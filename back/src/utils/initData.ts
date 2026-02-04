@@ -692,92 +692,97 @@ const submitForm = async () => {
       :title="isEdit ? '编辑架构' : '新增架构'"
       width="90%"
       top="5vh"
+      class="schema-edit-dialog"
     >
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="架构名称">
-          <el-input v-model="form.name" placeholder="架构唯一标识 (如: UserList)" />
-        </el-form-item>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="关联实体">
-              <el-select v-model="form.entityId" placeholder="请选择实体" style="width: 100%" @change="handleEntityChange">
-                <el-option
-                  v-for="item in entityList"
-                  :key="item._id"
-                  :label="item.name"
-                  :value="item._id"
-                />
-              </el-select>
+      <div class="schema-dialog-content">
+        <el-form :model="form" label-width="100px" class="schema-form-flex">
+          <div class="schema-form-header">
+            <el-form-item label="架构名称">
+              <el-input v-model="form.name" placeholder="架构唯一标识 (如: UserList)" />
             </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="关联视图">
-              <el-select v-model="form.viewId" placeholder="请选择视图" style="width: 100%" :disabled="!form.entityId">
-                <el-option
-                  v-for="item in filteredViewList"
-                  :key="item._id"
-                  :label="item.name"
-                  :value="item._id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-             <span style="font-weight: bold;">代码编辑</span>
-             <el-button type="primary" link @click="generateCode" :disabled="!form.viewId">根据视图生成代码</el-button>
-        </div>
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="关联实体">
+                  <el-select v-model="form.entityId" placeholder="请选择实体" style="width: 100%" @change="handleEntityChange">
+                    <el-option
+                      v-for="item in entityList"
+                      :key="item._id"
+                      :label="item.name"
+                      :value="item._id"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="关联视图">
+                  <el-select v-model="form.viewId" placeholder="请选择视图" style="width: 100%" :disabled="!form.entityId">
+                    <el-option
+                      v-for="item in filteredViewList"
+                      :key="item._id"
+                      :label="item.name"
+                      :value="item._id"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            
+            <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold;">代码编辑</span>
+                <el-button type="primary" link @click="generateCode" :disabled="!form.viewId">根据视图生成代码</el-button>
+            </div>
+          </div>
 
-        <el-tabs v-model="activeTab" type="border-card" class="code-tabs">
-          <el-tab-pane label="Template" name="template">
-            <template #label>
-                Template <el-badge :value="errors.template.length" type="danger" v-if="errors.template.length > 0" />
-            </template>
-            <div class="editor-container">
-                <vue-monaco-editor
-                    v-model:value="form.vue.template"
-                    theme="vs-dark"
-                    language="html"
-                    :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
-                    height="100%"
-                    @validate="(markers) => handleValidate(markers, 'template')"
-                />
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="Script" name="script">
-            <template #label>
-                Script <el-badge :value="errors.script.length" type="danger" v-if="errors.script.length > 0" />
-            </template>
-            <div class="editor-container">
-                <vue-monaco-editor
-                    v-model:value="form.vue.script"
-                    theme="vs-dark"
-                    language="javascript"
-                    :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
-                    height="100%"
-                    @validate="(markers) => handleValidate(markers, 'script')"
-                />
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="Style" name="style">
-            <template #label>
-                Style <el-badge :value="errors.style.length" type="danger" v-if="errors.style.length > 0" />
-            </template>
-            <div class="editor-container">
-                <vue-monaco-editor
-                    v-model:value="form.vue.style"
-                    theme="vs-dark"
-                    language="css"
-                    :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
-                    height="100%"
-                    @validate="(markers) => handleValidate(markers, 'style')"
-                />
-            </div>
-          </el-tab-pane>
-        </el-tabs>
+          <el-tabs v-model="activeTab" type="border-card" class="code-tabs">
+            <el-tab-pane label="Template" name="template">
+              <template #label>
+                  Template <el-badge :value="errors.template.length" type="danger" v-if="errors.template.length > 0" />
+              </template>
+              <div class="editor-container">
+                  <vue-monaco-editor
+                      v-model:value="form.vue.template"
+                      theme="vs-dark"
+                      language="html"
+                      :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
+                      height="100%"
+                      @validate="(markers) => handleValidate(markers, 'template')"
+                  />
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="Script" name="script">
+              <template #label>
+                  Script <el-badge :value="errors.script.length" type="danger" v-if="errors.script.length > 0" />
+              </template>
+              <div class="editor-container">
+                  <vue-monaco-editor
+                      v-model:value="form.vue.script"
+                      theme="vs-dark"
+                      language="javascript"
+                      :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
+                      height="100%"
+                      @validate="(markers) => handleValidate(markers, 'script')"
+                  />
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="Style" name="style">
+              <template #label>
+                  Style <el-badge :value="errors.style.length" type="danger" v-if="errors.style.length > 0" />
+              </template>
+              <div class="editor-container">
+                  <vue-monaco-editor
+                      v-model:value="form.vue.style"
+                      theme="vs-dark"
+                      language="css"
+                      :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
+                      height="100%"
+                      @validate="(markers) => handleValidate(markers, 'style')"
+                  />
+              </div>
+            </el-tab-pane>
+          </el-tabs>
 
-      </el-form>
+        </el-form>
+      </div>
       <template #footer>
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <span v-if="hasError" style="color: #f56c6c; margin-right: 10px;">
@@ -997,7 +1002,35 @@ const submitForm = async () => {
   }
 };
         `,
-        style: `.page-container { padding: 20px; } .code-tabs { height: 500px; } .editor-container { height: 400px; }`
+        style: `
+.page-container { padding: 20px; }
+.schema-edit-dialog {
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0 !important;
+}
+.schema-edit-dialog .el-dialog__body {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.schema-dialog-content {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.schema-form-flex { height: 100%; display: flex; flex-direction: column; }
+.schema-form-header { flex: 0 0 auto; padding-right: 10px; }
+.code-tabs { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.code-tabs :deep(.el-tabs__content) { flex: 1; padding: 0; overflow: hidden; }
+.code-tabs :deep(.el-tab-pane) { height: 100%; }
+.editor-container { height: 100%; }
+`
       };
       const schemaSchema = await this.createOrUpdateSchema('SysSchemaManage', '架构管理', schemaSchemaCode, entitySysSchema._id.toString(), viewSysSchema._id.toString());
       await this.createOrUpdateMenu('/sys/schema', '架构管理', 'Document', 4, schemaSchema._id, parentId);

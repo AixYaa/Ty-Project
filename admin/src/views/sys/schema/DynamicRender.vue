@@ -28,13 +28,21 @@
         <el-tab-pane label="Template" name="template">
           <template #label>
             Template
-            <el-badge :value="errors.template.length" class="error-badge" v-if="errors.template.length > 0" />
+            <el-badge
+              :value="errors.template.length"
+              class="error-badge"
+              v-if="errors.template.length > 0"
+            />
           </template>
           <vue-monaco-editor
             v-model:value="editForm.vue.template"
             theme="vs-dark"
             language="html"
-            :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true }"
+            :options="{
+              automaticLayout: true,
+              scrollBeyondLastLine: false,
+              mouseWheelZoom: true,
+            }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'template')"
           />
@@ -42,13 +50,21 @@
         <el-tab-pane label="Script" name="script">
           <template #label>
             Script
-            <el-badge :value="errors.script.length" class="error-badge" v-if="errors.script.length > 0" />
+            <el-badge
+              :value="errors.script.length"
+              class="error-badge"
+              v-if="errors.script.length > 0"
+            />
           </template>
           <vue-monaco-editor
             v-model:value="editForm.vue.script"
             theme="vs-dark"
             language="javascript"
-            :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true }"
+            :options="{
+              automaticLayout: true,
+              scrollBeyondLastLine: false,
+              mouseWheelZoom: true,
+            }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'script')"
           />
@@ -56,13 +72,21 @@
         <el-tab-pane label="Style" name="style">
           <template #label>
             Style
-            <el-badge :value="errors.style.length" class="error-badge" v-if="errors.style.length > 0" />
+            <el-badge
+              :value="errors.style.length"
+              class="error-badge"
+              v-if="errors.style.length > 0"
+            />
           </template>
           <vue-monaco-editor
             v-model:value="editForm.vue.style"
             theme="vs-dark"
             language="css"
-            :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true }"
+            :options="{
+              automaticLayout: true,
+              scrollBeyondLastLine: false,
+              mouseWheelZoom: true,
+            }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'style')"
           />
@@ -75,7 +99,13 @@
           </span>
           <div>
             <el-button @click="editDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="saveSchema" :loading="saving" :disabled="hasError">保存</el-button>
+            <el-button
+              type="primary"
+              @click="saveSchema"
+              :loading="saving"
+              :disabled="hasError"
+              >保存</el-button
+            >
           </div>
         </div>
       </template>
@@ -84,18 +114,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineAsyncComponent, shallowRef, reactive } from 'vue';
-import { loadModule } from 'vue3-sfc-loader';
-import * as Vue from 'vue';
-import * as ElementPlus from 'element-plus';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-import request from '../../../utils/request';
-import { getSchemaById, updateSchema } from '../../../api/schema';
-import { ElMessage } from 'element-plus';
-import { Edit, Warning } from '@element-plus/icons-vue';
-import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
-import * as MonacoEditor from '@guolao/vue-monaco-editor';
-import { computed } from 'vue';
+import { ref, watch, defineAsyncComponent, shallowRef, reactive } from "vue";
+import { loadModule } from "vue3-sfc-loader";
+import * as Vue from "vue";
+import * as ElementPlus from "element-plus";
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
+import request from "../../../utils/request";
+import { getSchemaById, updateSchema } from "../../../api/schema";
+import { ElMessage } from "element-plus";
+import { Edit, Warning } from "@element-plus/icons-vue";
+import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
+import * as MonacoEditor from "@guolao/vue-monaco-editor";
+import { computed } from "vue";
 
 const props = defineProps<{
   schemaId: string;
@@ -106,16 +136,16 @@ const dynamicComponent = shallowRef<any>(null);
 
 // Edit Logic
 const editDialogVisible = ref(false);
-const activeTab = ref('template');
+const activeTab = ref("template");
 const saving = ref(false);
 const editForm = reactive({
-  _id: '',
-  name: '',
+  _id: "",
+  name: "",
   vue: {
-    template: '',
-    script: '',
-    style: ''
-  }
+    template: "",
+    script: "",
+    style: "",
+  },
 });
 
 // Syntax Validation Logic
@@ -126,20 +156,31 @@ const errors = reactive<{
 }>({
   template: [],
   script: [],
-  style: []
+  style: [],
 });
 
-const hasError = computed(() => errors.template.length > 0 || errors.script.length > 0 || errors.style.length > 0);
+const hasError = computed(
+  () =>
+    errors.template.length > 0 ||
+    errors.script.length > 0 ||
+    errors.style.length > 0,
+);
 
 const errorSummary = computed(() => {
   const summary: string[] = [];
-  if (errors.template.length > 0) summary.push(`Template: ${errors.template.length} 个错误`);
-  if (errors.script.length > 0) summary.push(`Script: ${errors.script.length} 个错误`);
-  if (errors.style.length > 0) summary.push(`Style: ${errors.style.length} 个错误`);
-  return summary.join(' | ');
+  if (errors.template.length > 0)
+    summary.push(`Template: ${errors.template.length} 个错误`);
+  if (errors.script.length > 0)
+    summary.push(`Script: ${errors.script.length} 个错误`);
+  if (errors.style.length > 0)
+    summary.push(`Style: ${errors.style.length} 个错误`);
+  return summary.join(" | ");
 });
 
-const handleValidate = (markers: any[], type: 'template' | 'script' | 'style') => {
+const handleValidate = (
+  markers: any[],
+  type: "template" | "script" | "style",
+) => {
   // MarkerSeverity.Error = 8
   const errorMarkers = markers.filter((marker) => marker.severity === 8);
   errors[type] = errorMarkers;
@@ -160,7 +201,7 @@ const openEditDialog = async () => {
       editDialogVisible.value = true;
     }
   } catch (error) {
-    ElMessage.error('无法加载 Schema 数据');
+    ElMessage.error("无法加载 Schema 数据");
   }
 };
 
@@ -169,27 +210,27 @@ const saveSchema = async () => {
   saving.value = true;
   try {
     await updateSchema(editForm._id, { vue: editForm.vue });
-    ElMessage.success('Schema 更新成功');
+    ElMessage.success("Schema 更新成功");
     editDialogVisible.value = false;
     // Reload component
     loadSchema(props.schemaId);
   } catch (error: any) {
-    ElMessage.error('更新失败: ' + error.message);
+    ElMessage.error("更新失败: " + error.message);
   } finally {
     saving.value = false;
   }
 };
 
-import ProTable from '../../../../src/components/ProTable/index.vue';
+import ProTable from "../../../../src/components/ProTable/index.vue";
 
 const options = {
   moduleCache: {
     vue: Vue,
-    'element-plus': ElementPlus,
-    '@element-plus/icons-vue': ElementPlusIconsVue,
-    'app-request': request,
-    '@/components/ProTable/index.vue': ProTable,
-    '@guolao/vue-monaco-editor': MonacoEditor
+    "element-plus": ElementPlus,
+    "@element-plus/icons-vue": ElementPlusIconsVue,
+    "app-request": request,
+    "@/components/ProTable/index.vue": ProTable,
+    "@guolao/vue-monaco-editor": MonacoEditor,
   },
   async getFile(url: string) {
     // 这里我们模拟 url 就是 schemaId
@@ -197,9 +238,9 @@ const options = {
     return Promise.resolve(url);
   },
   addStyle(textContent: string) {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = textContent;
-    const ref = document.head.getElementsByTagName('style')[0] || null;
+    const ref = document.head.getElementsByTagName("style")[0] || null;
     document.head.insertBefore(style, ref);
   },
 };
@@ -212,20 +253,20 @@ const loadSchema = async (id: string) => {
   try {
     const res = await getSchemaById(id);
     if (!res || !res.vue) {
-      throw new Error('Invalid schema data');
+      throw new Error("Invalid schema data");
     }
 
     const { template, script, style } = res.vue;
-    
+
     // 构造 SFC 字符串
     // 自动检测是否使用 script setup (如果没有 export default 则认为是 script setup)
-    const isSetup = !script.includes('export default');
-    const scriptTag = isSetup ? '<script setup>' : '<script>';
+    const isSetup = !script.includes("export default");
+    const scriptTag = isSetup ? "<script setup>" : "<script>";
 
     const sfcContent = `
-<template>
-${template}
-</template>
+          <template>
+          ${template}
+          </template>
 ${scriptTag}
 ${script}
 <\/script>
@@ -237,25 +278,27 @@ ${style}
     // 使用 vue3-sfc-loader 加载
     // 强制使用新的 URL 以绕过缓存 (添加时间戳)
     const cacheBuster = Date.now();
-    dynamicComponent.value = defineAsyncComponent(() => 
-      loadModule(id + '.vue?t=' + cacheBuster, {
+    dynamicComponent.value = defineAsyncComponent(() =>
+      loadModule(id + ".vue?t=" + cacheBuster, {
         ...options,
-        getFile: () => Promise.resolve(sfcContent)
-      })
+        getFile: () => Promise.resolve(sfcContent),
+      }),
     );
-
   } catch (error: any) {
-    console.error('Failed to load schema:', error);
-    ElMessage.error('加载页面失败: ' + error.message);
+    console.error("Failed to load schema:", error);
+    ElMessage.error("加载页面失败: " + error.message);
   } finally {
     loading.value = false;
   }
 };
 
-watch(() => props.schemaId, (newId) => {
-  loadSchema(newId);
-}, { immediate: true });
-
+watch(
+  () => props.schemaId,
+  (newId) => {
+    loadSchema(newId);
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>
@@ -272,7 +315,7 @@ watch(() => props.schemaId, (newId) => {
 }
 :deep(.schema-edit-dialog) {
   margin-top: 5vh !important;
-  height: 90vh;
+  height: 89vh;
   display: flex;
   flex-direction: column;
 }
