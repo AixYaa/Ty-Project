@@ -161,21 +161,50 @@ export class SysService {
 
   // --- Composite Operations ---
   // Example: Get full menu tree with schema info if needed
-  static async getFullMenuTree() {
+  static async getFullMenuTree(userRole?: string) {
     const menus = await this.getMenus({});
+    
+    // Filter menus based on role if provided and not super admin
+    // Assuming 'admin' role sees everything, or if userRole is not provided (e.g. internal call)
+    // But typically tree is requested by frontend user.
+    let filteredMenus = menus;
+    
+    if (userRole && userRole !== 'admin') {
+      filteredMenus = menus.filter(m => {
+        // If roles is undefined or empty, it's public/visible to all (or logic could be: visible only if roles not set?)
+        // Let's assume: if roles is set and not empty, user must have one of them.
+        // If roles is empty/undefined, it is visible to everyone.
+        if (m.roles && m.roles.length > 0) {
+          return m.roles.includes(userRole);
+        }
+        return true;
+      });
+    }
+
     // Convert flat list to tree
     const map = new Map();
     const roots: any[] = [];
     
-    menus.forEach(m => {
+    filteredMenus.forEach(m => {
       map.set(m._id.toString(), { ...m, children: [] });
     });
 
-    menus.forEach(m => {
+    filteredMenus.forEach(m => {
       const node = map.get(m._id.toString());
+      // Only attach to parent if parent also exists in filtered list
       if (m.parentId && map.has(m.parentId)) {
         map.get(m.parentId).children.push(node);
       } else {
+        // If parent is filtered out (not visible), should we show this node as root?
+        // Usually if parent is hidden, children are hidden too. 
+        // With the filter above, if parent is removed, m.parentId won't be in map.
+        // So we push to roots? Or we hide it?
+        // Standard behavior: if parent is hidden, child is hidden (or becomes orphan).
+        // Let's treat as orphan (root) for now if parent is missing, or maybe hide it?
+        // Better logic: Recursively check visibility?
+        // Simple logic: If parent is not in map, it becomes a root node (orphan).
+        // However, if strict hierarchy is needed, maybe we should filter children of hidden parents.
+        // For simplicity: Orphan nodes become roots.
         roots.push(node);
       }
     });

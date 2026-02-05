@@ -1,21 +1,46 @@
 <template>
   <div class="login-container">
-    <el-card class="login-card">
-      <template #header>
-        <h2 class="login-title">管理平台登录</h2>
-      </template>
-      <el-form :model="loginForm" label-width="0">
-        <el-form-item>
-          <el-input v-model="loginForm.username" placeholder="用户名" :prefix-icon="User" />
-        </el-form-item>
-        <el-form-item>
-          <el-input v-model="loginForm.password" type="password" placeholder="密码" :prefix-icon="Lock" show-password />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" class="login-btn" @click="handleLogin" :loading="loading">登录</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <div class="login-content">
+      <div class="login-left">
+        <div class="login-welcome">
+          <h1>Aix Admin</h1>
+          <p>企业级后台管理系统</p>
+        </div>
+      </div>
+      <div class="login-right">
+        <el-card class="login-card" shadow="never">
+          <div class="login-header">
+            <h2>欢迎登录</h2>
+            <p class="sub-title">请输入您的账号和密码</p>
+          </div>
+          <el-form :model="loginForm" class="login-form" size="large">
+            <el-form-item>
+              <el-input 
+                v-model="loginForm.username" 
+                placeholder="用户名" 
+                :prefix-icon="User"
+                @keyup.enter="handleLogin"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-input 
+                v-model="loginForm.password" 
+                type="password" 
+                placeholder="密码" 
+                :prefix-icon="Lock" 
+                show-password 
+                @keyup.enter="handleLogin"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" class="login-btn" @click="handleLogin" :loading="loading">
+                登 录
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -58,19 +83,105 @@ const handleLogin = async () => {
 <style scoped>
 .login-container {
   height: 100vh;
+  width: 100%;
+  background-color: #f0f2f5;
+  background-image: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f0f2f5;
+  overflow: hidden;
 }
+
+.login-content {
+  display: flex;
+  width: 900px;
+  height: 500px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.login-left {
+  flex: 1;
+  background: linear-gradient(135deg, #1c2e40 0%, #2080c0 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  padding: 40px;
+}
+
+.login-welcome h1 {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.login-welcome p {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.login-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  background-color: #fff;
+}
+
 .login-card {
-  width: 400px;
+  width: 100%;
+  border: none;
 }
-.login-title {
+
+.login-header {
+  margin-bottom: 30px;
   text-align: center;
-  margin: 0;
 }
+
+.login-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.sub-title {
+  color: #909399;
+  font-size: 14px;
+}
+
+.login-form {
+  padding: 0 20px;
+}
+
 .login-btn {
   width: 100%;
+  height: 44px;
+  font-size: 16px;
+  background-color: #2080c0;
+  border-color: #2080c0;
+  transition: all 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #3a9bdc;
+  border-color: #3a9bdc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(32, 128, 192, 0.3);
+}
+
+:deep(.el-input__wrapper) {
+  box-shadow: 0 0 0 1px #dcdfe6 inset;
+  background-color: #f8f9fa;
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #2080c0 inset;
+  background-color: #fff;
 }
 </style>

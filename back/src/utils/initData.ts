@@ -1,4 +1,5 @@
 import { SysService } from '../services/sysService';
+import { GeneralService } from '../services/generalService';
 import { SysSchema, SysMenu } from '../types/sys';
 
 export class DataInitializer {
@@ -85,7 +86,9 @@ export class DataInitializer {
 
       // --- 0. Ensure Parent Menu (System Management) ---
       const parentMenu = await this.createOrUpdateMenu('/sys', '系统管理', 'Setting', 900, null, null);
+      const parentMenuManage = await this.createOrUpdateMenu('/manage', '管理中心', 'Monitor', 900, null, null);
       const parentId = parentMenu._id.toString();
+      const parentIdManage = parentMenuManage._id.toString();
 
       // --- 0.1 Initialize System Entities & Views ---
       const entitySysMenu = await this.createOrUpdateEntity('sys_menu');
@@ -111,7 +114,7 @@ export class DataInitializer {
       :batchDeleteApi="batchDeleteMenu"
       :deleteApi="deleteMenu"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: '菜单', initForm: { name: '', path: '', icon: '', sort: 0, parentId: undefined, schemaId: '' } }"
+      :formConfig="{ label: '菜单', initForm: { name: '', path: '', icon: '', sort: 0, parentId: undefined, schemaId: '', roles: [] }, width: '600px' }"
       @submit="submitForm"
       row-key="_id"
     >
@@ -137,41 +140,64 @@ export class DataInitializer {
 
       <!-- Built-in Editor Slot -->
       <template #edit-form="{ model, isEdit }">
-        <el-form :model="model" label-width="80px">
-          <el-form-item label="父菜单">
-            <el-tree-select
-              v-model="model.parentId"
-              :data="menuTreeData"
-              :props="{ label: 'name', value: '_id', children: 'children' }"
-              check-strictly
-              placeholder="请选择父菜单"
-              clearable
-              style="width: 100%"
-            />
-          </el-form-item>
-          <el-form-item label="名称">
-            <el-input v-model="model.name" placeholder="菜单名称" />
-          </el-form-item>
-          <el-form-item label="路径">
-            <el-input v-model="model.path" placeholder="路由路径 (如 /sys/menu)" />
-          </el-form-item>
-          <el-form-item label="图标">
-            <el-input v-model="model.icon" placeholder="Element Plus 图标名" />
-          </el-form-item>
-          <el-form-item label="排序">
-            <el-input-number v-model="model.sort" :min="0" />
-          </el-form-item>
-          <el-form-item label="绑定架构">
-            <el-select v-model="model.schemaId" placeholder="请选择架构" style="width: 100%" clearable>
-              <el-option
-                v-for="item in schemaList"
-                :key="item._id"
-                :label="item.name"
-                :value="item._id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-form>
+        <el-tabs type="border-card">
+          <el-tab-pane label="基本信息">
+            <el-form :model="model" label-width="80px" style="padding-top: 10px;">
+              <el-form-item label="父菜单">
+                <el-tree-select
+                  v-model="model.parentId"
+                  :data="menuTreeData"
+                  :props="{ label: 'name', value: '_id', children: 'children' }"
+                  check-strictly
+                  placeholder="请选择父菜单"
+                  clearable
+                  style="width: 100%"
+                />
+              </el-form-item>
+              <el-form-item label="名称">
+                <el-input v-model="model.name" placeholder="菜单名称" />
+              </el-form-item>
+              <el-form-item label="路径">
+                <el-input v-model="model.path" placeholder="路由路径 (如 /sys/menu)" />
+              </el-form-item>
+              <el-form-item label="图标">
+                <el-input v-model="model.icon" placeholder="Element Plus 图标名" />
+              </el-form-item>
+              <el-form-item label="排序">
+                <el-input-number v-model="model.sort" :min="0" />
+              </el-form-item>
+              <el-form-item label="绑定架构">
+                <el-select v-model="model.schemaId" placeholder="请选择架构" style="width: 100%" clearable>
+                  <el-option
+                    v-for="item in schemaList"
+                    :key="item._id"
+                    :label="item.name"
+                    :value="item._id"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
+          <el-tab-pane label="角色权限">
+             <el-form :model="model" label-width="80px" style="padding-top: 10px;">
+               <el-form-item label="可见角色">
+                 <el-select
+                    v-model="model.roles"
+                    multiple
+                    placeholder="请选择可见角色 (留空则所有角色可见)"
+                    style="width: 100%"
+                 >
+                   <el-option
+                     v-for="role in roleList"
+                     :key="role.code"
+                     :label="role.name"
+                     :value="role.code"
+                   />
+                 </el-select>
+               </el-form-item>
+             </el-form>
+          </el-tab-pane>
+        </el-tabs>
       </template>
 
       <!-- Built-in Viewer Slot -->
@@ -187,6 +213,11 @@ export class DataInitializer {
           <el-form-item label="绑定架构">
              <el-select v-model="model.schemaId" style="width: 100%">
                <el-option v-for="item in schemaList" :key="item._id" :label="item.name" :value="item._id" />
+             </el-select>
+          </el-form-item>
+          <el-form-item label="可见角色">
+             <el-select v-model="model.roles" multiple style="width: 100%">
+               <el-option v-for="role in roleList" :key="role.code" :label="role.name" :value="role.code" />
              </el-select>
           </el-form-item>
         </el-form>
@@ -210,11 +241,13 @@ const updateMenu = (id, data) => request.put('/core/sys_menu/' + id, data);
 const deleteMenu = (id) => request.delete('/core/sys_menu/' + id);
 const batchDeleteMenu = (ids) => request.post('/core/sys_menu/batch-delete', { ids });
 const getSchemaListAll = () => request.get('/core/sys_schema', { params: { pageSize: 1000 } });
+const getRoleListAll = () => request.get('/core/sys_role', { params: { pageSize: 1000 } });
 
 // State
 const proTable = ref();
 const menuTreeData = ref([]);
 const schemaList = ref([]);
+const roleList = ref([]);
 
 const initParam = reactive({});
 
@@ -260,8 +293,12 @@ const getSchemaName = (id) => {
 
 // Initialize
 onMounted(async () => {
-  const res = await getSchemaListAll();
-  schemaList.value = Array.isArray(res) ? res : res.list || [];
+  const [schemaRes, roleRes] = await Promise.all([
+    getSchemaListAll(),
+    getRoleListAll()
+  ]);
+  schemaList.value = Array.isArray(schemaRes) ? schemaRes : schemaRes.list || [];
+  roleList.value = Array.isArray(roleRes) ? roleRes : roleRes.list || [];
 });
 
 // Helper: Filter tree data
@@ -934,8 +971,334 @@ const submitForm = async (formData, done) => {
       const schemaSchema = await this.createOrUpdateSchema('SysSchemaManage', '架构管理', schemaSchemaCode, entitySysSchema._id.toString(), viewSysSchema._id.toString());
       await this.createOrUpdateMenu('/sys/schema', '架构管理', 'Document', 4, schemaSchema._id, parentId);
 
+      // --- 5. 角色管理 (Role Management) ---
+      const entitySysRole = await this.createOrUpdateEntity('sys_role');
+      const viewSysRole = await this.createOrUpdateView('SysRoleList', entitySysRole._id.toString());
+      
+      const roleSchemaCode = {
+        template: `
+<div class="page-container">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :initParam="initParam"
+      :batchDeleteApi="batchDeleteRole"
+      :deleteApi="deleteRole"
+      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: '角色', initForm: { name: '', code: '', description: '', status: 1 }, width: '500px' }"
+      @submit="submitForm"
+      row-key="_id"
+    >
+      <template #tableHeader>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增角色</el-button>
+      </template>
+      
+      <template #status="{ row }">
+        <el-tag :type="row.status === 1 ? 'success' : 'danger'">{{ row.status === 1 ? '启用' : '禁用' }}</el-tag>
+      </template>
+
+      <!-- Editor -->
+      <template #edit-form="{ model }">
+        <el-form :model="model" label-width="100px">
+          <el-form-item label="角色名称">
+            <el-input v-model="model.name" placeholder="如: 管理员" />
+          </el-form-item>
+          <el-form-item label="角色标识">
+            <el-input v-model="model.code" placeholder="如: admin" />
+          </el-form-item>
+          <el-form-item label="描述">
+            <el-input v-model="model.description" type="textarea" />
+          </el-form-item>
+          <el-form-item label="状态">
+             <el-switch v-model="model.status" :active-value="1" :inactive-value="0" />
+          </el-form-item>
+        </el-form>
+      </template>
+
+      <!-- Viewer -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="100px" disabled>
+          <el-form-item label="角色名称"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item label="角色标识"><el-input v-model="model.code" /></el-form-item>
+          <el-form-item label="描述"><el-input v-model="model.description" type="textarea" /></el-form-item>
+          <el-form-item label="状态">
+             <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? '启用' : '禁用' }}</el-tag>
+          </el-form-item>
+        </el-form>
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive } from 'vue';
+import { ElMessage } from 'element-plus';
+import { CirclePlus } from '@element-plus/icons-vue';
+import request from 'app-request';
+import ProTable from '@/components/ProTable/index.vue';
+
+// API
+const getRoleList = (params) => request.get('/core/sys_role', { params });
+const createRole = (data) => request.post('/core/sys_role', data);
+const updateRole = (id, data) => request.put('/core/sys_role/' + id, data);
+const deleteRole = (id) => request.delete('/core/sys_role/' + id);
+const batchDeleteRole = (ids) => request.post('/core/sys_role/batch-delete', { ids });
+
+const proTable = ref();
+const initParam = reactive({});
+
+const columns = [
+  { type: 'selection', fixed: 'left', width: 55 },
+  { prop: 'name', label: '角色名称', search: { el: 'input' } },
+  { prop: 'code', label: '角色标识', search: { el: 'input' } },
+  { prop: 'description', label: '描述' },
+  { prop: 'status', label: '状态' }
+];
+
+const getTableList = async (params) => {
+  const res = await getRoleList(params);
+  return {
+    data: Array.isArray(res) ? res : res.list || [],
+    total: Array.isArray(res) ? res.length : res.total || 0
+  };
+};
+
+const openAdd = () => proTable.value?.openAdd();
+
+const submitForm = async (formData, done) => {
+  try {
+    if (!formData.name || !formData.code) {
+       ElMessage.warning('名称和标识不能为空');
+       done();
+       return;
+    }
+    if (formData._id) {
+      await updateRole(formData._id, formData);
+      ElMessage.success('更新成功');
+    } else {
+      await createRole(formData);
+      ElMessage.success('创建成功');
+    }
+    done();
+  } catch (e) {
+    console.error(e);
+    done();
+  }
+};
+        `,
+        style: `.page-container { padding: 20px; }`
+      };
+      
+      const roleSchema = await this.createOrUpdateSchema('SysRoleManage', '角色管理', roleSchemaCode, entitySysRole._id.toString(), viewSysRole._id.toString());
+      await this.createOrUpdateMenu('/manage/role', '角色管理', 'Avatar', 5, roleSchema._id, parentIdManage);
+
+
+      // --- 6. 用户管理 (User Management) ---
+      // Note: User entity is 'sys用户' (already used by AuthService)
+      // We ensure the metadata entity exists
+      const entitySysUser = await this.createOrUpdateEntity('sys用户');
+      const viewSysUser = await this.createOrUpdateView('SysUserList', entitySysUser._id.toString());
+
+      const userSchemaCode = {
+        template: `
+<div class="page-container">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :initParam="initParam"
+      :batchDeleteApi="batchDeleteUser"
+      :deleteApi="deleteUser"
+      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: '用户', initForm: { username: '', password: '', name: '', role: '', status: 1 }, width: '500px' }"
+      @submit="submitForm"
+      row-key="_id"
+    >
+      <template #tableHeader>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增用户</el-button>
+      </template>
+
+      <template #role="{ row }">
+        <el-tag type="info">{{ getRoleName(row.role) }}</el-tag>
+      </template>
+      
+      <template #status="{ row }">
+        <el-switch v-model="row.status" :active-value="1" :inactive-value="0" @change="handleStatusChange(row)" />
+      </template>
+
+      <!-- Editor -->
+      <template #edit-form="{ model, isEdit }">
+        <el-form :model="model" label-width="100px">
+          <el-form-item label="用户名">
+            <el-input v-model="model.username" placeholder="登录账号" :disabled="isEdit" />
+          </el-form-item>
+          <el-form-item label="密码" v-if="!isEdit">
+            <el-input v-model="model.password" type="password" show-password placeholder="初始密码" />
+          </el-form-item>
+          <el-form-item label="重置密码" v-else>
+            <el-input v-model="model.password" type="password" show-password placeholder="留空则不修改" />
+          </el-form-item>
+          <el-form-item label="姓名">
+            <el-input v-model="model.name" placeholder="真实姓名" />
+          </el-form-item>
+          <el-form-item label="角色">
+             <el-select v-model="model.role" placeholder="选择角色" style="width: 100%" clearable>
+                <el-option v-for="item in roleList" :key="item.code" :label="item.name" :value="item.code" />
+             </el-select>
+          </el-form-item>
+          <el-form-item label="状态">
+             <el-switch v-model="model.status" :active-value="1" :inactive-value="0" />
+          </el-form-item>
+        </el-form>
+      </template>
+      
+      <!-- Viewer -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="100px" disabled>
+          <el-form-item label="用户名"><el-input v-model="model.username" /></el-form-item>
+          <el-form-item label="姓名"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item label="角色"><el-tag>{{ getRoleName(model.role) }}</el-tag></el-form-item>
+          <el-form-item label="状态">
+             <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? '启用' : '禁用' }}</el-tag>
+          </el-form-item>
+        </el-form>
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
+import { CirclePlus } from '@element-plus/icons-vue';
+import request from 'app-request';
+import ProTable from '@/components/ProTable/index.vue';
+
+// API
+const getUserList = (params) => request.get('/core/sys用户', { params });
+const createUser = (data) => request.post('/core/sys用户', data);
+const updateUser = (id, data) => request.put('/core/sys用户/' + id, data);
+const deleteUser = (id) => request.delete('/core/sys用户/' + id);
+const batchDeleteUser = (ids) => request.post('/core/sys用户/batch-delete', { ids });
+const getRoleListApi = () => request.get('/core/sys_role', { params: { pageSize: 100 } });
+
+const proTable = ref();
+const initParam = reactive({});
+const roleList = ref([]);
+
+const columns = [
+  { type: 'selection', fixed: 'left', width: 55 },
+  { prop: 'username', label: '用户名', search: { el: 'input' } },
+  { prop: 'name', label: '姓名', search: { el: 'input' } },
+  { prop: 'role', label: '角色' },
+  { prop: 'status', label: '状态' },
+  { prop: 'createdAt', label: '创建时间', width: 180 }
+];
+
+const getTableList = async (params) => {
+  const res = await getUserList(params);
+  return {
+    data: Array.isArray(res) ? res : res.list || [],
+    total: Array.isArray(res) ? res.length : res.total || 0
+  };
+};
+
+const getRoleName = (code) => {
+  const role = roleList.value.find(r => r.code === code);
+  return role ? role.name : code;
+};
+
+onMounted(async () => {
+  const res = await getRoleListApi();
+  roleList.value = Array.isArray(res) ? res : res.list || [];
+});
+
+const openAdd = () => {
+  proTable.value.openAdd();
+};
+
+const handleStatusChange = async (row) => {
+  try {
+    if (row._id) {
+       await updateUser(row._id, { status: row.status });
+       ElMessage.success('状态更新成功');
+    }
+  } catch (e) {
+    row.status = row.status === 1 ? 0 : 1; // revert
+    console.error(e);
+  }
+};
+
+const submitForm = async (formData, done) => {
+  try {
+    if (!formData.username) {
+       ElMessage.warning('用户名不能为空');
+       done();
+       return;
+    }
+    if (!formData._id && !formData.password) {
+       ElMessage.warning('初始密码不能为空');
+       done();
+       return;
+    }
+
+    if (formData._id) {
+      if (!formData.password) delete formData.password;
+      await updateUser(formData._id, formData);
+      ElMessage.success('更新成功');
+    } else {
+      await createUser(formData);
+      ElMessage.success('创建成功');
+    }
+    done();
+  } catch (e) {
+    console.error(e);
+    done();
+  }
+};
+        `,
+        style: `.page-container { padding: 20px; }`
+      };
+      
+      const userSchema = await this.createOrUpdateSchema('SysUserManage', '用户管理', userSchemaCode, entitySysUser._id.toString(), viewSysUser._id.toString());
+      await this.createOrUpdateMenu('/manage/user', '用户管理', 'User', 6, userSchema._id, parentIdManage);
+
     } catch (error) {
       console.error('Failed to init sys schemas:', error);
+    }
+  }
+
+  static async initDefaultRoles() {
+    try {
+      console.log('Initializing default roles...');
+      // Check if admin role exists
+      const { list } = await GeneralService.getList('sys_role', { code: 'admin' });
+      if (list.length === 0) {
+        console.log('Creating default admin role...');
+        await GeneralService.create('sys_role', {
+          name: '超级管理员',
+          code: 'admin',
+          description: '系统超级管理员，拥有所有权限',
+          status: 1
+        });
+      } else {
+        console.log('Admin role already exists');
+      }
+      
+      // Check if user role exists
+      const { list: userList } = await GeneralService.getList('sys_role', { code: 'user' });
+      if (userList.length === 0) {
+         console.log('Creating default user role...');
+         await GeneralService.create('sys_role', {
+           name: '普通用户',
+           code: 'user',
+           description: '普通注册用户',
+           status: 1
+         });
+      } else {
+        console.log('User role already exists');
+      }
+    } catch (error) {
+      console.error('Failed to init default roles:', error);
     }
   }
 

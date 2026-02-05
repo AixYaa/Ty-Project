@@ -9,7 +9,7 @@ const app = express();
 const whitelist = (process.env.CORS_WHITELIST || '').split(',').filter(Boolean);
 if (whitelist.length === 0) {
   // 开发环境默认值，防止配置漏掉导致无法访问
-  whitelist.push('http://localhost:5173', 'http://localhost:3000');
+  whitelist.push('http://localhost:5173', 'http://localhost:6632');
 }
 
 // 2. 通用 API 日志中间件
@@ -32,7 +32,9 @@ const corsOptions: cors.CorsOptions = {
       return callback(null, true);
     }
 
-    if (whitelist.includes(origin)) {
+    // 允许 localhost (任意端口) 或白名单中的来源
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    if (whitelist.includes(origin) || isLocalhost) {
       callback(null, true);
     } else {
       // 记录被 CORS 拦截的域名

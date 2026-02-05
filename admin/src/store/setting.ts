@@ -1,0 +1,79 @@
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+
+export type LayoutMode = 'vertical' | 'horizontal';
+export type ThemeColor = 'default' | 'dark' | 'blue' | 'green' | 'red' | 'purple';
+
+export const useSettingStore = defineStore('setting', () => {
+  // Layout Config
+  const isCollapse = ref(false);
+  const layoutMode = ref<LayoutMode>('vertical');
+  
+  // Theme Config
+  const themeColor = ref<ThemeColor>('default');
+  const primaryColor = ref('#409EFF');
+  
+  // Feature Config
+  const showWatermark = ref(false);
+  const watermarkText = ref('Aix Admin');
+  const watermarkShowTime = ref(false);
+
+  // Actions
+  const toggleCollapse = () => {
+    isCollapse.value = !isCollapse.value;
+  };
+
+  const setLayoutMode = (mode: LayoutMode) => {
+    layoutMode.value = mode;
+  };
+
+  const setThemeColor = (color: ThemeColor) => {
+    themeColor.value = color;
+    // You might want to map theme names to hex colors here or in a separate util
+    switch (color) {
+      case 'default': primaryColor.value = '#409EFF'; break;
+      case 'dark': primaryColor.value = '#409EFF'; break; // Dark mode usually affects background
+      case 'blue': primaryColor.value = '#409EFF'; break;
+      case 'green': primaryColor.value = '#67C23A'; break;
+      case 'red': primaryColor.value = '#F56C6C'; break;
+      case 'purple': primaryColor.value = '#909399'; break; // Example
+    }
+    updateTheme();
+  };
+
+  const setWatermark = (show: boolean, text?: string, showTime?: boolean) => {
+    showWatermark.value = show;
+    if (text) watermarkText.value = text;
+    if (showTime !== undefined) watermarkShowTime.value = showTime;
+  };
+
+  // Helper to update CSS variables
+  const updateTheme = () => {
+    const el = document.documentElement;
+    el.style.setProperty('--el-color-primary', primaryColor.value);
+    // Add logic to generate light/dark variants if needed
+    // For now, basic primary color switch
+    
+    if (themeColor.value === 'dark') {
+      el.classList.add('dark');
+    } else {
+      el.classList.remove('dark');
+    }
+  };
+
+  return {
+    isCollapse,
+    layoutMode,
+    themeColor,
+    primaryColor,
+    showWatermark,
+    watermarkText,
+    watermarkShowTime,
+    toggleCollapse,
+    setLayoutMode,
+    setThemeColor,
+    setWatermark
+  };
+}, {
+  persist: true
+});

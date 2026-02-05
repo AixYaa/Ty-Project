@@ -41,6 +41,7 @@ export interface SysMenu extends Document {
   path: string;        // 路由路径
   icon?: string;
   sort?: number;
+  roles?: string[];    // 可见角色
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -52,6 +53,16 @@ export interface SysUser extends Document {
   name?: string;       // 真实姓名
   avatar?: string;
   role?: string;       // 角色
+  status?: number;     // 1: 启用, 0: 禁用
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface SysRole extends Document {
+  _id?: ObjectId;
+  name: string;        // 角色名称 (如: 管理员)
+  code: string;        // 角色标识 (如: admin)
+  description?: string;
   status?: number;     // 1: 启用, 0: 禁用
   createdAt?: Date;
   updatedAt?: Date;

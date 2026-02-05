@@ -2,7 +2,7 @@ export interface ProTableColumn {
   prop?: string;
   label?: string;
   width?: string | number;
-  type?: 'selection' | 'index' | 'expand';
+  type?: 'selection' | 'index' | 'expand' | 'operation';
   fixed?: 'left' | 'right';
   sortable?: boolean | 'custom';
   search?: SearchProps; // Search configuration

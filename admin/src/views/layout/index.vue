@@ -1,131 +1,132 @@
 <template>
-  <div class="app-layout">
-    <el-container>
-      <el-aside width="200px" class="aside">
-        <div class="logo">管理平台</div>
-        <el-menu
-          router
-          :default-active="$route.path"
-          class="el-menu-vertical"
-          background-color="#001529"
-          text-color="#fff"
-          active-text-color="#409EFF"
-        >
-          <el-menu-item index="/dashboard">
-            <el-icon><House /></el-icon>
-            <span>首页</span>
-          </el-menu-item>
-          
-          <!-- 递归渲染菜单 -->
-          <template v-for="menu in menuTree" :key="menu._id">
-            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu._id || ''">
-              <template #title>
-                <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
-                <span>{{ menu.name }}</span>
-              </template>
-              <el-menu-item 
-                v-for="child in menu.children" 
-                :key="child._id" 
-                :index="child.path"
-              >
-                <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
-                <span>{{ child.name }}</span>
-              </el-menu-item>
-            </el-sub-menu>
-            <el-menu-item v-else :index="menu.path">
-              <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
-              <span>{{ menu.name }}</span>
-            </el-menu-item>
-          </template>
-        </el-menu>
+  <div class="app-layout" :class="layoutClasses">
+    <el-container class="main-container">
+      <!-- Vertical Mode: Sidebar on left -->
+      <el-aside v-if="isVertical" :width="sidebarWidth" class="aside">
+        <Sidebar />
       </el-aside>
+
       <el-container>
-        <el-header class="header">
-          <div class="header-right">
-            <span class="username" v-if="userStore.userInfo">
-              {{ userStore.userInfo.name || userStore.userInfo.username }}
-            </span>
-            <el-button type="primary" link @click="handleLogout">退出登录</el-button>
-          </div>
+        <el-header class="header" :height="isHorizontal ? '60px' : 'auto'">
+          <Header @openSettings="openSettings" />
         </el-header>
-        <el-main>
-          <router-view />
+        
+        <!-- Horizontal Mode: Sidebar (Menu) in Header area or below it? 
+             Actually, for horizontal mode, the menu usually goes into the header.
+             For simplicity, I will keep Sidebar component but style it differently or hide it if Header has menu.
+             But the requirement says "Sidebar becomes Header Nav".
+             Let's adjust Sidebar to support horizontal mode if possible, or just put Sidebar in Header.
+             For now, let's stick to Vertical structure for Sidebar, and if Horizontal, we might need to adjust.
+             
+             Wait, standard Element Plus layout:
+             Vertical: Aside + (Header + Main)
+             Horizontal: Header (with Menu) + Main
+             
+             I will just hide Sidebar in Aside and maybe inject it into Header or render a horizontal menu in Header.
+             Let's modify Header to support Horizontal Menu if needed, or keep it simple.
+             If "Horizontal", maybe we hide Aside and put Sidebar content in Header?
+             Let's try to keep it simple first: Vertical Layout is standard.
+             If Horizontal, I will hide Aside and show a horizontal menu in Header.
+        -->
+        <el-main class="main-content">
+           <router-view v-slot="{ Component, route }">
+              <transition name="fade-transform" mode="out-in">
+                <component :is="Component" :key="route.fullPath" />
+              </transition>
+           </router-view>
         </el-main>
       </el-container>
     </el-container>
+
+    <Settings ref="settingsRef" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useUserStore } from '../../store/user';
-import { getMenuTree, type SysMenu } from '../../api/sys';
-import { House } from '@element-plus/icons-vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import Sidebar from './components/Sidebar.vue';
+import Header from './components/Header.vue';
+import Settings from './components/Settings/index.vue';
+import { useSettingStore } from '@/store/setting';
+import { useWatermark } from '@/hooks/useWatermark';
 
-const router = useRouter();
-const userStore = useUserStore();
-const menuTree = ref<SysMenu[]>([]);
+const settingStore = useSettingStore();
+const settingsRef = ref();
+const { setWatermark, clear } = useWatermark();
 
-const loadMenus = async () => {
-  try {
-    const res = await getMenuTree();
-    menuTree.value = res;
-  } catch (e) {
-    console.error('Failed to load menus', e);
-  }
+const isVertical = computed(() => settingStore.layoutMode === 'vertical');
+const isHorizontal = computed(() => settingStore.layoutMode === 'horizontal');
+const sidebarWidth = computed(() => settingStore.isCollapse ? '64px' : '210px');
+
+const layoutClasses = computed(() => ({
+  'layout-vertical': isVertical.value,
+  'layout-horizontal': isHorizontal.value
+}));
+
+const openSettings = () => {
+  settingsRef.value?.open();
 };
 
-const handleLogout = async () => {
-  await userStore.logout();
-  router.push('/login');
-};
+// Watermark Effect
+watch(
+  () => [settingStore.showWatermark, settingStore.watermarkText, settingStore.watermarkShowTime],
+  ([show, text, showTime]) => {
+    if (show) {
+      setWatermark(text as string, showTime as boolean);
+    } else {
+      clear();
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
-  loadMenus();
+  // Init theme
+  settingStore.setThemeColor(settingStore.themeColor);
 });
 </script>
 
 <style scoped>
 .app-layout {
   height: 100vh;
+  width: 100%;
 }
-.el-container {
+
+.main-container {
   height: 100%;
 }
+
 .aside {
-  background-color: #001529;
-  color: white;
-  display: flex;
-  flex-direction: column;
+  transition: width 0.3s;
+  overflow: hidden;
+  box-shadow: 2px 0 8px 0 rgba(29, 35, 41, 0.05);
+  z-index: 10;
 }
-.logo {
-  height: 60px;
-  line-height: 60px;
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-  background-color: #002140;
-}
-.el-menu-vertical {
-  border-right: none;
-  flex: 1;
-}
+
 .header {
-  background-color: #fff;
-  border-bottom: 1px solid #dcdfe6;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 20px;
+  padding: 0;
+  height: 60px;
 }
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+
+.main-content {
+  background-color: #f0f2f5;
+  padding: 20px;
+  overflow-x: hidden;
 }
-.username {
-  font-size: 14px;
-  color: #606266;
+
+/* Transitions */
+.fade-transform-leave-active,
+.fade-transform-enter-active {
+  transition: all 0.5s;
+}
+
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
 }
 </style>

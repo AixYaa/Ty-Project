@@ -1,5 +1,6 @@
 import { getDb } from '../db/mongo';
 import { ObjectId } from 'mongodb';
+import bcrypt from 'bcryptjs';
 
 export class GeneralService {
   
@@ -46,6 +47,13 @@ export class GeneralService {
   // Create
   static async create(collectionName: string, data: any) {
     const col = await this.getCollection(collectionName);
+    
+    // Special handling for User password
+    if (collectionName === 'sys用户' && data.password) {
+      const salt = await bcrypt.genSalt(10);
+      data.password = await bcrypt.hash(data.password, salt);
+    }
+
     const doc = { 
       ...data, 
       createdAt: new Date(), 
@@ -58,6 +66,18 @@ export class GeneralService {
   // Update
   static async update(collectionName: string, id: string, data: any) {
     const col = await this.getCollection(collectionName);
+    
+    // Special handling for User password
+    if (collectionName === 'sys用户') {
+      if (data.password) {
+        const salt = await bcrypt.genSalt(10);
+        data.password = await bcrypt.hash(data.password, salt);
+      } else {
+        // If password is empty/undefined, do not update it
+        delete data.password;
+      }
+    }
+
     const update = { 
       ...data, 
       updatedAt: new Date() 

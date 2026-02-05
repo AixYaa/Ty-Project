@@ -1,6 +1,5 @@
 import router from './index';
-import { useUserStore } from '../store/user';
-import { getMenuTree, type SysMenu } from '../api/sys';
+import { getMenuTree, type SysMenu } from '@/api/sys';
 import type { RouteRecordRaw } from 'vue-router';
 
 let isRoutesLoaded = false;
@@ -16,10 +15,11 @@ const generateRoutes = (menus: SysMenu[]): RouteRecordRaw[] => {
     
     // 如果有 schemaId，说明是动态页面
     if (menu.schemaId && menu.path) {
+      console.log('Generating route:', menu.path, menu.schemaId);
       routes.push({
         path: menu.path,
         name: `Dynamic_${menu._id}`, // 确保 name 唯一
-        component: () => import('../views/sys/schema/DynamicRender.vue'),
+        component: () => import('@/views/sys/schema/DynamicRender.vue'),
         meta: {
           title: menu.name,
           schemaId: menu.schemaId,
@@ -35,9 +35,8 @@ const generateRoutes = (menus: SysMenu[]): RouteRecordRaw[] => {
   return routes;
 };
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   console.log('Router beforeEach:', to.path);
-  const userStore = useUserStore();
   const token = localStorage.getItem('accessToken');
 
   if (token) {

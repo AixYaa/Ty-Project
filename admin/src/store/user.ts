@@ -29,5 +29,6 @@ export const useUserStore = defineStore('user', {
         localStorage.removeItem('refreshToken');
       }
     }
-  }
+  },
+  persist: true
 });

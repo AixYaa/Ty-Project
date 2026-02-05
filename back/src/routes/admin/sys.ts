@@ -127,7 +127,8 @@ router.delete('/schema/:id', async (req: Request, res: Response) => {
 // --- Menu Routes ---
 router.get('/menu/tree', async (req: Request, res: Response) => {
   try {
-    const result = await SysService.getFullMenuTree();
+    const userRole = req.user?.role;
+    const result = await SysService.getFullMenuTree(userRole);
     res.json(ApiResult.success(result));
   } catch (error: any) {
     res.json(ApiResult.error(error.message));

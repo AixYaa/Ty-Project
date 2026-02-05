@@ -2,7 +2,7 @@
   <div class="pro-table">
     <!-- 1. Search Form Area -->
     <el-card v-if="showSearch" class="search-card" shadow="never">
-      <el-form ref="searchFormRef" :model="searchParam" :inline="true" label-width="auto">
+      <el-form ref="searchFormRef" :model="searchParam" :inline="true" label-width="100px">
         <template v-for="item in searchColumns" :key="item.prop">
           <el-form-item :label="item.label">
             <!-- Input -->
@@ -73,7 +73,7 @@
     <el-card class="table-card" shadow="never">
       <div class="table-header">
         <div class="header-button-lf">
-          <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增菜单</el-button>
+          <!-- <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增菜单</el-button> -->
           <slot name="tableHeader" :selectedList="selectedList" :selectedIds="selectedIds"></slot>
         </div>
         <div class="header-button-ri">
@@ -219,7 +219,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { CirclePlus, Search, Delete, Refresh, View, EditPen } from '@element-plus/icons-vue';
+import { Search, Delete, Refresh, View, EditPen } from '@element-plus/icons-vue';
 import type { ProTableColumn, Pageable } from './interface';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
@@ -439,6 +439,10 @@ const openEdit = (row: any) => {
   editor.isEdit = true;
   editor.title = '编辑' + (props.formConfig?.label || '');
   editor.formData = JSON.parse(JSON.stringify(row));
+  // Special handling for password field: clear it when editing
+  if ('password' in editor.formData) {
+    editor.formData.password = '';
+  }
   editor.visible = true;
 };
 

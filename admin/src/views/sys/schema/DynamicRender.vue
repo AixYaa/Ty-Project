@@ -5,7 +5,7 @@
 
     <!-- Edit Schema Button -->
     <el-button
-      v-if="schemaId"
+      v-if="currentSchemaId"
       type="primary"
       circle
       size="large"
@@ -114,22 +114,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineAsyncComponent, shallowRef, reactive } from "vue";
+import { ref, watch, defineAsyncComponent, shallowRef, reactive, computed } from "vue";
+import { useRoute } from 'vue-router';
 import { loadModule } from "vue3-sfc-loader";
 import * as Vue from "vue";
 import * as ElementPlus from "element-plus";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
-import request from "../../../utils/request";
-import { getSchemaById, updateSchema } from "../../../api/schema";
+import request from "@/utils/request";
+import { getSchemaById, updateSchema } from "@/api/schema";
 import { ElMessage } from "element-plus";
 import { Edit, Warning } from "@element-plus/icons-vue";
 import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
 import * as MonacoEditor from "@guolao/vue-monaco-editor";
-import { computed } from "vue";
+import ProTable from "@/components/ProTable/index.vue";
 
 const props = defineProps<{
-  schemaId: string;
+  schemaId?: string;
 }>();
+
+const route = useRoute();
+const currentSchemaId = computed(() => {
+  return props.schemaId || (route.meta.schemaId as string) || '';
+});
 
 const loading = ref(false);
 const dynamicComponent = shallowRef<any>(null);
@@ -187,11 +193,11 @@ const handleValidate = (
 };
 
 const openEditDialog = async () => {
-  if (!props.schemaId) return;
+  if (!currentSchemaId.value) return;
   try {
-    const res = await getSchemaById(props.schemaId);
+    const res = await getSchemaById(currentSchemaId.value);
     if (res) {
-      editForm._id = res._id || props.schemaId;
+      editForm._id = res._id || currentSchemaId.value;
       editForm.name = res.name;
       editForm.vue = { ...res.vue };
       // Reset errors
@@ -213,15 +219,13 @@ const saveSchema = async () => {
     ElMessage.success("Schema 更新成功");
     editDialogVisible.value = false;
     // Reload component
-    loadSchema(props.schemaId);
+    loadSchema(currentSchemaId.value);
   } catch (error: any) {
     ElMessage.error("更新失败: " + error.message);
   } finally {
     saving.value = false;
   }
 };
-
-import ProTable from "../../../../src/components/ProTable/index.vue";
 
 const options = {
   moduleCache: {
@@ -274,7 +278,7 @@ ${script}
 ${style}
 </style>
     `;
-
+    
     // 使用 vue3-sfc-loader 加载
     // 强制使用新的 URL 以绕过缓存 (添加时间戳)
     const cacheBuster = Date.now();
@@ -293,9 +297,10 @@ ${style}
 };
 
 watch(
-  () => props.schemaId,
+  () => currentSchemaId.value,
   (newId) => {
-    loadSchema(newId);
+    console.log('DynamicRender watched newId:', newId);
+    if (newId) loadSchema(newId);
   },
   { immediate: true },
 );
