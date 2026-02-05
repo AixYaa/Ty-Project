@@ -310,7 +310,7 @@ watch(
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 9999;
+  z-index: 100;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 :deep(.schema-edit-dialog) {
