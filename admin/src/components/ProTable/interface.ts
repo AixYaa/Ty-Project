@@ -6,6 +6,7 @@ export interface ProTableColumn {
   fixed?: 'left' | 'right';
   sortable?: boolean | 'custom';
   search?: SearchProps; // Search configuration
+  isShow?: boolean | ((row: any) => boolean); // Whether to show this column (or specific row cell?) - Usually column level
   [key: string]: any;
 }
 

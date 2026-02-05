@@ -73,6 +73,7 @@
     <el-card class="table-card" shadow="never">
       <div class="table-header">
         <div class="header-button-lf">
+          <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增菜单</el-button>
           <slot name="tableHeader" :selectedList="selectedList" :selectedIds="selectedIds"></slot>
         </div>
         <div class="header-button-ri">
@@ -118,7 +119,35 @@
             </template>
             <!-- Custom Cell -->
             <template #default="scope">
-              <slot :name="col.prop" :row="scope.row">
+              <!-- Operation Column Handling -->
+              <div v-if="col.prop === 'operation'" class="operation-cell" :class="{ 'operation-cell-hover': props.operation?.mode === 'hover' }">
+                <template v-if="props.operation">
+                  <el-button 
+                    v-if="props.operation.view === true" 
+                    link type="primary" :icon="View" 
+                    @click="openView(scope.row)"
+                  >
+                    {{ props.operation.viewText || '查看' }}
+                  </el-button>
+                  <el-button 
+                    v-if="props.operation.edit !== false" 
+                    link type="primary" :icon="EditPen" 
+                    @click="openEdit(scope.row)"
+                  >
+                    {{ props.operation.editText || '编辑' }}
+                  </el-button>
+                  <el-button 
+                    v-if="props.operation.delete !== false" 
+                    link type="danger" :icon="Delete" 
+                    @click="handleDelete(scope.row)"
+                  >
+                    {{ props.operation.deleteText || '删除' }}
+                  </el-button>
+                </template>
+                <slot name="operation" :row="scope.row"></slot>
+              </div>
+              
+              <slot v-else :name="col.prop" :row="scope.row">
                 {{ scope.row[col.prop!] }}
               </slot>
             </template>
@@ -153,12 +182,44 @@
         />
       </div>
     </el-card>
+
+    <!-- Built-in Editor Drawer -->
+    <el-drawer
+      v-if="formConfig"
+      v-model="editor.visible"
+      :title="editor.title"
+      :size="formConfig.width || '500px'"
+      append-to-body
+      :class="formConfig.class"
+    >
+      <div class="drawer-content" :style="formConfig.contentStyle">
+         <slot name="edit-form" :model="editor.formData" :is-edit="editor.isEdit"></slot>
+      </div>
+      <template #footer>
+         <el-button @click="closeDrawer">取消</el-button>
+         <el-button type="primary" @click="handleEditorSubmit" :loading="editor.loading">确定</el-button>
+      </template>
+    </el-drawer>
+
+    <!-- Built-in Viewer Dialog -->
+    <el-dialog
+      v-if="formConfig"
+      v-model="viewer.visible"
+      :title="viewer.title"
+      width="90%"
+      append-to-body
+      class="pro-table-view-dialog"
+    >
+       <div class="view-content" style="padding: 20px;">
+          <slot name="view-form" :model="viewer.data"></slot>
+       </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { Search, Delete, Refresh } from '@element-plus/icons-vue';
+import { CirclePlus, Search, Delete, Refresh, View, EditPen } from '@element-plus/icons-vue';
 import type { ProTableColumn, Pageable } from './interface';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
@@ -174,6 +235,9 @@ const props = withDefaults(defineProps<{
   beforeSearchSubmit?: (params: any) => any; // Callback before search
   labelKey?: string; // Key to display for selected items
   batchDeleteApi?: (ids: string[]) => Promise<any>; // Batch delete API
+  deleteApi?: (id: string) => Promise<any>; // Single delete API
+  operation?: any; // Operation column configuration
+  formConfig?: any; // Configuration for built-in editor (drawer)
 }>(), {
   columns: () => [],
   pagination: true,
@@ -182,8 +246,13 @@ const props = withDefaults(defineProps<{
   rowKey: '_id',
   showIndex: true, // Default to true
   beforeSearchSubmit: (params: any) => params,
-  labelKey: 'name'
+  labelKey: 'name',
+  operation: undefined,
+  formConfig: undefined
 });
+
+// Emits
+const emit = defineEmits(['view', 'edit', 'delete', 'submit']);
 
 // State
 const tableRef = ref();
@@ -194,6 +263,21 @@ const searchParam = reactive<any>({ ...props.initParam });
 const selectedList = ref<any[]>([]);
 const selectedIds = computed(() => selectedList.value.map(item => item[props.rowKey]));
 
+// Built-in Editor/Viewer State
+const editor = reactive({
+  visible: false,
+  isEdit: false,
+  title: '',
+  formData: {} as any,
+  loading: false
+});
+
+const viewer = reactive({
+  visible: false,
+  title: '',
+  data: {} as any
+});
+
 const pageable = reactive<Pageable>({
   pageNum: 1,
   pageSize: 10,
@@ -201,7 +285,25 @@ const pageable = reactive<Pageable>({
 });
 
 // Computed Columns
-const tableColumns = computed(() => props.columns);
+const tableColumns = computed(() => {
+  let cols = [...props.columns];
+  // Filter hidden columns (simple check)
+  cols = cols.filter(col => col.isShow !== false);
+
+  // Auto-inject operation column if configured
+  if (props.operation && !props.operation.hidden && !cols.some(c => c.prop === 'operation')) {
+    const isHover = props.operation.mode === 'hover';
+    cols.push({
+      prop: 'operation',
+      label: isHover ? '' : (props.operation.label || '操作'),
+      fixed: props.operation.fixed || 'right',
+      width: isHover ? 50 : (props.operation.width || 200), // Minimal width for hover mode
+      type: 'operation',
+      className: isHover ? 'operation-column-hover' : ''
+    });
+  }
+  return cols;
+});
 const searchColumns = computed(() => {
   return props.columns.filter(item => item.search);
 });
@@ -286,6 +388,24 @@ const selectionChange = (val: any[]) => {
   selectedList.value = val;
 };
 
+const handleDelete = async (row: any) => {
+  if (props.deleteApi) {
+    try {
+       await ElMessageBox.confirm(`确定删除 "<strong>${row[props.labelKey || 'name']}</strong>" 吗？<br/>此操作不可恢复！`, '警告', {
+         type: 'warning',
+         dangerouslyUseHTMLString: true,
+         confirmButtonText: '确定删除',
+         cancelButtonText: '取消'
+       });
+       await props.deleteApi(row[props.rowKey]);
+       ElMessage.success('删除成功');
+       getTableList();
+    } catch (e) { /* cancel */ }
+  } else {
+    emit('delete', row);
+  }
+};
+
 const handleBatchDelete = async () => {
   if (!props.batchDeleteApi) return;
   const ids = selectedIds.value;
@@ -307,6 +427,40 @@ const handleBatchDelete = async () => {
   }
 };
 
+// Built-in Editor Methods
+const openAdd = () => {
+  editor.isEdit = false;
+  editor.title = '新增' + (props.formConfig?.label || '');
+  editor.formData = JSON.parse(JSON.stringify(props.formConfig?.initForm || {}));
+  editor.visible = true;
+};
+
+const openEdit = (row: any) => {
+  editor.isEdit = true;
+  editor.title = '编辑' + (props.formConfig?.label || '');
+  editor.formData = JSON.parse(JSON.stringify(row));
+  editor.visible = true;
+};
+
+const openView = (row: any) => {
+  viewer.title = '查看' + (props.formConfig?.label || '');
+  viewer.data = JSON.parse(JSON.stringify(row));
+  viewer.visible = true;
+};
+
+const handleEditorSubmit = () => {
+  editor.loading = true;
+  emit('submit', editor.formData, () => {
+    editor.loading = false;
+    editor.visible = false;
+    getTableList();
+  });
+};
+
+const closeDrawer = () => {
+  editor.visible = false;
+};
+
 // Initialize
 onMounted(() => {
   getTableList();
@@ -320,7 +474,10 @@ defineExpose({
   pageable,
   getTableList,
   reset,
-  search
+  search,
+  openAdd,
+  openEdit,
+  openView
 });
 </script>
 
@@ -378,5 +535,45 @@ defineExpose({
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.operation-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  /* flex-wrap: wrap; Removed to prevent wrapping in hover mode */
+}
+
+.operation-cell-hover {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  padding: 0 10px;
+  background-color: var(--el-table-row-hover-bg-color); /* Match hover bg */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 10;
+  box-shadow: -10px 0 10px -5px rgba(0,0,0,0.1);
+  white-space: nowrap;
+  width: max-content; /* Ensure it adapts to content width */
+}
+
+:deep(.el-table__row:hover) .operation-cell-hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:deep(.operation-column-hover) {
+  padding: 0 !important;
+  border-left: none !important;
+}
+
+:deep(.operation-column-hover .cell) {
+  overflow: visible !important;
+  padding: 0 !important;
+  position: static !important; /* Allow absolute child to align with row */
 }
 </style>
