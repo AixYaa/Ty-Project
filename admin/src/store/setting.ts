@@ -8,6 +8,8 @@ export const useSettingStore = defineStore('setting', () => {
   // Layout Config
   const isCollapse = ref(false);
   const layoutMode = ref<LayoutMode>('vertical');
+  const isMobile = ref(false);
+  const mobileDrawerVisible = ref(false);
   
   // Theme Config
   const themeColor = ref<ThemeColor>('default');
@@ -25,6 +27,18 @@ export const useSettingStore = defineStore('setting', () => {
   // Actions
   const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
+  };
+
+  const setIsMobile = (val: boolean) => {
+    isMobile.value = val;
+  };
+
+  const setMobileDrawerVisible = (val: boolean) => {
+    mobileDrawerVisible.value = val;
+  };
+
+  const toggleMobileDrawer = () => {
+    mobileDrawerVisible.value = !mobileDrawerVisible.value;
   };
 
   const setLayoutMode = (mode: LayoutMode) => {
@@ -76,6 +90,8 @@ export const useSettingStore = defineStore('setting', () => {
   return {
     isCollapse,
     layoutMode,
+    isMobile,
+    mobileDrawerVisible,
     themeColor,
     primaryColor,
     showWatermark,
@@ -84,6 +100,9 @@ export const useSettingStore = defineStore('setting', () => {
     showDebugDrawer,
     debugDrawerVisible,
     toggleCollapse,
+    setIsMobile,
+    setMobileDrawerVisible,
+    toggleMobileDrawer,
     setLayoutMode,
     setThemeColor,
     setWatermark,

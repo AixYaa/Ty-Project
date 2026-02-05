@@ -242,6 +242,7 @@
       width="90%"
       append-to-body
       class="pro-table-view-dialog"
+      top="5vh"
     >
        <div class="view-content" style="padding: 20px;">
           <slot name="view-form" :model="viewer.data"></slot>

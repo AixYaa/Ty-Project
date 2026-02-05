@@ -6,7 +6,17 @@
         <Header @openSettings="openSettings" />
       </el-header>
       <el-container class="classic-content">
-        <el-aside :width="sidebarWidth" class="aside">
+        <el-drawer
+          v-if="settingStore.isMobile"
+          v-model="settingStore.mobileDrawerVisible"
+          direction="ltr"
+          :with-header="false"
+          size="210px"
+          class="mobile-sidebar-drawer"
+        >
+          <Sidebar />
+        </el-drawer>
+        <el-aside v-if="!settingStore.isMobile" :width="sidebarWidth" class="aside">
           <Sidebar />
         </el-aside>
         <el-main class="main-content">
@@ -21,11 +31,22 @@
 
     <!-- Vertical / Columns / Transverse Layout -->
     <el-container v-else class="main-container">
-      <el-aside v-if="isVertical" :width="sidebarWidth" class="aside">
+      <el-drawer
+        v-if="settingStore.isMobile"
+        v-model="settingStore.mobileDrawerVisible"
+        direction="ltr"
+        :with-header="false"
+        size="210px"
+        class="mobile-sidebar-drawer"
+      >
+        <Sidebar />
+      </el-drawer>
+
+      <el-aside v-if="isVertical && !settingStore.isMobile" :width="sidebarWidth" class="aside">
         <Sidebar />
       </el-aside>
       
-      <el-aside v-if="isColumns" width="210px" class="aside">
+      <el-aside v-if="isColumns && !settingStore.isMobile" width="210px" class="aside">
         <ColumnsSidebar />
       </el-aside>
 
@@ -56,10 +77,12 @@ import Header from './components/Header.vue';
 import Settings from './components/Settings/index.vue';
 import { useSettingStore } from '@/store/setting';
 import { useWatermark } from '@/hooks/useWatermark';
+import { useResponsive } from '@/hooks/useResponsive';
 
 const settingStore = useSettingStore();
 const settingsRef = ref();
 const { setWatermark, clear } = useWatermark();
+useResponsive();
 
 const isVertical = computed(() => settingStore.layoutMode === 'vertical');
 const isClassic = computed(() => settingStore.layoutMode === 'classic');

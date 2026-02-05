@@ -7,6 +7,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import IconSelect from '@/components/IconSelect/index.vue'
 
 const app = createApp(App)
 
@@ -24,6 +25,7 @@ pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
+app.component('IconSelect', IconSelect)
 
 // 引入权限控制 (要在 use(router) 之后)
 import './router/permission';

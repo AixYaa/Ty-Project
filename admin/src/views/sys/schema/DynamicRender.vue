@@ -5,7 +5,7 @@
 
     <!-- Edit Schema Button -->
     <el-button
-      v-if="currentSchemaId"
+      v-if="currentSchemaId && userStore.userInfo?.username === 'admin'"
       type="primary"
       circle
       size="large"
@@ -127,12 +127,15 @@ import { Edit, Warning } from "@element-plus/icons-vue";
 import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
 import * as MonacoEditor from "@guolao/vue-monaco-editor";
 import ProTable from "@/components/ProTable/index.vue";
+import IconSelect from "@/components/IconSelect/index.vue";
+import { useUserStore } from '@/store/user';
 
 const props = defineProps<{
   schemaId?: string;
 }>();
 
 const route = useRoute();
+const userStore = useUserStore();
 const currentSchemaId = computed(() => {
   return props.schemaId || (route.meta.schemaId as string) || '';
 });
@@ -234,6 +237,7 @@ const options = {
     "@element-plus/icons-vue": ElementPlusIconsVue,
     "app-request": request,
     "@/components/ProTable/index.vue": ProTable,
+    "@/components/IconSelect/index.vue": IconSelect,
     "@guolao/vue-monaco-editor": MonacoEditor,
   },
   async getFile(url: string) {

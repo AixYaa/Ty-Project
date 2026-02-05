@@ -161,7 +161,7 @@ export class DataInitializer {
                 <el-input v-model="model.path" placeholder="路由路径 (如 /sys/menu)" />
               </el-form-item>
               <el-form-item label="图标">
-                <el-input v-model="model.icon" placeholder="Element Plus 图标名" />
+                <IconSelect v-model="model.icon" />
               </el-form-item>
               <el-form-item label="排序">
                 <el-input-number v-model="model.sort" :min="0" />
@@ -208,7 +208,7 @@ export class DataInitializer {
           </el-form-item>
           <el-form-item label="名称"><el-input v-model="model.name" /></el-form-item>
           <el-form-item label="路径"><el-input v-model="model.path" /></el-form-item>
-          <el-form-item label="图标"><el-input v-model="model.icon" /></el-form-item>
+          <el-form-item label="图标"><IconSelect v-model="model.icon" disabled /></el-form-item>
           <el-form-item label="排序"><el-input-number v-model="model.sort" /></el-form-item>
           <el-form-item label="绑定架构">
              <el-select v-model="model.schemaId" style="width: 100%">
@@ -231,6 +231,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { CirclePlus, Delete, EditPen, Warning } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
+import IconSelect from '@/components/IconSelect/index.vue';
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 
 // API
@@ -748,33 +749,67 @@ const submitForm = async (formData, done) => {
 
       <!-- Built-in Viewer Slot -->
       <template #view-form="{ model }">
-        <el-form :model="model" label-width="100px" disabled>
-          <el-form-item label="架构名称"><el-input v-model="model.name" /></el-form-item>
-          <el-row>
-            <el-col :span="12">
-               <el-form-item label="关联实体">
-                  <el-select v-model="model.entityId" style="width: 100%">
-                    <el-option v-for="item in entityList" :key="item._id" :label="item.name" :value="item._id" />
-                  </el-select>
-               </el-form-item>
-            </el-col>
-            <el-col :span="12">
-               <el-form-item label="关联视图">
-                  <el-select v-model="model.viewId" style="width: 100%">
-                    <el-option v-for="item in getFilteredViewList(model.entityId)" :key="item._id" :label="item.name" :value="item._id" />
-                  </el-select>
-               </el-form-item>
-            </el-col>
-          </el-row>
-          <div style="margin-top: 20px;">
-             <h3>Template</h3>
-             <el-input v-model="model.vue.template" type="textarea" :rows="10" />
-             <h3>Script</h3>
-             <el-input v-model="model.vue.script" type="textarea" :rows="10" />
-             <h3>Style</h3>
-             <el-input v-model="model.vue.style" type="textarea" :rows="10" />
-          </div>
-        </el-form>
+        <div class="schema-drawer-content" style="height: 70vh; display: flex; flex-direction: column; overflow: hidden;">
+          <el-form :model="model" label-width="100px" class="schema-form-flex" style="height: 100%; display: flex; flex-direction: column;">
+            <div class="schema-form-header" style="flex-shrink: 0;">
+              <el-form-item label="架构名称">
+                <el-input v-model="model.name" readonly />
+              </el-form-item>
+              <el-row>
+                <el-col :span="12">
+                   <el-form-item label="关联实体">
+                      <el-select v-model="model.entityId" style="width: 100%" disabled>
+                        <el-option v-for="item in entityList" :key="item._id" :label="item.name" :value="item._id" />
+                      </el-select>
+                   </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                   <el-form-item label="关联视图">
+                      <el-select v-model="model.viewId" style="width: 100%" disabled>
+                        <el-option v-for="item in getFilteredViewList(model.entityId)" :key="item._id" :label="item.name" :value="item._id" />
+                      </el-select>
+                   </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+
+            <el-tabs v-model="activeTab" type="border-card" class="code-tabs" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+              <el-tab-pane label="Template" name="template" style="height: 100%;">
+                <div class="editor-container" style="height: 100%;">
+                    <vue-monaco-editor
+                        :value="model.vue.template"
+                        theme="vs-dark"
+                        language="html"
+                        :options="{ readOnly: true, automaticLayout: true, scrollBeyondLastLine: false, minimap: { enabled: false } }"
+                        height="100%"
+                    />
+                </div>
+              </el-tab-pane>
+              <el-tab-pane label="Script" name="script" style="height: 100%;">
+                <div class="editor-container" style="height: 100%;">
+                    <vue-monaco-editor
+                        :value="model.vue.script"
+                        theme="vs-dark"
+                        language="javascript"
+                        :options="{ readOnly: true, automaticLayout: true, scrollBeyondLastLine: false, minimap: { enabled: false } }"
+                        height="100%"
+                    />
+                </div>
+              </el-tab-pane>
+              <el-tab-pane label="Style" name="style" style="height: 100%;">
+                <div class="editor-container" style="height: 100%;">
+                    <vue-monaco-editor
+                        :value="model.vue.style"
+                        theme="vs-dark"
+                        language="css"
+                        :options="{ readOnly: true, automaticLayout: true, scrollBeyondLastLine: false, minimap: { enabled: false } }"
+                        height="100%"
+                    />
+                </div>
+              </el-tab-pane>
+            </el-tabs>
+          </el-form>
+        </div>
       </template>
     </ProTable>
 </div>

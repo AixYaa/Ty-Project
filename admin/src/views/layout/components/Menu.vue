@@ -95,4 +95,11 @@ onMounted(() => {
   border-bottom: none;
   height: 100%;
 }
+
+@media screen and (max-width: 768px) {
+  .el-menu-vertical {
+    --el-menu-base-level-padding: 10px;
+    --el-menu-item-height: 50px;
+  }
+}
 </style>
