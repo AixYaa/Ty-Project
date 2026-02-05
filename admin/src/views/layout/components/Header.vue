@@ -1,18 +1,18 @@
 <template>
   <div class="header-container">
     <div class="header-left">
-      <div v-if="isVertical" class="collapse-btn" @click="settingStore.toggleCollapse">
+      <div v-if="showCollapse" class="collapse-btn" @click="settingStore.toggleCollapse">
         <el-icon :size="20">
           <component :is="settingStore.isCollapse ? Expand : Fold" />
         </el-icon>
       </div>
       
-      <div v-if="!isVertical" class="logo">
+      <div v-if="showLogo" class="logo">
         管理平台
       </div>
 
       <!-- Horizontal Menu -->
-      <div v-if="!isVertical" class="horizontal-menu-wrapper">
+      <div v-if="showMenu" class="horizontal-menu-wrapper">
         <Menu mode="horizontal" />
       </div>
     </div>
@@ -42,6 +42,10 @@ const userStore = useUserStore();
 const settingStore = useSettingStore();
 
 const isVertical = computed(() => settingStore.layoutMode === 'vertical');
+
+const showCollapse = computed(() => ['vertical', 'classic', 'columns'].includes(settingStore.layoutMode));
+const showLogo = computed(() => ['classic', 'transverse'].includes(settingStore.layoutMode));
+const showMenu = computed(() => settingStore.layoutMode === 'transverse');
 
 const handleLogout = async () => {
   await userStore.logout();

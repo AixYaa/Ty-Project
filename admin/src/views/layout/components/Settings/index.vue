@@ -24,10 +24,62 @@
 
     <div class="setting-item">
       <span class="label">布局模式</span>
-      <el-select v-model="settingStore.layoutMode" @change="settingStore.setLayoutMode">
-        <el-option label="纵向 (Vertical)" value="vertical" />
-        <el-option label="横向 (Horizontal)" value="horizontal" />
-      </el-select>
+      <div class="layout-box">
+        <el-tooltip content="左侧菜单模式" placement="top" :show-after="200">
+          <div 
+            class="layout-item item-vertical" 
+            :class="{ 'is-active': settingStore.layoutMode === 'vertical' }"
+            @click="settingStore.setLayoutMode('vertical')"
+          >
+            <div class="layout-dark"></div>
+            <div class="layout-container">
+              <div class="layout-light"></div>
+              <div class="layout-content"></div>
+            </div>
+            <el-icon v-if="settingStore.layoutMode === 'vertical'" class="active-icon"><CircleCheckFilled /></el-icon>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip content="经典模式" placement="top" :show-after="200">
+          <div 
+            class="layout-item item-classic" 
+            :class="{ 'is-active': settingStore.layoutMode === 'classic' }"
+            @click="settingStore.setLayoutMode('classic')"
+          >
+            <div class="layout-dark"></div>
+            <div class="layout-container">
+              <div class="layout-light"></div>
+              <div class="layout-content"></div>
+            </div>
+            <el-icon v-if="settingStore.layoutMode === 'classic'" class="active-icon"><CircleCheckFilled /></el-icon>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip content="顶部菜单模式" placement="top" :show-after="200">
+          <div 
+            class="layout-item item-transverse" 
+            :class="{ 'is-active': settingStore.layoutMode === 'transverse' }"
+            @click="settingStore.setLayoutMode('transverse')"
+          >
+            <div class="layout-dark"></div>
+            <div class="layout-content"></div>
+            <el-icon v-if="settingStore.layoutMode === 'transverse'" class="active-icon"><CircleCheckFilled /></el-icon>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip content="分栏模式" placement="top" :show-after="200">
+          <div 
+            class="layout-item item-columns" 
+            :class="{ 'is-active': settingStore.layoutMode === 'columns' }"
+            @click="settingStore.setLayoutMode('columns')"
+          >
+            <div class="layout-dark"></div>
+            <div class="layout-light"></div>
+            <div class="layout-content"></div>
+            <el-icon v-if="settingStore.layoutMode === 'columns'" class="active-icon"><CircleCheckFilled /></el-icon>
+          </div>
+        </el-tooltip>
+      </div>
     </div>
 
     <div class="setting-item">
@@ -51,7 +103,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useSettingStore, type ThemeColor } from '@/store/setting';
-import { Check } from '@element-plus/icons-vue';
+import { Check, CircleCheckFilled } from '@element-plus/icons-vue';
 
 const visible = ref(false);
 const settingStore = useSettingStore();
@@ -95,5 +147,142 @@ defineExpose({ open });
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Layout Box Grid */
+.layout-box {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.layout-item {
+  position: relative;
+  box-sizing: border-box;
+  width: 100px;
+  height: 70px;
+  padding: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #ccc;
+  background-color: #f0f2f5;
+  margin-bottom: 20px;
+  transition: all 0.2s;
+}
+
+.layout-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 5px var(--el-color-primary);
+}
+
+.layout-item.is-active {
+  border: 2px solid var(--el-color-primary);
+}
+
+.active-icon {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  color: var(--el-color-primary);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Common Parts */
+.layout-dark {
+  background-color: #273352;
+  border-radius: 3px;
+}
+.layout-light {
+  background-color: #fff;
+  border-radius: 3px;
+}
+.layout-content {
+  background-color: #f0f2f5;
+  border: 1px dashed #bbb;
+  border-radius: 3px;
+}
+
+/* Vertical */
+.item-vertical {
+  display: flex;
+  justify-content: space-between;
+}
+.item-vertical .layout-dark {
+  width: 20%;
+  height: 100%;
+}
+.item-vertical .layout-container {
+  width: 72%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.item-vertical .layout-light {
+  height: 20%;
+}
+.item-vertical .layout-content {
+  height: 70%;
+}
+
+/* Classic */
+.item-classic {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.item-classic .layout-dark {
+  width: 100%;
+  height: 22%;
+}
+.item-classic .layout-container {
+  height: 70%;
+  display: flex;
+  justify-content: space-between;
+}
+.item-classic .layout-light {
+  width: 20%;
+  height: 100%;
+  background-color: #273352;
+}
+.item-classic .layout-content {
+  width: 72%;
+  height: 100%;
+}
+
+/* Transverse */
+.item-transverse {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.item-transverse .layout-dark {
+  width: 100%;
+  height: 20%;
+}
+.item-transverse .layout-content {
+  height: 72%;
+}
+
+/* Columns */
+.item-columns {
+  display: flex;
+  justify-content: space-between;
+}
+.item-columns .layout-dark {
+  width: 14%;
+  height: 100%;
+}
+.item-columns .layout-light {
+  width: 17%;
+  height: 100%;
+  background-color: #fff;
+}
+.item-columns .layout-content {
+  width: 60%;
+  height: 100%;
 }
 </style>

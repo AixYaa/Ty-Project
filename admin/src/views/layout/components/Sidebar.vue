@@ -1,6 +1,6 @@
 <template>
   <div class="sidebar-container" :class="{ 'is-collapse': settingStore.isCollapse }">
-    <div class="logo">
+    <div class="logo" v-if="showLogo">
       <span v-if="!settingStore.isCollapse">管理平台</span>
       <span v-else>Aix</span>
     </div>
@@ -17,6 +17,7 @@ import Menu from './Menu.vue';
 
 const settingStore = useSettingStore();
 
+const showLogo = computed(() => settingStore.layoutMode !== 'classic');
 const menuBgColor = computed(() => settingStore.themeColor === 'dark' ? '#001529' : '#ffffff');
 const menuTextColor = computed(() => settingStore.themeColor === 'dark' ? '#fff' : '#303133');
 </script>

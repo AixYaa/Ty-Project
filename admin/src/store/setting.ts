@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export type LayoutMode = 'vertical' | 'horizontal';
+export type LayoutMode = 'vertical' | 'classic' | 'transverse' | 'columns';
 export type ThemeColor = 'default' | 'dark' | 'blue' | 'green' | 'red' | 'purple';
 
 export const useSettingStore = defineStore('setting', () => {
