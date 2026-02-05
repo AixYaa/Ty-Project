@@ -109,11 +109,15 @@ export class DataInitializer {
       :initParam="initParam"
       :beforeSearchSubmit="beforeSearchSubmit"
       :batchDeleteApi="batchDeleteMenu"
+      :deleteApi="deleteMenu"
+      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: '菜单', initForm: { name: '', path: '', icon: '', sort: 0, parentId: undefined, schemaId: '' } }"
+      @submit="submitForm"
       row-key="_id"
     >
       <!-- Table Header Buttons -->
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="handleAdd()">新增菜单</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增菜单</el-button>
       </template>
 
       <!-- Custom Columns -->
@@ -129,56 +133,65 @@ export class DataInitializer {
 
       <template #operation="{ row }">
         <el-button link type="primary" :icon="CirclePlus" @click="handleAdd(row)">新增子菜单</el-button>
-        <el-button link type="primary" :icon="EditPen" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
+      </template>
+
+      <!-- Built-in Editor Slot -->
+      <template #edit-form="{ model, isEdit }">
+        <el-form :model="model" label-width="80px">
+          <el-form-item label="父菜单">
+            <el-tree-select
+              v-model="model.parentId"
+              :data="menuTreeData"
+              :props="{ label: 'name', value: '_id', children: 'children' }"
+              check-strictly
+              placeholder="请选择父菜单"
+              clearable
+              style="width: 100%"
+            />
+          </el-form-item>
+          <el-form-item label="名称">
+            <el-input v-model="model.name" placeholder="菜单名称" />
+          </el-form-item>
+          <el-form-item label="路径">
+            <el-input v-model="model.path" placeholder="路由路径 (如 /sys/menu)" />
+          </el-form-item>
+          <el-form-item label="图标">
+            <el-input v-model="model.icon" placeholder="Element Plus 图标名" />
+          </el-form-item>
+          <el-form-item label="排序">
+            <el-input-number v-model="model.sort" :min="0" />
+          </el-form-item>
+          <el-form-item label="绑定架构">
+            <el-select v-model="model.schemaId" placeholder="请选择架构" style="width: 100%" clearable>
+              <el-option
+                v-for="item in schemaList"
+                :key="item._id"
+                :label="item.name"
+                :value="item._id"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </template>
+
+      <!-- Built-in Viewer Slot -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="80px" disabled>
+          <el-form-item label="父菜单">
+             <el-tree-select v-model="model.parentId" :data="menuTreeData" :props="{ label: 'name', value: '_id', children: 'children' }" style="width: 100%" />
+          </el-form-item>
+          <el-form-item label="名称"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item label="路径"><el-input v-model="model.path" /></el-form-item>
+          <el-form-item label="图标"><el-input v-model="model.icon" /></el-form-item>
+          <el-form-item label="排序"><el-input-number v-model="model.sort" /></el-form-item>
+          <el-form-item label="绑定架构">
+             <el-select v-model="model.schemaId" style="width: 100%">
+               <el-option v-for="item in schemaList" :key="item._id" :label="item.name" :value="item._id" />
+             </el-select>
+          </el-form-item>
+        </el-form>
       </template>
     </ProTable>
-
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑菜单' : '新增菜单'"
-      width="500px"
-    >
-      <el-form :model="form" label-width="80px">
-        <el-form-item label="父菜单">
-          <el-tree-select
-            v-model="form.parentId"
-            :data="menuTreeData"
-            :props="{ label: 'name', value: '_id', children: 'children' }"
-            check-strictly
-            placeholder="请选择父菜单"
-            clearable
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="名称">
-          <el-input v-model="form.name" placeholder="菜单名称" />
-        </el-form-item>
-        <el-form-item label="路径">
-          <el-input v-model="form.path" placeholder="路由路径 (如 /sys/menu)" />
-        </el-form-item>
-        <el-form-item label="图标">
-          <el-input v-model="form.icon" placeholder="Element Plus 图标名" />
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-input-number v-model="form.sort" :min="0" />
-        </el-form-item>
-        <el-form-item label="绑定架构">
-          <el-select v-model="form.schemaId" placeholder="请选择架构" style="width: 100%" clearable>
-            <el-option
-              v-for="item in schemaList"
-              :key="item._id"
-              :label="item.name"
-              :value="item._id"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm" :loading="submitting">确定</el-button>
-      </template>
-    </el-dialog>
   </div>
         `,
         script: `
@@ -200,9 +213,6 @@ const getSchemaListAll = () => request.get('/core/sys_schema', { params: { pageS
 
 // State
 const proTable = ref();
-const dialogVisible = ref(false);
-const submitting = ref(false);
-const isEdit = ref(false);
 const menuTreeData = ref([]);
 const schemaList = ref([]);
 
@@ -216,15 +226,6 @@ const beforeSearchSubmit = (params) => {
   return params;
 };
 
-const form = ref({
-  name: '',
-  path: '',
-  icon: '',
-  sort: 0,
-  parentId: undefined,
-  schemaId: ''
-});
-
 // Columns Config
 const columns = [
   { type: 'selection', fixed: 'left' },
@@ -232,8 +233,7 @@ const columns = [
   { prop: 'path', label: '路由路径', search: { el: 'input' } },
   { prop: 'icon', label: '图标' },
   { prop: 'sort', label: '排序' },
-  { prop: 'schemaId', label: '绑定架构', showOverflowTooltip: true },
-  { prop: 'operation', label: '操作', width: 280, fixed: 'right' }
+  { prop: 'schemaId', label: '绑定架构', showOverflowTooltip: true }
 ];
 
 // Data Request
@@ -285,59 +285,28 @@ const filterTree = (tree, name, path) => {
 };
 
 // Actions
+const openAdd = () => {
+  proTable.value?.openAdd();
+};
+
 const handleAdd = (parent) => {
-  isEdit.value = false;
-  form.value = {
-    name: '',
-    path: '',
-    icon: '',
-    sort: 0,
-    parentId: parent?._id,
-    schemaId: ''
-  };
-  dialogVisible.value = true;
+  // Special case: Add submenu with parentId
+  proTable.value?.openAdd();
 };
 
-const handleEdit = (row) => {
-  isEdit.value = true;
-  form.value = { ...row };
-  dialogVisible.value = true;
-};
-
-const handleDelete = async (row) => {
+const submitForm = async (formData, done) => {
   try {
-    let msg = \`确定删除菜单 "<strong>\${row.name}</strong>" 吗？\`;
-    if (row.children && row.children.length > 0) {
-      msg += \`<br/><span style="color:red">注意：该菜单包含 \${row.children.length} 个子菜单！</span>\`;
-    }
-    msg += \`<br/>此操作不可恢复！\`;
-
-    await ElMessageBox.confirm(msg, '警告', { 
-      type: 'warning',
-      dangerouslyUseHTMLString: true,
-      confirmButtonText: '确定删除',
-      cancelButtonText: '取消'
-    });
-    await deleteMenu(row._id);
-    ElMessage.success('删除成功');
-    proTable.value?.getTableList();
-  } catch (e) {}
-};
-
-const submitForm = async () => {
-  submitting.value = true;
-  try {
-    if (isEdit.value) {
-      await updateMenu(form.value._id, form.value);
+    if (formData._id) {
+      await updateMenu(formData._id, formData);
       ElMessage.success('更新成功');
     } else {
-      await createMenu(form.value);
+      await createMenu(formData);
       ElMessage.success('创建成功');
     }
-    dialogVisible.value = false;
-    proTable.value?.getTableList();
-  } finally {
-    submitting.value = false;
+    done();
+  } catch (e) {
+    console.error(e);
+    done();
   }
 };
         `,
@@ -363,33 +332,34 @@ const submitForm = async () => {
       :requestApi="getTableList"
       :initParam="initParam"
       :batchDeleteApi="batchDeleteEntity"
+      :deleteApi="deleteEntity"
+      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: '实体', initForm: { name: '' }, width: '500px' }"
+      @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="handleAdd()">新增实体</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增实体</el-button>
       </template>
 
-      <template #operation="{ row }">
-        <el-button link type="primary" :icon="EditPen" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
+      <!-- Built-in Editor Slot -->
+      <template #edit-form="{ model }">
+        <el-form :model="model" label-width="100px">
+          <el-form-item label="实体名称">
+            <el-input v-model="model.name" placeholder="数据库集合名 (如: user_data)" />
+          </el-form-item>
+        </el-form>
+      </template>
+
+      <!-- Built-in Viewer Slot -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="100px" disabled>
+          <el-form-item label="实体名称">
+            <el-input v-model="model.name" />
+          </el-form-item>
+        </el-form>
       </template>
     </ProTable>
-
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑实体' : '新增实体'"
-      width="400px"
-    >
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="实体名称">
-          <el-input v-model="form.name" placeholder="数据库集合名 (如: user_data)" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm" :loading="submitting">确定</el-button>
-      </template>
-    </el-dialog>
 </div>
         `,
         script: `
@@ -408,20 +378,14 @@ const batchDeleteEntity = (ids) => request.post('/core/sys_entity/batch-delete',
 
 // State
 const proTable = ref();
-const dialogVisible = ref(false);
-const submitting = ref(false);
-const isEdit = ref(false);
 const initParam = reactive({});
 
 const form = ref({
   name: ''
 });
-
-// Columns
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
-  { prop: 'name', label: '实体名称', search: { el: 'input' } },
-  { prop: 'operation', label: '操作', fixed: 'right', width: 180 }
+  { prop: 'name', label: '实体名称', search: { el: 'input' } }
 ];
 
 const getTableList = async (params) => {
@@ -433,51 +397,29 @@ const getTableList = async (params) => {
 };
 
 // Actions
-const handleAdd = () => {
-  isEdit.value = false;
-  form.value = { name: '' };
-  dialogVisible.value = true;
+const openAdd = () => {
+  proTable.value?.openAdd();
 };
 
-const handleEdit = (row) => {
-  isEdit.value = true;
-  form.value = { ...row };
-  dialogVisible.value = true;
-};
-
-const handleDelete = async (row) => {
+const submitForm = async (formData, done) => {
   try {
-    await ElMessageBox.confirm(\`确定删除实体 "<strong>\${row.name}</strong>" 吗？\`, '提示', { 
-      type: 'warning',
-      dangerouslyUseHTMLString: true
-    });
-    await deleteEntity(row._id);
-    ElMessage.success('删除成功');
-    proTable.value?.getTableList();
-  } catch (e) {}
-};
-
-const submitForm = async () => {
-  submitting.value = true;
-  try {
-    if (!form.value.name) {
+    if (!formData.name) {
        ElMessage.warning('实体名称不能为空');
+       done();
        return;
     }
 
-    if (isEdit.value) {
-      await updateEntity(form.value._id, form.value);
+    if (formData._id) {
+      await updateEntity(formData._id, formData);
       ElMessage.success('更新成功');
     } else {
-      await createEntity(form.value);
+      await createEntity(formData);
       ElMessage.success('创建成功');
     }
-    dialogVisible.value = false;
-    proTable.value?.getTableList();
+    done();
   } catch (e) {
     console.error(e);
-  } finally {
-    submitting.value = false;
+    done();
   }
 };
         `,
@@ -496,53 +438,65 @@ const submitForm = async () => {
       :requestApi="getTableList"
       :initParam="initParam"
       :batchDeleteApi="batchDeleteView"
+      :deleteApi="deleteView"
+      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: '视图', initForm: { name: '', entityId: '', type: 'list', config: {} } }"
+      @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="handleAdd()">新增视图</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增视图</el-button>
       </template>
 
       <template #entityId="{ row }">
         <el-tag>{{ getEntityName(row.entityId) }}</el-tag>
       </template>
 
-      <template #operation="{ row }">
-        <el-button link type="primary" :icon="EditPen" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
+      <!-- Built-in Editor Slot -->
+      <template #edit-form="{ model, isEdit }">
+        <el-form :model="model" label-width="100px">
+            <el-form-item label="视图名称">
+              <el-input v-model="model.name" placeholder="视图名称 (如: 用户列表)" />
+            </el-form-item>
+            <el-form-item label="关联实体">
+              <el-select v-model="model.entityId" placeholder="请选择实体" style="width: 100%">
+                <el-option
+                  v-for="item in entityList"
+                  :key="item._id"
+                  :label="item.name"
+                  :value="item._id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="视图类型">
+              <el-select v-model="model.type" placeholder="请选择视图类型" style="width: 100%">
+                <el-option label="列表视图 (List)" value="list" />
+                <el-option label="表单视图 (Form)" value="form" />
+              </el-select>
+            </el-form-item>
+        </el-form>
+      </template>
+
+      <!-- Built-in Viewer Slot -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="100px" disabled>
+          <el-form-item label="视图名称">
+            <el-input v-model="model.name" />
+          </el-form-item>
+          <el-form-item label="关联实体">
+             <el-select v-model="model.entityId" style="width: 100%">
+               <el-option v-for="item in entityList" :key="item._id" :label="item.name" :value="item._id" />
+             </el-select>
+          </el-form-item>
+          <el-form-item label="视图类型">
+            <el-select v-model="model.type" style="width: 100%">
+              <el-option label="列表视图 (List)" value="list" />
+              <el-option label="表单视图 (Form)" value="form" />
+            </el-select>
+          </el-form-item>
+        </el-form>
       </template>
     </ProTable>
-
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑视图' : '新增视图'"
-      width="600px"
-    >
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="视图名称">
-          <el-input v-model="form.name" placeholder="视图名称 (如: 用户列表)" />
-        </el-form-item>
-        <el-form-item label="关联实体">
-          <el-select v-model="form.entityId" placeholder="请选择实体" style="width: 100%">
-            <el-option
-              v-for="item in entityList"
-              :key="item._id"
-              :label="item.name"
-              :value="item._id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="视图类型">
-          <el-select v-model="form.type" placeholder="请选择视图类型" style="width: 100%">
-            <el-option label="列表视图 (List)" value="list" />
-            <el-option label="表单视图 (Form)" value="form" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm" :loading="submitting">确定</el-button>
-      </template>
-    </el-dialog>
 </div>
         `,
         script: `
@@ -562,26 +516,15 @@ const getEntityListAll = () => request.get('/core/sys_entity', { params: { pageS
 
 // State
 const proTable = ref();
-const dialogVisible = ref(false);
-const submitting = ref(false);
-const isEdit = ref(false);
 const initParam = reactive({});
 const entityList = ref([]);
-
-const form = ref({
-  name: '',
-  entityId: '',
-  type: 'list',
-  config: {}
-});
 
 // Columns
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
   { prop: 'name', label: '视图名称', search: { el: 'input' } },
   { prop: 'entityId', label: '关联实体' },
-  { prop: 'type', label: '视图类型' },
-  { prop: 'operation', label: '操作', fixed: 'right', width: 180 }
+  { prop: 'type', label: '视图类型' }
 ];
 
 const getTableList = async (params) => {
@@ -604,51 +547,29 @@ onMounted(async () => {
 });
 
 // Actions
-const handleAdd = () => {
-  isEdit.value = false;
-  form.value = { name: '', entityId: '', type: 'list', config: {} };
-  dialogVisible.value = true;
+const openAdd = () => {
+  proTable.value?.openAdd();
 };
 
-const handleEdit = (row) => {
-  isEdit.value = true;
-  form.value = { ...row };
-  dialogVisible.value = true;
-};
-
-const handleDelete = async (row) => {
+const submitForm = async (formData, done) => {
   try {
-    await ElMessageBox.confirm(\`确定删除视图 "<strong>\${row.name}</strong>" 吗？\`, '提示', { 
-      type: 'warning',
-      dangerouslyUseHTMLString: true
-    });
-    await deleteView(row._id);
-    ElMessage.success('删除成功');
-    proTable.value?.getTableList();
-  } catch (e) {}
-};
-
-const submitForm = async () => {
-  submitting.value = true;
-  try {
-    if (!form.value.name || !form.value.entityId) {
+    if (!formData.name || !formData.entityId) {
        ElMessage.warning('名称和实体不能为空');
+       done();
        return;
     }
 
-    if (isEdit.value) {
-      await updateView(form.value._id, form.value);
+    if (formData._id) {
+      await updateView(formData._id, formData);
       ElMessage.success('更新成功');
     } else {
-      await createView(form.value);
+      await createView(formData);
       ElMessage.success('创建成功');
     }
-    dialogVisible.value = false;
-    proTable.value?.getTableList();
+    done();
   } catch (e) {
     console.error(e);
-  } finally {
-    submitting.value = false;
+    done();
   }
 };
         `,
@@ -667,10 +588,20 @@ const submitForm = async () => {
       :requestApi="getTableList"
       :initParam="initParam"
       :batchDeleteApi="batchDeleteSchema"
+      :deleteApi="deleteSchema"
+      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ 
+        label: '架构', 
+        initForm: { name: '', entityId: '', viewId: '', vue: { template: '', script: '', style: '' } },
+        width: '90%',
+        class: 'schema-edit-drawer',
+        contentStyle: { height: '100%', display: 'flex', flexDirection: 'column' }
+      }"
+      @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="handleAdd()">新增架构</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增架构</el-button>
       </template>
 
       <template #entityId="{ row }">
@@ -681,120 +612,134 @@ const submitForm = async () => {
         <el-tag type="warning">{{ getViewName(row.viewId) }}</el-tag>
       </template>
 
-      <template #operation="{ row }">
-        <el-button link type="primary" :icon="EditPen" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
-      </template>
-    </ProTable>
-
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑架构' : '新增架构'"
-      width="90%"
-      top="5vh"
-      class="schema-edit-dialog"
-    >
-      <div class="schema-dialog-content">
-        <el-form :model="form" label-width="100px" class="schema-form-flex">
-          <div class="schema-form-header">
-            <el-form-item label="架构名称">
-              <el-input v-model="form.name" placeholder="架构唯一标识 (如: UserList)" />
-            </el-form-item>
-            <el-row>
-              <el-col :span="12">
-                <el-form-item label="关联实体">
-                  <el-select v-model="form.entityId" placeholder="请选择实体" style="width: 100%" @change="handleEntityChange">
-                    <el-option
-                      v-for="item in entityList"
-                      :key="item._id"
-                      :label="item.name"
-                      :value="item._id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="关联视图">
-                  <el-select v-model="form.viewId" placeholder="请选择视图" style="width: 100%" :disabled="!form.entityId">
-                    <el-option
-                      v-for="item in filteredViewList"
-                      :key="item._id"
-                      :label="item.name"
-                      :value="item._id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            
-            <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: bold;">代码编辑</span>
-                <el-button type="primary" link @click="generateCode" :disabled="!form.viewId">根据视图生成代码</el-button>
+      <!-- Built-in Editor Slot -->
+      <template #edit-form="{ model, isEdit }">
+        <div class="schema-drawer-content">
+          <el-form :model="model" label-width="100px" class="schema-form-flex">
+            <div class="schema-form-header">
+              <el-form-item label="架构名称">
+                <el-input v-model="model.name" placeholder="架构唯一标识 (如: UserList)" />
+              </el-form-item>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="关联实体">
+                    <el-select v-model="model.entityId" placeholder="请选择实体" style="width: 100%" @change="handleEntityChange(model)">
+                      <el-option
+                        v-for="item in entityList"
+                        :key="item._id"
+                        :label="item.name"
+                        :value="item._id"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="关联视图">
+                    <el-select v-model="model.viewId" placeholder="请选择视图" style="width: 100%" :disabled="!model.entityId">
+                      <el-option
+                        v-for="item in getFilteredViewList(model.entityId)"
+                        :key="item._id"
+                        :label="item.name"
+                        :value="item._id"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              
+              <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-weight: bold;">代码编辑</span>
+                  <div style="display: flex; align-items: center;">
+                      <span v-if="hasError" style="color: #f56c6c; margin-right: 15px; font-size: 14px;">
+                          <el-icon style="vertical-align: middle"><Warning /></el-icon> 代码存在语法错误
+                      </span>
+                      <el-button type="primary" link @click="generateCode(model)" :disabled="!model.viewId">根据视图生成代码</el-button>
+                  </div>
+              </div>
             </div>
-          </div>
 
-          <el-tabs v-model="activeTab" type="border-card" class="code-tabs">
-            <el-tab-pane label="Template" name="template">
-              <template #label>
-                  Template <el-badge :value="errors.template.length" type="danger" v-if="errors.template.length > 0" />
-              </template>
-              <div class="editor-container">
-                  <vue-monaco-editor
-                      v-model:value="form.vue.template"
-                      theme="vs-dark"
-                      language="html"
-                      :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
-                      height="100%"
-                      @validate="(markers) => handleValidate(markers, 'template')"
-                  />
-              </div>
-            </el-tab-pane>
-            <el-tab-pane label="Script" name="script">
-              <template #label>
-                  Script <el-badge :value="errors.script.length" type="danger" v-if="errors.script.length > 0" />
-              </template>
-              <div class="editor-container">
-                  <vue-monaco-editor
-                      v-model:value="form.vue.script"
-                      theme="vs-dark"
-                      language="javascript"
-                      :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
-                      height="100%"
-                      @validate="(markers) => handleValidate(markers, 'script')"
-                  />
-              </div>
-            </el-tab-pane>
-            <el-tab-pane label="Style" name="style">
-              <template #label>
-                  Style <el-badge :value="errors.style.length" type="danger" v-if="errors.style.length > 0" />
-              </template>
-              <div class="editor-container">
-                  <vue-monaco-editor
-                      v-model:value="form.vue.style"
-                      theme="vs-dark"
-                      language="css"
-                      :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
-                      height="100%"
-                      @validate="(markers) => handleValidate(markers, 'style')"
-                  />
-              </div>
-            </el-tab-pane>
-          </el-tabs>
-
-        </el-form>
-      </div>
-      <template #footer>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span v-if="hasError" style="color: #f56c6c; margin-right: 10px;">
-                <el-icon><Warning /></el-icon> 代码存在语法错误
-            </span>
-            <div>
-                <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="submitForm" :loading="submitting" :disabled="hasError">确定</el-button>
-            </div>
+            <el-tabs v-model="activeTab" type="border-card" class="code-tabs">
+              <el-tab-pane label="Template" name="template">
+                <template #label>
+                    Template <el-badge :value="errors.template.length" type="danger" v-if="errors.template.length > 0" />
+                </template>
+                <div class="editor-container">
+                    <vue-monaco-editor
+                        v-model:value="model.vue.template"
+                        theme="vs-dark"
+                        language="html"
+                        :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
+                        height="100%"
+                        @validate="(markers) => handleValidate(markers, 'template')"
+                    />
+                </div>
+              </el-tab-pane>
+              <el-tab-pane label="Script" name="script">
+                <template #label>
+                    Script <el-badge :value="errors.script.length" type="danger" v-if="errors.script.length > 0" />
+                </template>
+                <div class="editor-container">
+                    <vue-monaco-editor
+                        v-model:value="model.vue.script"
+                        theme="vs-dark"
+                        language="javascript"
+                        :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
+                        height="100%"
+                        @validate="(markers) => handleValidate(markers, 'script')"
+                    />
+                </div>
+              </el-tab-pane>
+              <el-tab-pane label="Style" name="style">
+                <template #label>
+                    Style <el-badge :value="errors.style.length" type="danger" v-if="errors.style.length > 0" />
+                </template>
+                <div class="editor-container">
+                    <vue-monaco-editor
+                        v-model:value="model.vue.style"
+                        theme="vs-dark"
+                        language="css"
+                        :options="{ automaticLayout: true, scrollBeyondLastLine: false, mouseWheelZoom: true, minimap: { enabled: false } }"
+                        height="100%"
+                        @validate="(markers) => handleValidate(markers, 'style')"
+                    />
+                </div>
+              </el-tab-pane>
+            </el-tabs>
+          </el-form>
         </div>
       </template>
-    </el-dialog>
+
+      <!-- Built-in Viewer Slot -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="100px" disabled>
+          <el-form-item label="架构名称"><el-input v-model="model.name" /></el-form-item>
+          <el-row>
+            <el-col :span="12">
+               <el-form-item label="关联实体">
+                  <el-select v-model="model.entityId" style="width: 100%">
+                    <el-option v-for="item in entityList" :key="item._id" :label="item.name" :value="item._id" />
+                  </el-select>
+               </el-form-item>
+            </el-col>
+            <el-col :span="12">
+               <el-form-item label="关联视图">
+                  <el-select v-model="model.viewId" style="width: 100%">
+                    <el-option v-for="item in getFilteredViewList(model.entityId)" :key="item._id" :label="item.name" :value="item._id" />
+                  </el-select>
+               </el-form-item>
+            </el-col>
+          </el-row>
+          <div style="margin-top: 20px;">
+             <h3>Template</h3>
+             <el-input v-model="model.vue.template" type="textarea" :rows="10" />
+             <h3>Script</h3>
+             <el-input v-model="model.vue.script" type="textarea" :rows="10" />
+             <h3>Style</h3>
+             <el-input v-model="model.vue.style" type="textarea" :rows="10" />
+          </div>
+        </el-form>
+      </template>
+    </ProTable>
 </div>
         `,
         script: `
@@ -816,24 +761,10 @@ const getViewListAll = () => request.get('/core/sys_view', { params: { pageSize:
 
 // State
 const proTable = ref();
-const dialogVisible = ref(false);
-const submitting = ref(false);
-const isEdit = ref(false);
 const activeTab = ref('template');
 const initParam = reactive({});
 const entityList = ref([]);
 const viewList = ref([]);
-
-const form = ref({
-  name: '',
-  entityId: '',
-  viewId: '',
-  vue: {
-    template: '',
-    script: '',
-    style: ''
-  }
-});
 
 // Validation
 const errors = reactive({ template: [], script: [], style: [] });
@@ -843,19 +774,18 @@ const handleValidate = (markers, type) => {
     errors[type] = markers.filter(marker => marker.severity === 8); // Error = 8
 };
 
-// Computed
-const filteredViewList = computed(() => {
-  if (!form.value.entityId) return [];
-  return viewList.value.filter(v => v.entityId === form.value.entityId);
-});
+// Computed Helpers
+const getFilteredViewList = (entityId) => {
+  if (!entityId) return [];
+  return viewList.value.filter(v => v.entityId === entityId);
+};
 
 // Columns
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
   { prop: 'name', label: '架构名称', width: 200, search: { el: 'input' } },
   { prop: 'entityId', label: '关联实体',},
-  { prop: 'viewId', label: '关联视图', },
-  { prop: 'operation', label: '操作', fixed: 'right' }
+  { prop: 'viewId', label: '关联视图', }
 ];
 
 const getTableList = async (params) => {
@@ -884,59 +814,43 @@ onMounted(async () => {
 });
 
 // Actions
-const handleAdd = () => {
-  isEdit.value = false;
-  form.value = { 
-    name: '', 
-    entityId: '', 
-    viewId: '', 
-    vue: { template: '', script: '', style: '' } 
-  };
+const openAdd = () => {
   errors.template = []; errors.script = []; errors.style = [];
-  dialogVisible.value = true;
+  activeTab.value = 'template';
+  proTable.value?.openAdd();
 };
 
-const handleEdit = (row) => {
-  isEdit.value = true;
-  form.value = { ...row };
-  // Ensure vue object exists
-  if (!form.value.vue) form.value.vue = { template: '', script: '', style: '' };
-  errors.template = []; errors.script = []; errors.style = [];
-  dialogVisible.value = true;
+const handleEntityChange = (model) => {
+  model.viewId = '';
 };
 
-const handleEntityChange = () => {
-  form.value.viewId = '';
-};
-
-const generateCode = () => {
+const generateCode = (model) => {
   // Mock generation logic based on view type
-  const view = viewList.value.find(v => v._id === form.value.viewId);
-  const entity = entityList.value.find(e => e._id === form.value.entityId);
+  const view = viewList.value.find(v => v._id === model.viewId);
+  const entity = entityList.value.find(e => e._id === model.entityId);
   
   if (!view || !entity) return;
 
   if (view.type === 'list') {
-    form.value.vue.template = \`
+    model.vue.template = \`
 <div class="page-container">
   <ProTable
-    ref="proTable"
-    :columns="columns"
-    :requestApi="getTableList"
-    row-key="_id"
-  >
-    <template #tableHeader>
-      <el-button type="primary" :icon="CirclePlus" @click="handleAdd">新增</el-button>
-    </template>
-    <template #operation="{ row }">
-      <el-button link type="primary" :icon="EditPen" @click="handleEdit(row)">编辑</el-button>
-      <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
-    </template>
-  </ProTable>
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :operation="{ edit: true, delete: true, mode: 'hover' }"
+      @edit="handleEdit"
+      @delete="handleDelete"
+      row-key="_id"
+    >
+      <template #tableHeader>
+        <el-button type="primary" :icon="CirclePlus" @click="handleAdd">新增</el-button>
+      </template>
+    </ProTable>
   <!-- Add Dialog Here -->
 </div>
 \`;
-    form.value.vue.script = \`
+    model.vue.script = \`
 import { ref, reactive } from 'vue';
 import { CirclePlus, Delete, EditPen } from '@element-plus/icons-vue';
 import request from 'app-request';
@@ -952,65 +866,50 @@ const deleteApi = (id) => request.delete(apiPrefix + '/' + id);
 const proTable = ref();
 const columns = [
   // Define columns based on entity fields if available
-  { prop: 'name', label: 'Name' }, // Example
-  { prop: 'operation', label: '操作', fixed: 'right', width: 180 }
+  { prop: 'name', label: 'Name' } // Example
 ];
 
 const handleAdd = () => { /* ... */ };
 const handleEdit = (row) => { /* ... */ };
 const handleDelete = async (row) => { /* ... */ };
 \`;
-    form.value.vue.style = \`.page-container { padding: 20px; }\`;
+    model.vue.style = \`.page-container { padding: 20px; }\`;
   }
   
   ElMessage.success('代码已生成 (示例)');
 };
 
-const handleDelete = async (row) => {
+const submitForm = async (formData, done) => {
   try {
-    await ElMessageBox.confirm(\`确定删除架构 "<strong>\${row.name}</strong>" 吗？\`, '提示', { 
-      type: 'warning',
-      dangerouslyUseHTMLString: true
-    });
-    await deleteSchema(row._id);
-    ElMessage.success('删除成功');
-    proTable.value?.getTableList();
-  } catch (e) {}
-};
-
-const submitForm = async () => {
-  submitting.value = true;
-  try {
-    if (!form.value.name) {
+    if (!formData.name) {
        ElMessage.warning('架构名称不能为空');
+       done();
+       return;
+    }
+    
+    if (hasError.value) {
+       ElMessage.error('代码存在语法错误，请修正后再提交');
+       done();
        return;
     }
 
-    if (isEdit.value) {
-      await updateSchema(form.value._id, form.value);
+    if (formData._id) {
+      await updateSchema(formData._id, formData);
       ElMessage.success('更新成功');
     } else {
-      await createSchema(form.value);
+      await createSchema(formData);
       ElMessage.success('创建成功');
     }
-    dialogVisible.value = false;
-    proTable.value?.getTableList();
+    done();
   } catch (e) {
     console.error(e);
-  } finally {
-    submitting.value = false;
+    done();
   }
 };
         `,
         style: `
 .page-container { padding: 20px; }
-.schema-edit-dialog {
-  height: 90vh;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 0 !important;
-}
-.schema-edit-dialog .el-dialog__body {
+.schema-edit-drawer .el-drawer__body {
   flex: 1;
   min-height: 0;
   padding: 10px 20px;
@@ -1018,7 +917,7 @@ const submitForm = async () => {
   display: flex;
   flex-direction: column;
 }
-.schema-dialog-content {
+.schema-drawer-content {
   height: 100%;
   overflow: hidden;
   display: flex;

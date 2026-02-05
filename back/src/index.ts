@@ -15,7 +15,7 @@ async function start() {
     await connectRedis();
     
     // 初始化超级管理员
-    await AuthService.initSuperAdmin();
+    // await AuthService.initSuperAdmin();
     
     // 初始化测试数据 (Schema & Menu)
     await DataInitializer.initTestSchemaAndMenu();
