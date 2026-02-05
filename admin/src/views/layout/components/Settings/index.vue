@@ -82,19 +82,28 @@
       </div>
     </div>
 
+    <!-- Watermark Settings -->
     <div class="setting-item">
-      <span class="label">显示水印</span>
-      <el-switch v-model="settingStore.showWatermark" @change="(val) => settingStore.setWatermark(val as boolean)" />
-    </div>
-    
-    <div class="setting-item" v-if="settingStore.showWatermark">
-      <span class="label">水印内容</span>
-      <el-input v-model="settingStore.watermarkText" @input="(val) => settingStore.setWatermark(true, val as string)" />
+      <div class="label">水印配置</div>
+      <el-switch v-model="settingStore.showWatermark" active-text="开启水印" />
+      <el-input 
+        v-if="settingStore.showWatermark" 
+        v-model="settingStore.watermarkText" 
+        placeholder="水印文本" 
+        style="margin-top: 10px" 
+      />
+      <el-switch 
+        v-if="settingStore.showWatermark"
+        v-model="settingStore.watermarkShowTime" 
+        active-text="显示时间"
+        style="margin-top: 10px"
+      />
     </div>
 
-    <div class="setting-item" v-if="settingStore.showWatermark">
-      <span class="label">显示时间</span>
-      <el-switch v-model="settingStore.watermarkShowTime" @change="(val) => settingStore.setWatermark(true, undefined, val as boolean)" />
+    <!-- Debug Settings (Only for Admin) -->
+    <div class="setting-item" v-if="userStore.userInfo?.username === 'admin'">
+      <div class="label">调试配置</div>
+      <el-switch v-model="settingStore.showDebugDrawer" active-text="开启调试抽屉" />
     </div>
 
   </el-drawer>
@@ -103,10 +112,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useSettingStore, type ThemeColor } from '@/store/setting';
+import { useUserStore } from '@/store/user';
 import { Check, CircleCheckFilled } from '@element-plus/icons-vue';
 
 const visible = ref(false);
 const settingStore = useSettingStore();
+const userStore = useUserStore();
 
 const themeColors: { value: ThemeColor; hex: string }[] = [
   { value: 'default', hex: '#409EFF' },

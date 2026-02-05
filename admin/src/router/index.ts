@@ -15,7 +15,8 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: () => import('../components/HelloWorld.vue')
+        component: () => import('../components/HelloWorld.vue'),
+        meta: { title: '首页', icon: 'House' }
       }
     ]
   }

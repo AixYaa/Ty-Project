@@ -193,6 +193,39 @@
       :class="formConfig.class"
     >
       <div class="drawer-content" :style="formConfig.contentStyle">
+         <!-- Debug Info -->
+         <div v-if="settingStore.showDebugDrawer && userStore.userInfo?.username === 'admin'" class="debug-info-box">
+            <div class="debug-header" @click="isDebugExpanded = !isDebugExpanded">
+              <span class="debug-title">
+                <el-icon class="debug-icon"><Monitor /></el-icon>
+                API 数据预览
+              </span>
+              <el-icon :class="{ 'is-expanded': isDebugExpanded }" class="expand-icon"><ArrowRight /></el-icon>
+            </div>
+            <el-collapse-transition>
+              <div v-show="isDebugExpanded" class="monaco-wrapper">
+                <VueMonacoEditor
+                  :value="debugJsonStr"
+                  language="json"
+                  theme="vs"
+                  :options="{
+                    readOnly: true,
+                    domReadOnly: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    fontSize: 12,
+                    lineNumbers: 'off',
+                    renderLineHighlight: 'none',
+                    contextmenu: false,
+                    folding: true
+                  }"
+                  height="200px"
+                />
+              </div>
+            </el-collapse-transition>
+         </div>
+
          <slot name="edit-form" :model="editor.formData" :is-edit="editor.isEdit"></slot>
       </div>
       <template #footer>
@@ -214,14 +247,56 @@
           <slot name="view-form" :model="viewer.data"></slot>
        </div>
     </el-dialog>
+
+    <!-- Global API Debug Button (Floating) -->
+    <div 
+      v-if="settingStore.showDebugDrawer && userStore.userInfo?.username === 'admin'" 
+      class="global-debug-float-btn"
+      @click="showApiDebug = true"
+    >
+      <el-icon><Cpu /></el-icon>
+    </div>
+
+    <!-- API Debug Drawer -->
+    <el-drawer
+      v-model="showApiDebug"
+      title="当前表格数据 (API Debug)"
+      direction="rtl"
+      size="500px"
+      append-to-body
+    >
+      <div class="monaco-full-height">
+        <VueMonacoEditor
+          :value="tableDataJsonStr"
+          language="json"
+          theme="vs"
+          :options="{
+            readOnly: true,
+            domReadOnly: true,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            fontSize: 12,
+            lineNumbers: 'on',
+            renderLineHighlight: 'none',
+            contextmenu: false,
+            folding: true
+          }"
+          style="height: 100%;"
+        />
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { Search, Delete, Refresh, View, EditPen } from '@element-plus/icons-vue';
+import { Search, Delete, Refresh, View, EditPen, Monitor, ArrowRight, Cpu } from '@element-plus/icons-vue';
 import type { ProTableColumn, Pageable } from './interface';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { useSettingStore } from '@/store/setting';
+import { useUserStore } from '@/store/user';
+import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 
 // Props
 const props = withDefaults(defineProps<{
@@ -254,6 +329,9 @@ const props = withDefaults(defineProps<{
 // Emits
 const emit = defineEmits(['view', 'edit', 'delete', 'submit']);
 
+const settingStore = useSettingStore();
+const userStore = useUserStore();
+
 // State
 const tableRef = ref();
 const searchFormRef = ref();
@@ -262,6 +340,19 @@ const tableData = ref<any[]>([]);
 const searchParam = reactive<any>({ ...props.initParam });
 const selectedList = ref<any[]>([]);
 const selectedIds = computed(() => selectedList.value.map(item => item[props.rowKey]));
+
+// Debug Json
+const debugJsonStr = computed(() => JSON.stringify(editor.formData, null, 2));
+const isDebugExpanded = ref(false);
+
+// Table Data Debug
+const showApiDebug = ref(false);
+const tableDataJsonStr = computed(() => JSON.stringify({
+  list: tableData.value,
+  total: pageable.total,
+  pageNum: pageable.pageNum,
+  pageSize: pageable.pageSize
+}, null, 2));
 
 // Built-in Editor/Viewer State
 const editor = reactive({
@@ -579,5 +670,82 @@ defineExpose({
   overflow: visible !important;
   padding: 0 !important;
   position: static !important; /* Allow absolute child to align with row */
+}
+
+.debug-info-box {
+  margin-bottom: 20px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #dcdfe6;
+  background-color: #fff;
+}
+
+.debug-header {
+  background-color: #f5f7fa;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #606266;
+  border-bottom: 1px solid #ebeef5;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.debug-header:hover {
+  background-color: #e6e8eb;
+}
+
+.debug-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.expand-icon {
+  transition: transform 0.3s;
+  color: #909399;
+}
+
+.expand-icon.is-expanded {
+  transform: rotate(90deg);
+}
+
+.monaco-wrapper {
+  height: 200px;
+  border-top: 1px solid #ebeef5;
+}
+
+.global-debug-float-btn {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background-color: #67c23a;
+  border-radius: 4px 0 0 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 999;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+  color: #fff;
+  font-size: 20px;
+  transition: all 0.3s;
+}
+
+.global-debug-float-btn:hover {
+  background-color: #85ce61;
+  width: 50px;
+}
+
+.monaco-full-height {
+  height: 100%;
+  border: 1px solid #dcdfe6;
 }
 </style>

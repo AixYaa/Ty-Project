@@ -18,6 +18,10 @@ export const useSettingStore = defineStore('setting', () => {
   const watermarkText = ref('Aix Admin');
   const watermarkShowTime = ref(false);
 
+  // Debug Config
+  const showDebugDrawer = ref(false);
+  const debugDrawerVisible = ref(false); // Controls the drawer open/close state
+
   // Actions
   const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
@@ -47,6 +51,14 @@ export const useSettingStore = defineStore('setting', () => {
     if (showTime !== undefined) watermarkShowTime.value = showTime;
   };
 
+  const setDebugDrawer = (show: boolean) => {
+    showDebugDrawer.value = show;
+  };
+
+  const toggleDebugDrawer = () => {
+    debugDrawerVisible.value = !debugDrawerVisible.value;
+  };
+
   // Helper to update CSS variables
   const updateTheme = () => {
     const el = document.documentElement;
@@ -69,10 +81,14 @@ export const useSettingStore = defineStore('setting', () => {
     showWatermark,
     watermarkText,
     watermarkShowTime,
+    showDebugDrawer,
+    debugDrawerVisible,
     toggleCollapse,
     setLayoutMode,
     setThemeColor,
-    setWatermark
+    setWatermark,
+    setDebugDrawer,
+    toggleDebugDrawer
   };
 }, {
   persist: true

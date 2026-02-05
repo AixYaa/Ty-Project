@@ -11,6 +11,8 @@
         管理平台
       </div>
 
+      <Breadcrumb v-if="showBreadcrumb" />
+
       <!-- Horizontal Menu -->
       <div v-if="showMenu" class="horizontal-menu-wrapper">
         <Menu mode="horizontal" />
@@ -35,6 +37,7 @@ import { useUserStore } from '@/store/user';
 import { useSettingStore } from '@/store/setting';
 import { Fold, Expand, Setting } from '@element-plus/icons-vue';
 import Menu from './Menu.vue';
+import Breadcrumb from './Breadcrumb.vue';
 
 const emit = defineEmits(['openSettings']);
 const router = useRouter();
@@ -46,6 +49,10 @@ const isVertical = computed(() => settingStore.layoutMode === 'vertical');
 const showCollapse = computed(() => ['vertical', 'classic', 'columns'].includes(settingStore.layoutMode));
 const showLogo = computed(() => ['classic', 'transverse'].includes(settingStore.layoutMode));
 const showMenu = computed(() => settingStore.layoutMode === 'transverse');
+const showBreadcrumb = computed(() => !['transverse'].includes(settingStore.layoutMode)); // Hide breadcrumb in transverse mode if space is tight, or keep it? Usually vertical layouts need it more. Let's keep it generally but maybe hide in transverse if it conflicts. actually, let's just show it unless user says otherwise, or maybe stick to common patterns. In transverse, menu is on top. Breadcrumb below? Or in content?
+// Usually breadcrumb is in header for vertical layouts.
+// For now I will show it when not in transverse mode, as transverse usually has the menu there.
+
 
 const handleLogout = async () => {
   await userStore.logout();
