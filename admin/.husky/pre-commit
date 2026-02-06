@@ -1,1 +1,3 @@
+#!/bin/sh
+cd admin
 npx lint-staged
