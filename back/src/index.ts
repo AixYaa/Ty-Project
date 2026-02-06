@@ -14,17 +14,11 @@ async function start() {
     await connectMongo();
     await connectRedis();
     
-    // 初始化超级管理员
-    await AuthService.initSuperAdmin();
-    
-    // 初始化测试数据 (Schema & Menu)
-    await DataInitializer.initTestSchemaAndMenu();
-    
-    // 初始化系统管理页面架构
-    await DataInitializer.initSysManagementSchemas();
-    
-    // 初始化默认角色
-    await DataInitializer.initDefaultRoles();
+    // 初始化默认用户 admin password123 初始化测试数据 初始化系统管理页面架构 初始化默认角色
+    // await AuthService.initSuperAdmin();
+    // await DataInitializer.initTestSchemaAndMenu();
+    // await DataInitializer.initSysManagementSchemas();
+    // await DataInitializer.initDefaultRoles();
 
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

@@ -35,7 +35,7 @@ const menuTextColor = computed(() => {
   flex-direction: column;
   background-color: v-bind(menuBgColor);
   transition: width 0.3s;
-  width: 210px;
+  width: 260px;
   border-right: 1px solid #dcdfe6;
 }
 

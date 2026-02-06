@@ -1,0 +1,142 @@
+{
+  "column": {
+    "avatar": "Avatar",
+    "bindSchema": "Bind Schema",
+    "createTime": "Created At",
+    "description": "Description",
+    "entityName": "Entity Name",
+    "enUS": "English",
+    "icon": "Icon",
+    "key": "Key",
+    "menuName": "Menu Name",
+    "name": "Name",
+    "password": "Password",
+    "relatedEntity": "Related Entity",
+    "relatedView": "Related View",
+    "resetPassword": "Reset Password",
+    "role": "Role",
+    "roleCode": "Role Code",
+    "roleName": "Role Name",
+    "routePath": "Route Path",
+    "schemaName": "Schema Name",
+    "sort": "Sort",
+    "status": "Status",
+    "username": "Username",
+    "viewName": "View Name",
+    "viewType": "View Type",
+    "zhCN": "Chinese"
+  },
+  "common": {
+    "add": "Add",
+    "back": "Back",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "home": "Home",
+    "loading": "Loading...",
+    "nameAndCodeRequired": "Name and Code cannot be empty",
+    "nameAndEntityRequired": "Name and Entity cannot be empty",
+    "notEmpty": "{name} cannot be empty",
+    "operation": "Actions",
+    "passwordPlaceholder": "Leave empty to keep unchanged",
+    "pleaseInput": "Please enter",
+    "pleaseSelect": "Please select",
+    "reset": "Reset",
+    "search": "Search",
+    "statusUpdated": "Status updated successfully",
+    "submit": "Submit",
+    "view": "View",
+    "warning": "Warning"
+  },
+  "dashboard": {
+    "overview": "This is your dashboard overview."
+  },
+  "error": {
+    "403": "Sorry, you are not authorized to access this page.",
+    "404": "Sorry, the page you visited does not exist.",
+    "500": "Sorry, something went wrong on the server.",
+    "backToHome": "Back to Home"
+  },
+  "header": {
+    "confirmLogout": "Are you sure to logout?",
+    "exitFullscreen": "Exit Fullscreen",
+    "fullscreen": "Fullscreen",
+    "languageChanged": "Language switched to {lang}",
+    "logout": "Logout",
+    "switchLanguage": "Switch Language",
+    "tip": "Tip"
+  },
+  "i18n": {
+    "confirmDeleteKey": "Are you sure to delete this key?",
+    "keyRequired": "Key cannot be empty",
+    "duplicateKeys": "Duplicate keys exist",
+    "saveSuccess": "Saved successfully",
+    "saveFailed": "Failed to save"
+  },
+  "login": {
+    "loginBtn": "Login",
+    "password": "Password",
+    "placeholder": {
+      "password": "Enter password",
+      "username": "Enter username"
+    },
+    "subTitle": "Please enter your account details",
+    "success": "Login Successful",
+    "tips": {
+      "inputRequired": "Please enter username and password"
+    },
+    "title": "Welcome Back",
+    "username": "Username"
+  },
+  "menu": {
+    "basicInfo": "Basic Info",
+    "parentMenu": "Parent Menu",
+    "rolePermission": "Role Permission",
+    "system": {
+      "center": "Management Center",
+      "entity": "Entity Management",
+      "i18n": "Language Management",
+      "management": "System Management",
+      "menu": "Menu Management",
+      "role": "Role Management",
+      "schema": "Schema Management",
+      "user": "User Management",
+      "view": "View Management"
+    },
+    "test": {
+      "dynamic": "Dynamic Test"
+    },
+    "visibleRoles": "Visible Roles",
+    "visibleRolesPlaceholder": "Select roles (Empty means visible to all)"
+  },
+  "schema": {
+    "codeEdit": "Code Edit",
+    "fixSyntaxError": "Code contains syntax errors, please fix before submitting",
+    "generateCode": "Generate Code from View",
+    "syntaxError": "Syntax Error"
+  },
+  "status": {
+    "disabled": "Disabled",
+    "enabled": "Enabled"
+  },
+  "system": {
+    "subTitle": "Enterprise Admin System",
+    "title": "Aix Admin",
+    "welcome": "Welcome to Admin Platform"
+  },
+  "table": {
+    "add": "Add {name}",
+    "addSubMenu": "Add Sub Menu",
+    "batchDeleteSuccess": "Batch deleted successfully",
+    "confirmBatchDelete": "Are you sure you want to delete <span style=\"color:red;font-weight:bold\">{count}</span> items?<br/>This action cannot be undone!",
+    "confirmDelete": "Are you sure you want to delete \"{name}\"?<br/>This action cannot be undone!",
+    "deleteSuccess": "Deleted successfully",
+    "edit": "Edit {name}",
+    "view": "View {name}"
+  },
+  "view": {
+    "formView": "Form View",
+    "listView": "List View"
+  }
+}

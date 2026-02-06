@@ -1,0 +1,142 @@
+{
+  "column": {
+    "avatar": "头像",
+    "bindSchema": "绑定架构",
+    "createTime": "创建时间",
+    "description": "描述",
+    "entityName": "实体名称",
+    "enUS": "英文",
+    "icon": "图标",
+    "key": "键名",
+    "menuName": "菜单名称",
+    "name": "姓名",
+    "password": "密码",
+    "relatedEntity": "关联实体",
+    "relatedView": "关联视图",
+    "resetPassword": "重置密码",
+    "role": "角色",
+    "roleCode": "角色标识",
+    "roleName": "角色名称",
+    "routePath": "路由路径",
+    "schemaName": "架构名称",
+    "sort": "排序",
+    "status": "状态",
+    "username": "用户名",
+    "viewName": "视图名称",
+    "viewType": "视图类型",
+    "zhCN": "中文"
+  },
+  "common": {
+    "add": "新增",
+    "back": "返回",
+    "cancel": "取消",
+    "confirm": "确定",
+    "delete": "删除",
+    "edit": "编辑",
+    "home": "首页",
+    "loading": "加载中...",
+    "nameAndCodeRequired": "名称和标识不能为空",
+    "nameAndEntityRequired": "名称和实体不能为空",
+    "notEmpty": "{name}不能为空",
+    "operation": "操作",
+    "passwordPlaceholder": "留空则不修改",
+    "pleaseInput": "请输入",
+    "pleaseSelect": "请选择",
+    "reset": "重置",
+    "search": "搜索",
+    "statusUpdated": "状态更新成功",
+    "submit": "提交",
+    "view": "查看",
+    "warning": "警告"
+  },
+  "dashboard": {
+    "overview": "这是您的仪表盘首页。"
+  },
+  "error": {
+    "403": "抱歉，您无权访问该页面",
+    "404": "抱歉，您访问的页面不存在",
+    "500": "抱歉，服务器出错了",
+    "backToHome": "返回首页"
+  },
+  "header": {
+    "confirmLogout": "确认退出登录吗？",
+    "exitFullscreen": "退出全屏",
+    "fullscreen": "全屏",
+    "languageChanged": "已切换语言至 {lang}",
+    "logout": "退出登录",
+    "switchLanguage": "切换语言",
+    "tip": "提示"
+  },
+  "i18n": {
+    "confirmDeleteKey": "确定删除这个键吗？",
+    "keyRequired": "键名不能为空",
+    "duplicateKeys": "存在重复的键名",
+    "saveSuccess": "保存成功",
+    "saveFailed": "保存失败"
+  },
+  "login": {
+    "loginBtn": "登 录",
+    "password": "密码",
+    "placeholder": {
+      "password": "请输入密码",
+      "username": "请输入用户名"
+    },
+    "subTitle": "请输入您的账号和密码",
+    "success": "登录成功",
+    "tips": {
+      "inputRequired": "请输入用户名和密码"
+    },
+    "title": "欢迎登录",
+    "username": "用户名"
+  },
+  "menu": {
+    "basicInfo": "基本信息",
+    "parentMenu": "父菜单",
+    "rolePermission": "角色权限",
+    "system": {
+      "center": "管理中心",
+      "entity": "实体管理",
+      "i18n": "国际化管理",
+      "management": "系统管理",
+      "menu": "菜单管理",
+      "role": "角色管理",
+      "schema": "架构管理",
+      "user": "用户管理",
+      "view": "视图管理"
+    },
+    "test": {
+      "dynamic": "动态测试"
+    },
+    "visibleRoles": "可见角色",
+    "visibleRolesPlaceholder": "请选择可见角色 (留空则所有角色可见)"
+  },
+  "schema": {
+    "codeEdit": "代码编辑",
+    "fixSyntaxError": "代码存在语法错误，请修正后再提交",
+    "generateCode": "根据视图生成代码",
+    "syntaxError": "代码存在语法错误"
+  },
+  "status": {
+    "disabled": "禁用",
+    "enabled": "启用"
+  },
+  "system": {
+    "subTitle": "企业级后台管理系统",
+    "title": "Aix Admin",
+    "welcome": "欢迎使用管理平台"
+  },
+  "table": {
+    "add": "新增{name}",
+    "addSubMenu": "新增子菜单",
+    "batchDeleteSuccess": "批量删除成功",
+    "confirmBatchDelete": "确定删除选中的 <span style=\"color:red;font-weight:bold\">{count}</span> 项吗？<br/>此操作不可恢复！",
+    "confirmDelete": "确定删除 \"{name}\" 吗？<br/>此操作不可恢复！",
+    "deleteSuccess": "删除成功",
+    "edit": "编辑{name}",
+    "view": "查看{name}"
+  },
+  "view": {
+    "formView": "表单视图 (Form)",
+    "listView": "列表视图 (List)"
+  }
+}

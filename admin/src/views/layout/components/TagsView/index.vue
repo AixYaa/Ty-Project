@@ -1,6 +1,10 @@
 <template>
-  <div class="tags-view-container">
-    <el-scrollbar class="tags-view-wrapper">
+  <div :class="['tags-view-container', `style-${tagsViewStyle}`]">
+    <el-scrollbar 
+      ref="scrollContainer" 
+      class="tags-view-wrapper" 
+      @wheel.prevent="handleScroll"
+    >
       <router-link
         v-for="tag in visitedViews"
         :key="tag.path"
@@ -31,19 +35,32 @@
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTagsViewStore, type TagView } from '@/store/tagsView';
+import { useSettingStore } from '@/store/setting';
 import { Close } from '@element-plus/icons-vue';
 import { storeToRefs } from 'pinia';
 
 const route = useRoute();
 const router = useRouter();
 const tagsViewStore = useTagsViewStore();
+const settingStore = useSettingStore();
 const { visitedViews } = storeToRefs(tagsViewStore);
+const { tagsViewStyle } = storeToRefs(settingStore);
 
 const visible = ref(false);
 const top = ref(0);
 const left = ref(0);
 const selectedTag = ref<any>({});
 const affixTags = ref<any[]>([]);
+const scrollContainer = ref();
+
+const handleScroll = (e: WheelEvent) => {
+  if (scrollContainer.value) {
+    const wrap = scrollContainer.value.wrapRef;
+    if (wrap) {
+      wrap.scrollLeft += e.deltaY;
+    }
+  }
+};
 
 const isActive = (tag: any) => {
   return tag.path === route.path;
@@ -272,6 +289,68 @@ onMounted(() => {
     &:hover {
       background: #f5f7fa;
       color: var(--el-color-primary);
+    }
+  }
+}
+
+/* Style Overrides */
+
+/* Google Style */
+.style-google {
+  .tags-view-item {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    margin: 0 2px;
+    height: 32px;
+    line-height: 32px;
+    margin-top: 6px;
+    background-color: #f0f2f5;
+    color: #909399;
+
+    &:first-of-type {
+      margin-left: 15px;
+    }
+
+    &:hover {
+      background-color: #e6e6e6;
+      color: #303133;
+    }
+
+    &.active {
+      background-color: #fff;
+      color: var(--el-color-primary);
+      position: relative;
+      box-shadow: none;
+      
+      &::before {
+        display: none;
+      }
+    }
+  }
+}
+
+/* Smooth Style (Slider/Pill) */
+.style-smooth {
+  .tags-view-item {
+    border: none;
+    background: transparent;
+    color: #606266;
+    margin-top: 4px;
+
+    &:hover {
+      color: var(--el-color-primary);
+      background-color: var(--el-color-primary-light-9);
+    }
+
+    &.active {
+      background-color: var(--el-color-primary-light-9);
+      color: var(--el-color-primary);
+      border: 1px solid var(--el-color-primary-light-5);
+      box-shadow: none;
+
+      &::before {
+        background: var(--el-color-primary);
+      }
     }
   }
 }

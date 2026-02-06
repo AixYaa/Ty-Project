@@ -130,6 +130,15 @@
     <div class="setting-item">
       <div class="label">界面配置</div>
       <el-switch v-model="settingStore.showTagsView" active-text="多页签 (TagsView)" />
+      
+      <div class="label-row" style="margin-top: 15px;" v-if="settingStore.showTagsView">
+        <span class="label" style="margin-bottom: 0;">页签风格</span>
+        <el-select v-model="settingStore.tagsViewStyle" size="small" style="width: 100px">
+          <el-option label="谷歌" value="google" />
+          <el-option label="按钮" value="button" />
+          <el-option label="滑块" value="smooth" />
+        </el-select>
+      </div>
     </div>
 
     <!-- Debug Settings (Only for Admin) -->

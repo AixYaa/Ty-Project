@@ -51,7 +51,7 @@ export interface SysUser extends Document {
   username: string;
   password?: string;   // 加密后的密码
   name?: string;       // 真实姓名
-  avatar?: string;
+  avatar?: any;        // 头像 (String or { original, compressed })
   role?: string;       // 角色
   status?: number;     // 1: 启用, 0: 禁用
   createdAt?: Date;

@@ -2,7 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import router from './routes';
 
+import path from 'path';
+
 const app = express();
+
+// Serve static files
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // 1. 定义允许的来源 (白名单)
 // 从环境变量获取，默认为空数组

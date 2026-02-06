@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 export type LayoutMode = 'vertical' | 'classic' | 'transverse' | 'columns';
 export type ThemeColor = 'default' | 'dark' | 'blue' | 'green' | 'red' | 'purple';
+export type TagsViewStyle = 'google' | 'button' | 'smooth';
 
 export const useSettingStore = defineStore('setting', () => {
   // Layout Config
@@ -21,6 +22,7 @@ export const useSettingStore = defineStore('setting', () => {
   const watermarkText = ref('Aix Admin');
   const watermarkShowTime = ref(false);
   const showTagsView = ref(true);
+  const tagsViewStyle = ref<TagsViewStyle>('button');
 
   // Debug Config
   const showDebugDrawer = ref(false);
@@ -71,6 +73,10 @@ export const useSettingStore = defineStore('setting', () => {
     showTagsView.value = show;
   };
 
+  const setTagsViewStyle = (style: TagsViewStyle) => {
+    tagsViewStyle.value = style;
+  };
+
   const setDebugDrawer = (show: boolean) => {
     showDebugDrawer.value = show;
   };
@@ -109,6 +115,7 @@ export const useSettingStore = defineStore('setting', () => {
     watermarkText,
     watermarkShowTime,
     showTagsView,
+    tagsViewStyle,
     showDebugDrawer,
     debugDrawerVisible,
     toggleCollapse,
@@ -119,12 +126,13 @@ export const useSettingStore = defineStore('setting', () => {
     setThemeColor,
     setWatermark,
     setTagsView,
+    setTagsViewStyle,
     setDebugDrawer,
     toggleDebugDrawer,
     toggleDark
   };
 }, {
   persist: {
-    pick: ['layoutMode', 'themeColor', 'primaryColor', 'isDark', 'showWatermark', 'watermarkText', 'showTagsView']
+    pick: ['layoutMode', 'themeColor', 'primaryColor', 'isDark', 'showWatermark', 'watermarkText', 'showTagsView', 'tagsViewStyle']
   }
 });

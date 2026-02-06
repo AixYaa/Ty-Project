@@ -6,13 +6,20 @@ export const useResponsive = () => {
 
   const resizeHandler = () => {
     const width = document.body.clientWidth;
-    const isMobile = width < 992; // Bootstrap lg breakpoint or 768 for tablet? 992 is safer for sidebar layouts.
+    const isMobile = width < 992; 
     
     settingStore.setIsMobile(isMobile);
     
-    if (isMobile) {
-      // Auto close sidebar logic if needed, or just rely on layout change
-      // settingStore.isCollapse = true; // Not needed if we hide sidebar
+    // Auto collapse sidebar on tablet/small laptop screens (992px - 1200px)
+    if (!isMobile) {
+      if (width < 1200) {
+        if (!settingStore.isCollapse) settingStore.toggleCollapse();
+      } else {
+        if (settingStore.isCollapse) settingStore.toggleCollapse();
+      }
+    } else {
+       // On mobile, close sidebar drawer
+       settingStore.setMobileDrawerVisible(false);
     }
   };
 

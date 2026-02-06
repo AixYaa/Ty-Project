@@ -94,9 +94,18 @@
       </el-tabs>
       <template #footer>
         <div class="dialog-footer-content">
-          <span v-if="hasError" class="error-tip">
-            <el-icon><Warning /></el-icon> 代码存在语法错误: {{ errorSummary }}
-          </span>
+          <div class="footer-left-info">
+            <span v-if="hasError" class="error-tip">
+              <el-icon><Warning /></el-icon> 代码存在语法错误: {{ errorSummary }}
+            </span>
+            <span v-else class="context-info">
+               <el-tag size="small" type="info">User: {{ userStore.userInfo?.username }}</el-tag>
+               <el-tag size="small" type="info">Role: {{ userStore.userInfo?.roles?.join(', ') || 'user' }}</el-tag>
+               <el-tooltip content="Global variables available in template: $t, $user, $utils" placement="top">
+                  <el-icon class="info-icon"><InfoFilled /></el-icon>
+               </el-tooltip>
+            </span>
+          </div>
           <div>
             <el-button @click="editDialogVisible = false">取消</el-button>
             <el-button
@@ -114,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineAsyncComponent, shallowRef, reactive, computed } from "vue";
+import { ref, watch, defineAsyncComponent, shallowRef, reactive, computed, getCurrentInstance } from "vue";
 import { useRoute } from 'vue-router';
 import { loadModule } from "vue3-sfc-loader";
 import * as Vue from "vue";
@@ -124,7 +133,7 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import request from "@/utils/request";
 import { getSchemaById, updateSchema } from "@/api/schema";
 import { ElMessage } from "element-plus";
-import { Edit, Warning } from "@element-plus/icons-vue";
+import { Edit, Warning, InfoFilled } from "@element-plus/icons-vue";
 import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
 import * as MonacoEditor from "@guolao/vue-monaco-editor";
 import ProTable from "@/components/ProTable/index.vue";
@@ -140,6 +149,13 @@ const userStore = useUserStore();
 const currentSchemaId = computed(() => {
   return props.schemaId || (route.meta.schemaId as string) || '';
 });
+
+// Inject global properties for dynamic components
+const app = getCurrentInstance()?.appContext.app;
+if (app) {
+  app.config.globalProperties.$user = userStore;
+  // $t is already injected by vue-i18n
+}
 
 const loading = ref(false);
 const dynamicComponent = shallowRef<any>(null);
@@ -353,6 +369,21 @@ watch(
   justify-content: space-between;
   align-items: center;
   width: 100%;
+}
+.footer-left-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.context-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-icon {
+  color: #909399;
+  cursor: help;
+  font-size: 16px;
 }
 .error-tip {
   color: #f56c6c;

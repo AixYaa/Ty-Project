@@ -12,7 +12,7 @@
           v-model="settingStore.mobileDrawerVisible"
           direction="ltr"
           :with-header="false"
-          size="210px"
+          size="260px"
           class="mobile-sidebar-drawer"
         >
           <Sidebar />
@@ -39,7 +39,7 @@
         v-model="settingStore.mobileDrawerVisible"
         direction="ltr"
         :with-header="false"
-        size="210px"
+        size="260px"
         class="mobile-sidebar-drawer"
       >
         <Sidebar />
@@ -49,7 +49,7 @@
         <Sidebar />
       </el-aside>
       
-      <el-aside v-if="isColumns && !settingStore.isMobile" width="210px" class="aside">
+      <el-aside v-if="isColumns && !settingStore.isMobile" width="260px" class="aside">
         <ColumnsSidebar />
       </el-aside>
 
@@ -99,7 +99,7 @@ const isClassic = computed(() => settingStore.layoutMode === 'classic');
 const isTransverse = computed(() => settingStore.layoutMode === 'transverse');
 const isColumns = computed(() => settingStore.layoutMode === 'columns');
 
-const sidebarWidth = computed(() => settingStore.isCollapse ? '64px' : '210px');
+const sidebarWidth = computed(() => settingStore.isCollapse ? '64px' : '260px');
 
 const layoutClasses = computed(() => ({
   'layout-vertical': isVertical.value,

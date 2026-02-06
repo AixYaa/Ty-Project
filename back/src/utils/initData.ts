@@ -118,15 +118,28 @@ export class DataInitializer {
       const parentIdManage = parentMenuManage._id.toString();
 
       // --- 0.1 Initialize System Entities & Views ---
-      const entitySysMenu = await this.createOrUpdateEntity('sys_menu');
-      const entitySysEntity = await this.createOrUpdateEntity('sys_entity');
-      const entitySysView = await this.createOrUpdateEntity('sys_view');
-      const entitySysSchema = await this.createOrUpdateEntity('sys_schema');
+      const entitySysMenu = await this.createOrUpdateEntity('sys菜单');
+      const entitySysEntity = await this.createOrUpdateEntity('sys实体');
+      const entitySysView = await this.createOrUpdateEntity('sys视图');
+      const entitySysSchema = await this.createOrUpdateEntity('sys架构');
+      const entitySysUser = await this.createOrUpdateEntity('sys用户');
+      const entitySysRole = await this.createOrUpdateEntity('sys角色');
+      const entitySysI18n = await this.createOrUpdateEntity('sys国际化');
 
-      const viewSysMenu = await this.createOrUpdateView('SysMenuList', entitySysMenu._id.toString());
-      const viewSysEntity = await this.createOrUpdateView('SysEntityList', entitySysEntity._id.toString());
-      const viewSysView = await this.createOrUpdateView('SysViewList', entitySysView._id.toString());
-      const viewSysSchema = await this.createOrUpdateView('SysSchemaList', entitySysSchema._id.toString());
+      const viewSysMenu = await this.createOrUpdateView('sys菜单列表', entitySysMenu._id.toString());
+      const viewSysEntity = await this.createOrUpdateView('sys实体列表', entitySysEntity._id.toString());
+      const viewSysView = await this.createOrUpdateView('sys视图列表', entitySysView._id.toString());
+      const viewSysSchema = await this.createOrUpdateView('sys架构列表', entitySysSchema._id.toString());
+      const viewSysUser = await this.createOrUpdateView('sys用户列表', entitySysUser._id.toString());
+      const viewSysRole = await this.createOrUpdateView('sys角色列表', entitySysRole._id.toString());
+      const viewSysI18n = await this.createOrUpdateView('sys国际化列表', entitySysI18n._id.toString());
+
+      // Update Entity Names to Chinese (as requested)
+      // Note: We keep collection name (first arg) in English for best practice in DB, 
+      // but we can update the display name if the second argument of createOrUpdateEntity supports it or via update.
+      // Checking createOrUpdateEntity signature... it seems it only takes name.
+      // Let's check definition of createOrUpdateEntity in this file.
+      // Wait, I can't see the definition in previous read. Let me read the definition first.
 
       // --- 1. 菜单管理 (Menu Management) ---
       const menuSchemaCode = {
@@ -269,12 +282,12 @@ import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 const { t } = useI18n();
 // Use generic core API for menu
 const getMenuTree = () => request.get('/sys/menu/tree'); // Keep specialized tree API for now as generic one is flat list
-const createMenu = (data) => request.post('/core/sys_menu', data);
-const updateMenu = (id, data) => request.put('/core/sys_menu/' + id, data);
-const deleteMenu = (id) => request.delete('/core/sys_menu/' + id);
-const batchDeleteMenu = (ids) => request.post('/core/sys_menu/batch-delete', { ids });
-const getSchemaListAll = () => request.get('/core/sys_schema', { params: { pageSize: 1000 } });
-const getRoleListAll = () => request.get('/core/sys_role', { params: { pageSize: 1000 } });
+const createMenu = (data) => request.post('/core/sys菜单', data);
+const updateMenu = (id, data) => request.put('/core/sys菜单/' + id, data);
+const deleteMenu = (id) => request.delete('/core/sys菜单/' + id);
+const batchDeleteMenu = (ids) => request.post('/core/sys菜单/batch-delete', { ids });
+const getSchemaListAll = () => request.get('/core/sys架构', { params: { pageSize: 1000 } });
+const getRoleListAll = () => request.get('/core/sys角色', { params: { pageSize: 1000 } });
 
 // State
 const proTable = ref();
@@ -388,7 +401,7 @@ const submitForm = async (formData, done) => {
         `
       };
 
-      const menuSchema = await this.createOrUpdateSchema('SysMenuManage', '菜单管理', menuSchemaCode, entitySysMenu._id.toString(), viewSysMenu._id.toString());
+      const menuSchema = await this.createOrUpdateSchema('sys菜单管理', '菜单管理', menuSchemaCode, entitySysMenu._id.toString(), viewSysMenu._id.toString());
       await this.createOrUpdateMenu('/sys/menu', 'menu.system.menu', 'Menu', 1, menuSchema._id, parentId, ['admin']);
 
       // --- 2. 实体管理 (Entity Management) ---
@@ -445,11 +458,11 @@ import ProTable from '@/components/ProTable/index.vue';
 
 // API
 const { t } = useI18n();
-const getEntityList = (params) => request.get('/core/sys_entity', { params });
-const createEntity = (data) => request.post('/core/sys_entity', data);
-const updateEntity = (id, data) => request.put('/core/sys_entity/' + id, data);
-const deleteEntity = (id) => request.delete('/core/sys_entity/' + id);
-const batchDeleteEntity = (ids) => request.post('/core/sys_entity/batch-delete', { ids });
+const getEntityList = (params) => request.get('/core/sys实体', { params });
+const createEntity = (data) => request.post('/core/sys实体', data);
+const updateEntity = (id, data) => request.put('/core/sys实体/' + id, data);
+const deleteEntity = (id) => request.delete('/core/sys实体/' + id);
+const batchDeleteEntity = (ids) => request.post('/core/sys实体/batch-delete', { ids });
 
 // State
 const proTable = ref();
@@ -500,7 +513,7 @@ const submitForm = async (formData, done) => {
         `,
         style: `.page-container { padding: 20px; } .code-tabs { height: 500px; } .editor-container { height: 400px; }`
       };
-      const entitySchema = await this.createOrUpdateSchema('SysEntityManage', '实体管理', entitySchemaCode, entitySysEntity._id.toString(), viewSysEntity._id.toString());
+      const entitySchema = await this.createOrUpdateSchema('sys实体管理', '实体管理', entitySchemaCode, entitySysEntity._id.toString(), viewSysEntity._id.toString());
       await this.createOrUpdateMenu('/sys/entity', 'menu.system.entity', 'DataBoard', 2, entitySchema._id, parentId, ['admin']);
 
       // --- 3. 视图管理 (View Management) ---
@@ -588,12 +601,12 @@ import ProTable from '@/components/ProTable/index.vue';
 
 // API
 const { t } = useI18n();
-const getViewList = (params) => request.get('/core/sys_view', { params });
-const createView = (data) => request.post('/core/sys_view', data);
-const updateView = (id, data) => request.put('/core/sys_view/' + id, data);
-const deleteView = (id) => request.delete('/core/sys_view/' + id);
-const batchDeleteView = (ids) => request.post('/core/sys_view/batch-delete', { ids });
-const getEntityListAll = () => request.get('/core/sys_entity', { params: { pageSize: 1000 } });
+const getViewList = (params) => request.get('/core/sys视图', { params });
+const createView = (data) => request.post('/core/sys视图', data);
+const updateView = (id, data) => request.put('/core/sys视图/' + id, data);
+const deleteView = (id) => request.delete('/core/sys视图/' + id);
+const batchDeleteView = (ids) => request.post('/core/sys视图/batch-delete', { ids });
+const getEntityListAll = () => request.get('/core/sys实体', { params: { pageSize: 1000 } });
 
 // State
 const proTable = ref();
@@ -656,7 +669,7 @@ const submitForm = async (formData, done) => {
         `,
         style: `.page-container { padding: 20px; }`
       };
-      const viewSchema = await this.createOrUpdateSchema('SysViewManage', '视图管理', viewSchemaCode, entitySysView._id.toString(), viewSysView._id.toString());
+      const viewSchema = await this.createOrUpdateSchema('sys视图管理', '视图管理', viewSchemaCode, entitySysView._id.toString(), viewSysView._id.toString());
       await this.createOrUpdateMenu('/sys/view', 'menu.system.view', 'View', 3, viewSchema._id, parentId, ['admin']);
 
       // --- 4. 架构管理 (Schema Management) ---
@@ -872,13 +885,13 @@ import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 
 // API
 const { t } = useI18n();
-const getSchemaList = (params) => request.get('/core/sys_schema', { params });
-const createSchema = (data) => request.post('/core/sys_schema', data);
-const updateSchema = (id, data) => request.put('/core/sys_schema/' + id, data);
-const deleteSchema = (id) => request.delete('/core/sys_schema/' + id);
-const batchDeleteSchema = (ids) => request.post('/core/sys_schema/batch-delete', { ids });
-const getEntityListAll = () => request.get('/core/sys_entity', { params: { pageSize: 1000 } });
-const getViewListAll = () => request.get('/core/sys_view', { params: { pageSize: 1000 } });
+const getSchemaList = (params) => request.get('/core/sys架构', { params });
+const createSchema = (data) => request.post('/core/sys架构', data);
+const updateSchema = (id, data) => request.put('/core/sys架构/' + id, data);
+const deleteSchema = (id) => request.delete('/core/sys架构/' + id);
+const batchDeleteSchema = (ids) => request.post('/core/sys架构/batch-delete', { ids });
+const getEntityListAll = () => request.get('/core/sys实体', { params: { pageSize: 1000 } });
+const getViewListAll = () => request.get('/core/sys视图', { params: { pageSize: 1000 } });
 
 // State
 const proTable = ref();
@@ -1053,12 +1066,12 @@ const submitForm = async (formData, done) => {
 `
       };
 
-      const schemaSchema = await this.createOrUpdateSchema('SysSchemaManage', '架构管理', schemaSchemaCode, entitySysSchema._id.toString(), viewSysSchema._id.toString());
+      const schemaSchema = await this.createOrUpdateSchema('sys架构管理', '架构管理', schemaSchemaCode, entitySysSchema._id.toString(), viewSysSchema._id.toString());
       await this.createOrUpdateMenu('/sys/schema', 'menu.system.schema', 'Document', 4, schemaSchema._id, parentId, ['admin']);
 
       // --- 5. 角色管理 (Role Management) ---
-      const entitySysRole = await this.createOrUpdateEntity('sys_role');
-      const viewSysRole = await this.createOrUpdateView('SysRoleList', entitySysRole._id.toString());
+      // const entitySysRole = await this.createOrUpdateEntity('sys_role');
+      // const viewSysRole = await this.createOrUpdateView('SysRoleList', entitySysRole._id.toString());
       
       const roleSchemaCode = {
         template: `
@@ -1125,11 +1138,11 @@ import ProTable from '@/components/ProTable/index.vue';
 
 // API
 const { t } = useI18n();
-const getRoleList = (params) => request.get('/core/sys_role', { params });
-const createRole = (data) => request.post('/core/sys_role', data);
-const updateRole = (id, data) => request.put('/core/sys_role/' + id, data);
-const deleteRole = (id) => request.delete('/core/sys_role/' + id);
-const batchDeleteRole = (ids) => request.post('/core/sys_role/batch-delete', { ids });
+const getRoleList = (params) => request.get('/core/sys角色', { params });
+const createRole = (data) => request.post('/core/sys角色', data);
+const updateRole = (id, data) => request.put('/core/sys角色/' + id, data);
+const deleteRole = (id) => request.delete('/core/sys角色/' + id);
+const batchDeleteRole = (ids) => request.post('/core/sys角色/batch-delete', { ids });
 
 const proTable = ref();
 const initParam = reactive({});
@@ -1176,15 +1189,15 @@ const submitForm = async (formData, done) => {
         style: `.page-container { padding: 20px; }`
       };
       
-      const roleSchema = await this.createOrUpdateSchema('SysRoleManage', '角色管理', roleSchemaCode, entitySysRole._id.toString(), viewSysRole._id.toString());
+      const roleSchema = await this.createOrUpdateSchema('sys角色管理', '角色管理', roleSchemaCode, entitySysRole._id.toString(), viewSysRole._id.toString());
       await this.createOrUpdateMenu('/manage/role', 'menu.system.role', 'Avatar', 5, roleSchema._id, parentIdManage, ['admin']);
 
 
       // --- 6. 用户管理 (User Management) ---
       // Note: User entity is 'sys用户' (already used by AuthService)
       // We ensure the metadata entity exists
-      const entitySysUser = await this.createOrUpdateEntity('sys用户');
-      const viewSysUser = await this.createOrUpdateView('SysUserList', entitySysUser._id.toString());
+      // const entitySysUser = await this.createOrUpdateEntity('sys用户');
+      // const viewSysUser = await this.createOrUpdateView('SysUserList', entitySysUser._id.toString());
 
       const userSchemaCode = {
         template: `
@@ -1197,12 +1210,23 @@ const submitForm = async (formData, done) => {
       :batchDeleteApi="batchDeleteUser"
       :deleteApi="deleteUser"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: $t('column.username'), initForm: { username: '', password: '', name: '', role: '', status: 1 }, width: '500px' }"
+      :formConfig="{ label: $t('column.username'), initForm: { username: '', password: '', name: '', role: '', status: 1, avatar: null }, width: '500px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
         <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.username') }) }}</el-button>
+      </template>
+
+      <template #avatar="{ row }">
+        <el-image 
+          v-if="row.avatar" 
+          style="width: 40px; height: 40px; border-radius: 50%" 
+          :src="getAvatarUrl(row.avatar, 'compressed')" 
+          :preview-src-list="[getAvatarUrl(row.avatar, 'original')]" 
+          fit="cover" 
+          preview-teleported
+        />
       </template>
 
       <template #role="{ row }">
@@ -1216,6 +1240,18 @@ const submitForm = async (formData, done) => {
       <!-- Editor -->
       <template #edit-form="{ model, isEdit }">
         <el-form :model="model" label-width="100px">
+          <el-form-item label="Avatar">
+            <el-upload
+              class="avatar-uploader"
+              action="/api/common/upload"
+              :show-file-list="false"
+              :on-success="(res) => handleAvatarSuccess(res, model)"
+              :before-upload="beforeAvatarUpload"
+            >
+              <img v-if="model.avatar" :src="getAvatarUrl(model.avatar, 'compressed')" class="avatar" />
+              <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+            </el-upload>
+          </el-form-item>
           <el-form-item :label="$t('column.username')">
             <el-input v-model="model.username" :placeholder="$t('common.pleaseInput') + $t('column.username')" :disabled="isEdit" />
           </el-form-item>
@@ -1242,6 +1278,14 @@ const submitForm = async (formData, done) => {
       <!-- Viewer -->
       <template #view-form="{ model }">
         <el-form :model="model" label-width="100px" disabled>
+          <el-form-item :label="$t('column.avatar')">
+             <el-image 
+              v-if="model.avatar" 
+              style="width: 60px; height: 60px; border-radius: 50%" 
+              :src="getAvatarUrl(model.avatar, 'compressed')" 
+              fit="cover" 
+            />
+          </el-form-item>
           <el-form-item :label="$t('column.username')"><el-input v-model="model.username" /></el-form-item>
           <el-form-item :label="$t('column.name')"><el-input v-model="model.name" /></el-form-item>
           <el-form-item :label="$t('column.role')"><el-tag>{{ getRoleName(model.role) }}</el-tag></el-form-item>
@@ -1257,7 +1301,7 @@ const submitForm = async (formData, done) => {
 import { ref, reactive, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
-import { CirclePlus } from '@element-plus/icons-vue';
+import { CirclePlus, Plus } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
@@ -1268,14 +1312,18 @@ const createUser = (data) => request.post('/core/sys用户', data);
 const updateUser = (id, data) => request.put('/core/sys用户/' + id, data);
 const deleteUser = (id) => request.delete('/core/sys用户/' + id);
 const batchDeleteUser = (ids) => request.post('/core/sys用户/batch-delete', { ids });
-const getRoleListApi = () => request.get('/core/sys_role', { params: { pageSize: 100 } });
+const getRoleListApi = () => request.get('/core/sys角色', { params: { pageSize: 100 } });
 
 const proTable = ref();
 const initParam = reactive({});
 const roleList = ref([]);
+const uploadHeaders = reactive({
+  Authorization: 'Bearer ' + localStorage.getItem('accessToken')
+});
 
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
+  { prop: 'avatar', label: 'column.avatar', width: 80 },
   { prop: 'username', label: 'column.username', search: { el: 'input' } },
   { prop: 'name', label: 'column.name', search: { el: 'input' } },
   { prop: 'role', label: 'column.role' },
@@ -1294,6 +1342,44 @@ const getTableList = async (params) => {
 const getRoleName = (code) => {
   const role = roleList.value.find(r => r.code === code);
   return role ? role.name : code;
+};
+
+// Avatar Helper
+const getAvatarUrl = (avatar, type) => {
+  if (!avatar) return '';
+  // If it's a string, try to parse or return as is (assuming it might be just one url if legacy)
+  // But our new upload returns object.
+  // If backend stored it as object (MongoDB allows), then we can access props.
+  if (typeof avatar === 'string') {
+     try {
+         const obj = JSON.parse(avatar);
+         return obj[type] || obj.compressed || obj.original || '';
+     } catch (e) {
+         // Maybe it's a direct URL?
+         return avatar;
+     }
+  }
+  return avatar[type] || avatar.compressed || avatar.original || '';
+};
+
+const handleAvatarSuccess = (response, model) => {
+  if (response.status === 200) {
+    model.avatar = response.data;
+    ElMessage.success('Avatar uploaded!');
+  } else {
+    ElMessage.error('Upload failed');
+  }
+};
+
+const beforeAvatarUpload = (rawFile) => {
+  if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
+    ElMessage.error('Avatar must be JPG format!');
+    return false;
+  } else if (rawFile.size / 1024 / 1024 > 2) {
+    ElMessage.error('Avatar picture size can not exceed 2MB!');
+    return false;
+  }
+  return true;
 };
 
 onMounted(async () => {
@@ -1345,11 +1431,247 @@ const submitForm = async (formData, done) => {
   }
 };
         `,
-        style: `.page-container { padding: 20px; }`
+        style: `
+.page-container { padding: 20px; }
+.avatar-uploader .avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+.avatar-uploader .el-upload,
+.avatar-uploader.el-upload {
+  border: 1px dashed var(--el-border-color, #d9d9d9);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+.avatar-uploader .el-upload:hover,
+.avatar-uploader.el-upload:hover {
+  border-color: var(--el-color-primary, #409eff);
+}
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+        `
       };
       
-      const userSchema = await this.createOrUpdateSchema('SysUserManage', '用户管理', userSchemaCode, entitySysUser._id.toString(), viewSysUser._id.toString());
+      const userSchema = await this.createOrUpdateSchema('sys用户管理', '用户管理', userSchemaCode, entitySysUser._id.toString(), viewSysUser._id.toString());
       await this.createOrUpdateMenu('/manage/user', 'menu.system.user', 'User', 6, userSchema._id, parentIdManage, ['admin']);
+
+      // --- 7. 国际化管理 (Language Management) ---
+      // const entitySysI18n = await this.createOrUpdateEntity('sys_i18n');
+      // const viewSysI18n = await this.createOrUpdateView('SysI18nList', entitySysI18n._id.toString());
+      
+      const i18nSchemaCode = {
+        template: `
+<div class="table-box">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :pagination="true"
+      :toolButton="false"
+    >
+      <!-- Table Header Buttons -->
+      <template #tableHeader>
+        <el-button type="primary" :icon="CirclePlus" @click="handleAdd">{{ $t('common.add') }}</el-button>
+        <el-button type="success" :icon="Check" @click="handleSave" :loading="saving">{{ $t('common.submit') }}</el-button>
+      </template>
+
+      <!-- Inline Edit Columns -->
+      <template #key="{ row }">
+        <el-input v-model="row.key" placeholder="e.g. menu.system" />
+      </template>
+      <template #zh-CN="{ row }">
+        <el-input v-model="row['zh-CN']" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }" />
+      </template>
+      <template #en-US="{ row }">
+        <el-input v-model="row['en-US']" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }" />
+      </template>
+
+      <!-- Actions -->
+      <template #operation="{ row }">
+        <el-button type="danger" :icon="Delete" circle @click="handleDelete(row)" />
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive } from 'vue';
+import { CirclePlus, Check, Delete } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+import request from 'app-request';
+import ProTable from '@/components/ProTable/index.vue';
+
+// API
+const getLocales = () => request.get('/i18n');
+const saveLocales = (data) => request.post('/i18n', data);
+
+// Helper
+const loadLocaleMessages = async (locale, i18nGlobal) => {
+  try {
+    const res = await fetch(\`/locales/\${locale}.json\`);
+    const messages = await res.json();
+    i18nGlobal.setLocaleMessage(locale, messages);
+  } catch (e) {
+    console.error(\`Failed to load locale: \${locale}\`, e);
+  }
+};
+
+const { t, locale } = useI18n();
+const i18n = useI18n();
+
+const proTable = ref();
+const saving = ref(false);
+const localData = ref([]);
+
+// Columns
+const columns = [
+  { type: 'index', label: '#', width: 60 },
+  { prop: 'key', label: 'column.key', minWidth: 200, search: { el: 'input' } },
+  { prop: 'zh-CN', label: 'column.zhCN', minWidth: 300, search: { el: 'input' } },
+  { prop: 'en-US', label: 'column.enUS', minWidth: 300, search: { el: 'input' } },
+  { prop: 'operation', label: 'common.operation', fixed: 'right', width: 100 }
+];
+
+// Mock Server-side Pagination with Local Data
+const getTableList = async (params) => {
+  // 1. Init Data
+  if (localData.value.length === 0) {
+    try {
+      const res = await getLocales();
+      let data = [];
+      if (Array.isArray(res)) {
+        data = res;
+      } else if (res.code === 200) {
+        data = res.data;
+      }
+      // Add temp _id for ProTable/el-table keys
+      localData.value = data.map(item => ({
+        ...item,
+        _id: item._id || (Date.now() + Math.random().toString(36).substr(2, 9))
+      }));
+    } catch (error) {
+      console.error(error);
+      return { data: { list: [], total: 0 } };
+    }
+  }
+
+  let result = [...localData.value];
+
+  // 2. Filter
+  if (params.key) {
+    const lower = params.key.toLowerCase();
+    result = result.filter(item => item.key && item.key.toLowerCase().includes(lower));
+  }
+  if (params['zh-CN']) {
+    const lower = params['zh-CN'].toLowerCase();
+    result = result.filter(item => item['zh-CN'] && item['zh-CN'].toLowerCase().includes(lower));
+  }
+  if (params['en-US']) {
+    const lower = params['en-US'].toLowerCase();
+    result = result.filter(item => item['en-US'] && item['en-US'].toLowerCase().includes(lower));
+  }
+
+  // 3. Pagination
+  const { pageNum, pageSize } = params;
+  const total = result.length;
+  const start = (pageNum - 1) * pageSize;
+  const end = start + pageSize;
+  const list = result.slice(start, end);
+
+  return {
+    data: list,
+    total: total,
+    pageNum,
+    pageSize
+  };
+};
+
+const handleAdd = () => {
+  // Add to local data with temp ID
+  localData.value.unshift({
+    _id: Date.now() + Math.random().toString(36).substr(2, 9),
+    key: '',
+    'zh-CN': '',
+    'en-US': ''
+  });
+  // Refresh table
+  proTable.value?.getTableList();
+};
+
+const handleDelete = (row) => {
+  ElMessageBox.confirm(t('i18n.confirmDeleteKey'), t('common.warning'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
+    type: 'warning'
+  }).then(() => {
+    const index = localData.value.findIndex(item => item._id === row._id);
+    if (index !== -1) {
+      localData.value.splice(index, 1);
+      proTable.value?.getTableList();
+    }
+  });
+};
+
+const handleSave = async () => {
+  // Validate
+  const emptyKey = localData.value.find(item => !item.key || !item.key.trim());
+  if (emptyKey) {
+    ElMessage.warning(t('i18n.keyRequired'));
+    return;
+  }
+  
+  const keys = localData.value.map(item => item.key);
+  const uniqueKeys = new Set(keys);
+  if (keys.length !== uniqueKeys.size) {
+    ElMessage.warning(t('i18n.duplicateKeys'));
+    return;
+  }
+
+  saving.value = true;
+  try {
+    // Strip temp _id before saving if needed, or backend handles it.
+    // Assuming backend cleans unknown fields or we should clean it.
+    // Let's clean it to be safe.
+    const dataToSave = localData.value.map(({ _id, ...rest }) => rest);
+
+    const res = await saveLocales(dataToSave);
+    const isSuccess = res.code === 200 || res.status === 200 || res.success;
+    
+    if (isSuccess) {
+      ElMessage.success(t('i18n.saveSuccess'));
+      await loadLocaleMessages(locale.value, i18n);
+    } else {
+      ElMessage.error(res.msg || t('i18n.saveFailed'));
+    }
+  } catch (error) {
+    console.error(error);
+    ElMessage.error(t('i18n.saveFailed'));
+  } finally {
+    saving.value = false;
+  }
+};
+        `,
+        style: `
+.table-box {
+  height: 100%;
+}
+        `
+      };
+
+      const i18nSchema = await this.createOrUpdateSchema('sys国际化管理', '国际化管理', i18nSchemaCode, entitySysI18n._id.toString(), viewSysI18n._id.toString());
+      await this.createOrUpdateMenu('/sys/i18n', 'menu.system.i18n', 'Connection', 7, i18nSchema._id, parentId, ['admin']);
 
     } catch (error) {
       console.error('Failed to init sys schemas:', error);
@@ -1360,32 +1682,32 @@ const submitForm = async (formData, done) => {
     try {
       console.log('Initializing default roles...');
       // Check if admin role exists
-      const { list } = await GeneralService.getList('sys_role', { code: 'admin' });
-      if (list.length === 0) {
-        console.log('Creating default admin role...');
-        await GeneralService.create('sys_role', {
-          name: '超级管理员',
-          code: 'admin',
-          description: '系统超级管理员，拥有所有权限',
-          status: 1
-        });
-      } else {
-        console.log('Admin role already exists');
-      }
-      
-      // Check if user role exists
-      const { list: userList } = await GeneralService.getList('sys_role', { code: 'user' });
-      if (userList.length === 0) {
-         console.log('Creating default user role...');
-         await GeneralService.create('sys_role', {
-           name: '普通用户',
-           code: 'user',
-           description: '普通注册用户',
-           status: 1
-         });
-      } else {
-        console.log('User role already exists');
-      }
+    const { list } = await GeneralService.getList('sys角色', { code: 'admin' });
+    if (list.length === 0) {
+      console.log('Creating default admin role...');
+      await GeneralService.create('sys角色', {
+        name: '超级管理员',
+        code: 'admin',
+        description: '系统超级管理员，拥有所有权限',
+        status: 1
+      });
+    } else {
+      console.log('Admin role already exists');
+    }
+    
+    // Check if user role exists
+    const { list: userList } = await GeneralService.getList('sys角色', { code: 'user' });
+    if (userList.length === 0) {
+       console.log('Creating default user role...');
+       await GeneralService.create('sys角色', {
+         name: '普通用户',
+         code: 'user',
+         description: '普通注册用户',
+         status: 1
+       });
+    } else {
+      console.log('User role already exists');
+    }
     } catch (error) {
       console.error('Failed to init default roles:', error);
     }
@@ -1461,6 +1783,20 @@ const submitForm = async (formData, done) => {
       
       if (parentId && (!menu.parentId || menu.parentId !== parentId)) {
         updates.parentId = parentId;
+        needsUpdate = true;
+      }
+
+      // Update basic info (name, icon, sort) to ensure latest config (e.g. i18n keys)
+      if (menu.name !== name) {
+        updates.name = name;
+        needsUpdate = true;
+      }
+      if (menu.icon !== icon) {
+        updates.icon = icon;
+        needsUpdate = true;
+      }
+      if (menu.sort !== sort) {
+        updates.sort = sort;
         needsUpdate = true;
       }
 

@@ -31,6 +31,10 @@ app.component('IconSelect', IconSelect)
 
 // 引入权限控制 (要在 use(router) 之后)
 import './router/permission';
-import i18n from './locales'
+import i18n, { loadLocaleMessages } from './locales'
 
-app.mount('#app')
+// Load initial locale
+const defaultLocale = localStorage.getItem('language') || 'zh-CN';
+loadLocaleMessages(defaultLocale).then(() => {
+  app.mount('#app');
+});

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { ApiResult } from '../../apiResult';
+import uploadRouter from './upload';
 
 const router = Router();
 
@@ -7,6 +8,8 @@ const router = Router();
 router.get('/', (req: Request, res: Response) => {
   res.json(ApiResult.success({ module: 'common' }));
 });
+
+router.use('/upload', uploadRouter);
 
 router.get('/time', (req: Request, res: Response) => {
   res.json(ApiResult.success({ time: new Date().toISOString() }));

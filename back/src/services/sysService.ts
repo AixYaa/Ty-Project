@@ -3,10 +3,10 @@ import { ObjectId, Document } from 'mongodb';
 import { SysEntity, SysView, SysSchema, SysMenu } from '../types/sys';
 
 const COLLECTIONS = {
-  ENTITY: 'sys_entity',
-  VIEW: 'sys_view',
-  SCHEMA: 'sys_schema',
-  MENU: 'sys_menu'
+  ENTITY: 'sys实体',
+  VIEW: 'sys视图',
+  SCHEMA: 'sys架构',
+  MENU: 'sys菜单'
 };
 
 export class SysService {
