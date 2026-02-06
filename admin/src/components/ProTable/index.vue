@@ -4,13 +4,13 @@
     <el-card v-if="showSearch" class="search-card" shadow="never">
       <el-form ref="searchFormRef" :model="searchParam" :inline="true" label-width="100px">
         <template v-for="item in searchColumns" :key="item.prop">
-          <el-form-item :label="item.label">
+          <el-form-item :label="$t(item.label || '')">
             <!-- Input -->
             <el-input
               v-if="!item.search?.el || item.search.el === 'input'"
               v-model="searchParam[item.search?.key || item.prop!]"
               v-bind="item.search?.props"
-              :placeholder="item.search?.props?.placeholder || `请输入${item.label}`"
+              :placeholder="item.search?.props?.placeholder || `${$t('common.pleaseInput')} ${$t(item.label || '')}`"
               clearable
             />
             <!-- Select -->
@@ -18,7 +18,7 @@
               v-if="item.search?.el === 'select'"
               v-model="searchParam[item.search?.key || item.prop!]"
               v-bind="item.search?.props"
-              :placeholder="item.search?.props?.placeholder || `请选择${item.label}`"
+              :placeholder="item.search?.props?.placeholder || `${$t('common.pleaseSelect')} ${$t(item.label || '')}`"
               clearable
             >
               <el-option
@@ -39,8 +39,8 @@
           </el-form-item>
         </template>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="search">搜索</el-button>
-          <el-button :icon="Delete" @click="reset">重置</el-button>
+          <el-button type="primary" :icon="Search" @click="search">{{ $t('common.search') }}</el-button>
+          <el-button :icon="Delete" @click="reset">{{ $t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -114,7 +114,7 @@
             <!-- Custom Header -->
             <template #header>
               <slot :name="`${col.prop}Header`" :row="col">
-                {{ col.label }}
+                {{ $t(col.label || '') }}
               </slot>
             </template>
             <!-- Custom Cell -->
@@ -127,21 +127,21 @@
                     link type="primary" :icon="View" 
                     @click="openView(scope.row)"
                   >
-                    {{ props.operation.viewText || '查看' }}
+                    {{ props.operation.viewText || $t('common.view') }}
                   </el-button>
                   <el-button 
                     v-if="props.operation.edit !== false" 
                     link type="primary" :icon="EditPen" 
                     @click="openEdit(scope.row)"
                   >
-                    {{ props.operation.editText || '编辑' }}
+                    {{ props.operation.editText || $t('common.edit') }}
                   </el-button>
                   <el-button 
                     v-if="props.operation.delete !== false" 
                     link type="danger" :icon="Delete" 
                     @click="handleDelete(scope.row)"
                   >
-                    {{ props.operation.deleteText || '删除' }}
+                    {{ props.operation.deleteText || $t('common.delete') }}
                   </el-button>
                 </template>
                 <slot name="operation" :row="scope.row"></slot>
@@ -298,6 +298,9 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { useSettingStore } from '@/store/setting';
 import { useUserStore } from '@/store/user';
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // Props
 const props = withDefaults(defineProps<{
@@ -387,7 +390,7 @@ const tableColumns = computed(() => {
     const isHover = props.operation.mode === 'hover';
     cols.push({
       prop: 'operation',
-      label: isHover ? '' : (props.operation.label || '操作'),
+      label: isHover ? '' : (props.operation.label || t('common.operation')),
       fixed: props.operation.fixed || 'right',
       width: isHover ? 50 : (props.operation.width || 200), // Minimal width for hover mode
       type: 'operation',
@@ -483,14 +486,14 @@ const selectionChange = (val: any[]) => {
 const handleDelete = async (row: any) => {
   if (props.deleteApi) {
     try {
-       await ElMessageBox.confirm(`确定删除 "<strong>${row[props.labelKey || 'name']}</strong>" 吗？<br/>此操作不可恢复！`, '警告', {
+       await ElMessageBox.confirm(t('table.confirmDelete', { name: row[props.labelKey || 'name'] }), t('common.warning'), {
          type: 'warning',
          dangerouslyUseHTMLString: true,
-         confirmButtonText: '确定删除',
-         cancelButtonText: '取消'
+         confirmButtonText: t('common.confirm'),
+         cancelButtonText: t('common.cancel')
        });
        await props.deleteApi(row[props.rowKey]);
-       ElMessage.success('删除成功');
+       ElMessage.success(t('table.deleteSuccess'));
        getTableList();
     } catch (e) { /* cancel */ }
   } else {
@@ -504,14 +507,14 @@ const handleBatchDelete = async () => {
   if (ids.length === 0) return;
 
   try {
-    await ElMessageBox.confirm(`确定删除选中的 <span style="color:red;font-weight:bold">${ids.length}</span> 项吗？<br/>此操作不可恢复！`, '警告', {
+    await ElMessageBox.confirm(t('table.confirmBatchDelete', { count: ids.length }), t('common.warning'), {
       type: 'warning',
       dangerouslyUseHTMLString: true,
-      confirmButtonText: '确定删除',
-      cancelButtonText: '取消'
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel')
     });
     await props.batchDeleteApi(ids);
-    ElMessage.success('批量删除成功');
+    ElMessage.success(t('table.batchDeleteSuccess'));
     getTableList();
     tableRef.value?.clearSelection();
   } catch (e) {
@@ -522,14 +525,14 @@ const handleBatchDelete = async () => {
 // Built-in Editor Methods
 const openAdd = () => {
   editor.isEdit = false;
-  editor.title = '新增' + (props.formConfig?.label || '');
+  editor.title = t('table.add', { name: props.formConfig?.label || '' });
   editor.formData = JSON.parse(JSON.stringify(props.formConfig?.initForm || {}));
   editor.visible = true;
 };
 
 const openEdit = (row: any) => {
   editor.isEdit = true;
-  editor.title = '编辑' + (props.formConfig?.label || '');
+  editor.title = t('table.edit', { name: props.formConfig?.label || '' });
   editor.formData = JSON.parse(JSON.stringify(row));
   // Special handling for password field: clear it when editing
   if ('password' in editor.formData) {
@@ -539,7 +542,7 @@ const openEdit = (row: any) => {
 };
 
 const openView = (row: any) => {
-  viewer.title = '查看' + (props.formConfig?.label || '');
+  viewer.title = t('table.view', { name: props.formConfig?.label || '' });
   viewer.data = JSON.parse(JSON.stringify(row));
   viewer.visible = true;
 };

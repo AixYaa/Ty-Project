@@ -8,7 +8,7 @@
       </div>
       
       <div v-if="showLogo" class="logo">
-        管理平台
+        {{ $t('system.title') }}
       </div>
 
       <Breadcrumb v-if="showBreadcrumb" />
@@ -35,7 +35,7 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="handleLogout">
-              <el-icon><SwitchButton /></el-icon>退出登录
+              <el-icon><SwitchButton /></el-icon>{{ $t('header.logout') }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -50,18 +50,18 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store/user';
 import { useSettingStore } from '@/store/setting';
 import { Fold, Expand, Setting, UserFilled, SwitchButton, ArrowDown } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import Menu from './Menu.vue';
 import Breadcrumb from './Breadcrumb.vue';
+import { useI18n } from 'vue-i18n';
 
 const emit = defineEmits(['openSettings']);
-const router = useRouter();
 const userStore = useUserStore();
 const settingStore = useSettingStore();
+const { t } = useI18n();
 
 const showCollapse = computed(() => ['vertical', 'classic', 'columns'].includes(settingStore.layoutMode) || settingStore.isMobile);
 const showLogo = computed(() => ['classic', 'transverse'].includes(settingStore.layoutMode) && !settingStore.isMobile);
@@ -81,9 +81,9 @@ const toggleSidebar = () => {
 
 
 const handleLogout = () => {
-  ElMessageBox.confirm('确认退出登录吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('header.confirmLogout'), t('header.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning',
   })
     .then(async () => {

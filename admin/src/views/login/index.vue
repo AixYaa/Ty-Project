@@ -3,21 +3,21 @@
     <div class="login-content">
       <div class="login-left">
         <div class="login-welcome">
-          <h1>Aix Admin</h1>
-          <p>企业级后台管理系统</p>
+          <h1>{{ $t('system.title') }}</h1>
+          <p>{{ $t('system.subTitle') }}</p>
         </div>
       </div>
       <div class="login-right">
         <el-card class="login-card" shadow="never">
           <div class="login-header">
-            <h2>欢迎登录</h2>
-            <p class="sub-title">请输入您的账号和密码</p>
+            <h2>{{ $t('login.title') }}</h2>
+            <p class="sub-title">{{ $t('login.subTitle') }}</p>
           </div>
           <el-form :model="loginForm" class="login-form" size="large">
             <el-form-item>
               <el-input 
                 v-model="loginForm.username" 
-                placeholder="用户名" 
+                :placeholder="$t('login.placeholder.username')" 
                 :prefix-icon="User"
                 @keyup.enter="handleLogin"
               />
@@ -26,7 +26,7 @@
               <el-input 
                 v-model="loginForm.password" 
                 type="password" 
-                placeholder="密码" 
+                :placeholder="$t('login.placeholder.password')" 
                 :prefix-icon="Lock" 
                 show-password 
                 @keyup.enter="handleLogin"
@@ -34,7 +34,7 @@
             </el-form-item>
             <el-form-item>
               <el-button type="primary" class="login-btn" @click="handleLogin" :loading="loading">
-                登 录
+                {{ $t('login.loginBtn') }}
               </el-button>
             </el-form-item>
           </el-form>
@@ -50,9 +50,11 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '../../store/user';
 import { ElMessage } from 'element-plus';
 import { User, Lock } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const userStore = useUserStore();
+const { t } = useI18n();
 
 const loginForm = ref({
   username: '',
@@ -63,14 +65,14 @@ const loading = ref(false);
 
 const handleLogin = async () => {
   if (!loginForm.value.username || !loginForm.value.password) {
-    ElMessage.warning('请输入用户名和密码');
+    ElMessage.warning(t('login.tips.inputRequired'));
     return;
   }
   
   loading.value = true;
   try {
     await userStore.login(loginForm.value);
-    ElMessage.success('登录成功');
+    ElMessage.success(t('login.success'));
     router.push('/');
   } catch (error) {
     // 错误已在 request 中处理

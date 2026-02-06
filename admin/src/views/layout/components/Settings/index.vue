@@ -13,6 +13,24 @@
     </div>
 
     <div class="setting-item">
+      <div class="label-row">
+        <span class="label">语言 (Language)</span>
+        <el-dropdown @command="handleLanguageChange">
+          <span class="el-dropdown-link">
+            {{ locale === 'zh-CN' ? '简体中文' : 'English' }}
+            <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">简体中文</el-dropdown-item>
+              <el-dropdown-item command="en-US" :disabled="locale === 'en-US'">English</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+    </div>
+
+    <div class="setting-item">
       <span class="label">主题色</span>
       <div class="theme-colors">
         <div 
@@ -127,11 +145,20 @@
 import { ref } from 'vue';
 import { useSettingStore, type ThemeColor } from '@/store/setting';
 import { useUserStore } from '@/store/user';
-import { Check, CircleCheckFilled } from '@element-plus/icons-vue';
+import { Check, CircleCheckFilled, ArrowDown } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+import { ElMessage } from 'element-plus';
 
 const visible = ref(false);
 const settingStore = useSettingStore();
 const userStore = useUserStore();
+const { locale } = useI18n();
+
+const handleLanguageChange = (lang: string) => {
+  locale.value = lang;
+  localStorage.setItem('language', lang);
+  ElMessage.success('Switch Language Success');
+};
 
 const themeColors: { value: ThemeColor; hex: string }[] = [
   { value: 'default', hex: '#409EFF' },

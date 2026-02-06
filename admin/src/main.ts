@@ -25,10 +25,12 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 app.use(router)
+app.use(i18n)
 app.use(ElementPlus)
 app.component('IconSelect', IconSelect)
 
 // 引入权限控制 (要在 use(router) 之后)
 import './router/permission';
+import i18n from './locales'
 
 app.mount('#app')

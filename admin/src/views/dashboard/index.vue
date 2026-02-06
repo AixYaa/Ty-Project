@@ -3,12 +3,12 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>欢迎使用管理平台</span>
+          <span>{{ $t('system.welcome') }}</span>
         </div>
       </template>
       <div class="welcome-content">
         <h1>Hello, {{ userStore.userInfo?.name || userStore.userInfo?.username || 'Admin' }}</h1>
-        <p>这是您的仪表盘首页。</p>
+        <p>{{ $t('dashboard.overview') }}</p>
       </div>
     </el-card>
   </div>

@@ -8,10 +8,10 @@
               v-if="item.redirect === 'noRedirect' || index === breadcrumbList.length - 1 || !item.redirect" 
               class="no-redirect"
             >
-              {{ item.meta.title }}
+              {{ $t(item.meta.title) }}
             </span>
             <a v-else @click.prevent="handleLink(item)">
-              {{ item.meta.title }}
+              {{ $t(item.meta.title) }}
             </a>
           </el-breadcrumb-item>
         </transition-group>
@@ -70,7 +70,7 @@ const getBreadcrumb = () => {
   // Always add Dashboard/Home first
   matched.push({
     path: '/dashboard',
-    meta: { title: '首页' },
+    meta: { title: 'common.home' },
     redirect: '/dashboard'
   });
 

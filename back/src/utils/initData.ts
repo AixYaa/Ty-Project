@@ -90,7 +90,7 @@ export class DataInitializer {
 
       if (menus.length === 0) {
         const menuData: SysMenu = {
-          name: '动态测试',
+          name: 'menu.test.dynamic',
           path: '/test/dynamic',
           icon: 'Monitor',
           sort: 100,
@@ -112,8 +112,8 @@ export class DataInitializer {
       console.log('Initializing System Management Schemas...');
 
       // --- 0. Ensure Parent Menu (System Management) ---
-      const parentMenu = await this.createOrUpdateMenu('/sys', '系统管理', 'Setting', 900, null, null, ['admin']);
-      const parentMenuManage = await this.createOrUpdateMenu('/manage', '管理中心', 'Monitor', 900, null, null, ['admin']);
+      const parentMenu = await this.createOrUpdateMenu('/sys', 'menu.system.management', 'Setting', 900, null, null, ['admin']);
+      const parentMenuManage = await this.createOrUpdateMenu('/manage', 'menu.system.center', 'Monitor', 900, null, null, ['admin']);
       const parentId = parentMenu._id.toString();
       const parentIdManage = parentMenuManage._id.toString();
 
@@ -141,13 +141,13 @@ export class DataInitializer {
       :batchDeleteApi="batchDeleteMenu"
       :deleteApi="deleteMenu"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: '菜单', initForm: { name: '', path: '', icon: '', sort: 0, parentId: undefined, schemaId: '', roles: [] }, width: '600px' }"
+      :formConfig="{ label: $t('column.menuName'), initForm: { name: '', path: '', icon: '', sort: 0, parentId: undefined, schemaId: '', roles: [] }, width: '600px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <!-- Table Header Buttons -->
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增菜单</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.menuName') }) }}</el-button>
       </template>
 
       <!-- Custom Columns -->
@@ -162,39 +162,39 @@ export class DataInitializer {
       </template>
 
       <template #operation="{ row }">
-        <el-button link type="primary" :icon="CirclePlus" @click="handleAdd(row)">新增子菜单</el-button>
+        <el-button link type="primary" :icon="CirclePlus" @click="handleAdd(row)">{{ $t('table.addSubMenu') }}</el-button>
       </template>
 
       <!-- Built-in Editor Slot -->
       <template #edit-form="{ model, isEdit }">
         <el-tabs type="border-card">
-          <el-tab-pane label="基本信息">
+          <el-tab-pane :label="$t('menu.basicInfo')">
             <el-form :model="model" label-width="80px" style="padding-top: 10px;">
-              <el-form-item label="父菜单">
+              <el-form-item :label="$t('menu.parentMenu')">
                 <el-tree-select
                   v-model="model.parentId"
                   :data="menuTreeData"
                   :props="{ label: 'name', value: '_id', children: 'children' }"
                   check-strictly
-                  placeholder="请选择父菜单"
+                  :placeholder="$t('common.pleaseSelect') + $t('menu.parentMenu')"
                   clearable
                   style="width: 100%"
                 />
               </el-form-item>
-              <el-form-item label="名称">
-                <el-input v-model="model.name" placeholder="菜单名称" />
+              <el-form-item :label="$t('column.menuName')">
+                <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.menuName')" />
               </el-form-item>
-              <el-form-item label="路径">
-                <el-input v-model="model.path" placeholder="路由路径 (如 /sys/menu)" />
+              <el-form-item :label="$t('column.routePath')">
+                <el-input v-model="model.path" :placeholder="$t('common.pleaseInput') + $t('column.routePath')" />
               </el-form-item>
-              <el-form-item label="图标">
+              <el-form-item :label="$t('column.icon')">
                 <IconSelect v-model="model.icon" />
               </el-form-item>
-              <el-form-item label="排序">
+              <el-form-item :label="$t('column.sort')">
                 <el-input-number v-model="model.sort" :min="0" />
               </el-form-item>
-              <el-form-item label="绑定架构">
-                <el-select v-model="model.schemaId" placeholder="请选择架构" style="width: 100%" clearable>
+              <el-form-item :label="$t('column.bindSchema')">
+                <el-select v-model="model.schemaId" :placeholder="$t('common.pleaseSelect') + $t('column.bindSchema')" style="width: 100%" clearable>
                   <el-option
                     v-for="item in schemaList"
                     :key="item._id"
@@ -205,13 +205,13 @@ export class DataInitializer {
               </el-form-item>
             </el-form>
           </el-tab-pane>
-          <el-tab-pane label="角色权限">
+          <el-tab-pane :label="$t('menu.rolePermission')">
              <el-form :model="model" label-width="80px" style="padding-top: 10px;">
-               <el-form-item label="可见角色">
+               <el-form-item :label="$t('menu.visibleRoles')">
                  <el-select
                     v-model="model.roles"
                     multiple
-                    placeholder="请选择可见角色 (留空则所有角色可见)"
+                    :placeholder="$t('menu.visibleRolesPlaceholder')"
                     style="width: 100%"
                  >
                    <el-option
@@ -230,19 +230,19 @@ export class DataInitializer {
       <!-- Built-in Viewer Slot -->
       <template #view-form="{ model }">
         <el-form :model="model" label-width="80px" disabled>
-          <el-form-item label="父菜单">
+          <el-form-item :label="$t('menu.parentMenu')">
              <el-tree-select v-model="model.parentId" :data="menuTreeData" :props="{ label: 'name', value: '_id', children: 'children' }" style="width: 100%" />
           </el-form-item>
-          <el-form-item label="名称"><el-input v-model="model.name" /></el-form-item>
-          <el-form-item label="路径"><el-input v-model="model.path" /></el-form-item>
-          <el-form-item label="图标"><IconSelect v-model="model.icon" disabled /></el-form-item>
-          <el-form-item label="排序"><el-input-number v-model="model.sort" /></el-form-item>
-          <el-form-item label="绑定架构">
+          <el-form-item :label="$t('column.menuName')"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item :label="$t('column.routePath')"><el-input v-model="model.path" /></el-form-item>
+          <el-form-item :label="$t('column.icon')"><IconSelect v-model="model.icon" disabled /></el-form-item>
+          <el-form-item :label="$t('column.sort')"><el-input-number v-model="model.sort" /></el-form-item>
+          <el-form-item :label="$t('column.bindSchema')">
              <el-select v-model="model.schemaId" style="width: 100%">
                <el-option v-for="item in schemaList" :key="item._id" :label="item.name" :value="item._id" />
              </el-select>
           </el-form-item>
-          <el-form-item label="可见角色">
+          <el-form-item :label="$t('menu.visibleRoles')">
              <el-select v-model="model.roles" multiple style="width: 100%">
                <el-option v-for="role in roleList" :key="role.code" :label="role.name" :value="role.code" />
              </el-select>
@@ -254,6 +254,7 @@ export class DataInitializer {
         `,
         script: `
 import { ref, reactive, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { CirclePlus, Delete, EditPen, Warning } from '@element-plus/icons-vue';
 import request from 'app-request';
@@ -262,6 +263,7 @@ import IconSelect from '@/components/IconSelect/index.vue';
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 
 // API
+const { t } = useI18n();
 // Use generic core API for menu
 const getMenuTree = () => request.get('/sys/menu/tree'); // Keep specialized tree API for now as generic one is flat list
 const createMenu = (data) => request.post('/core/sys_menu', data);
@@ -290,11 +292,11 @@ const beforeSearchSubmit = (params) => {
 // Columns Config
 const columns = [
   { type: 'selection', fixed: 'left' },
-  { prop: 'name', label: '菜单名称',  align: 'left', search: { el: 'input' } },
-  { prop: 'path', label: '路由路径', search: { el: 'input' } },
-  { prop: 'icon', label: '图标' },
-  { prop: 'sort', label: '排序' },
-  { prop: 'schemaId', label: '绑定架构', showOverflowTooltip: true }
+  { prop: 'name', label: 'column.menuName',  align: 'left', search: { el: 'input' } },
+  { prop: 'path', label: 'column.routePath', search: { el: 'input' } },
+  { prop: 'icon', label: 'column.icon' },
+  { prop: 'sort', label: 'column.sort' },
+  { prop: 'schemaId', label: 'column.bindSchema', showOverflowTooltip: true }
 ];
 
 // Data Request
@@ -379,13 +381,12 @@ const submitForm = async (formData, done) => {
 .page-container {
   height: 100%;
   padding: 20px;
-  background-color: #f0f2f5;
 }
         `
       };
 
       const menuSchema = await this.createOrUpdateSchema('SysMenuManage', '菜单管理', menuSchemaCode, entitySysMenu._id.toString(), viewSysMenu._id.toString());
-      await this.createOrUpdateMenu('/sys/menu', '菜单管理', 'Menu', 1, menuSchema._id, parentId, ['admin']);
+      await this.createOrUpdateMenu('/sys/menu', 'menu.system.menu', 'Menu', 1, menuSchema._id, parentId, ['admin']);
 
       // --- 2. 实体管理 (Entity Management) ---
       const entitySchemaCode = {
@@ -399,19 +400,19 @@ const submitForm = async (formData, done) => {
       :batchDeleteApi="batchDeleteEntity"
       :deleteApi="deleteEntity"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: '实体', initForm: { name: '' }, width: '500px' }"
+      :formConfig="{ label: $t('column.entityName'), initForm: { name: '' }, width: '500px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增实体</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.entityName') }) }}</el-button>
       </template>
 
       <!-- Built-in Editor Slot -->
       <template #edit-form="{ model }">
         <el-form :model="model" label-width="100px">
-          <el-form-item label="实体名称">
-            <el-input v-model="model.name" placeholder="数据库集合名 (如: user_data)" />
+          <el-form-item :label="$t('column.entityName')">
+            <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.entityName')" />
           </el-form-item>
         </el-form>
       </template>
@@ -419,7 +420,7 @@ const submitForm = async (formData, done) => {
       <!-- Built-in Viewer Slot -->
       <template #view-form="{ model }">
         <el-form :model="model" label-width="100px" disabled>
-          <el-form-item label="实体名称">
+          <el-form-item :label="$t('column.entityName')">
             <el-input v-model="model.name" />
           </el-form-item>
         </el-form>
@@ -429,12 +430,14 @@ const submitForm = async (formData, done) => {
         `,
         script: `
 import { ref, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { CirclePlus, Delete, EditPen, Warning } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
 // API
+const { t } = useI18n();
 const getEntityList = (params) => request.get('/core/sys_entity', { params });
 const createEntity = (data) => request.post('/core/sys_entity', data);
 const updateEntity = (id, data) => request.put('/core/sys_entity/' + id, data);
@@ -450,7 +453,7 @@ const form = ref({
 });
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
-  { prop: 'name', label: '实体名称', search: { el: 'input' } }
+  { prop: 'name', label: 'column.entityName', search: { el: 'input' } }
 ];
 
 const getTableList = async (params) => {
@@ -469,7 +472,7 @@ const openAdd = () => {
 const submitForm = async (formData, done) => {
   try {
     if (!formData.name) {
-       ElMessage.warning('实体名称不能为空');
+       ElMessage.warning($t('common.notEmpty', { name: $t('column.entityName') }));
        done();
        return;
     }
@@ -491,7 +494,7 @@ const submitForm = async (formData, done) => {
         style: `.page-container { padding: 20px; } .code-tabs { height: 500px; } .editor-container { height: 400px; }`
       };
       const entitySchema = await this.createOrUpdateSchema('SysEntityManage', '实体管理', entitySchemaCode, entitySysEntity._id.toString(), viewSysEntity._id.toString());
-      await this.createOrUpdateMenu('/sys/entity', '实体管理', 'DataBoard', 2, entitySchema._id, parentId, ['admin']);
+      await this.createOrUpdateMenu('/sys/entity', 'menu.system.entity', 'DataBoard', 2, entitySchema._id, parentId, ['admin']);
 
       // --- 3. 视图管理 (View Management) ---
       const viewSchemaCode = {
@@ -505,12 +508,12 @@ const submitForm = async (formData, done) => {
       :batchDeleteApi="batchDeleteView"
       :deleteApi="deleteView"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: '视图', initForm: { name: '', entityId: '', type: 'list', config: {} } }"
+      :formConfig="{ label: $t('column.viewName'), initForm: { name: '', entityId: '', type: 'list', config: {} } }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增视图</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.viewName') }) }}</el-button>
       </template>
 
       <template #entityId="{ row }">
@@ -520,11 +523,11 @@ const submitForm = async (formData, done) => {
       <!-- Built-in Editor Slot -->
       <template #edit-form="{ model, isEdit }">
         <el-form :model="model" label-width="100px">
-            <el-form-item label="视图名称">
-              <el-input v-model="model.name" placeholder="视图名称 (如: 用户列表)" />
+            <el-form-item :label="$t('column.viewName')">
+              <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.viewName')" />
             </el-form-item>
-            <el-form-item label="关联实体">
-              <el-select v-model="model.entityId" placeholder="请选择实体" style="width: 100%">
+            <el-form-item :label="$t('column.relatedEntity')">
+              <el-select v-model="model.entityId" :placeholder="$t('common.pleaseSelect') + $t('column.relatedEntity')" style="width: 100%">
                 <el-option
                   v-for="item in entityList"
                   :key="item._id"
@@ -533,10 +536,10 @@ const submitForm = async (formData, done) => {
                 />
               </el-select>
             </el-form-item>
-            <el-form-item label="视图类型">
-              <el-select v-model="model.type" placeholder="请选择视图类型" style="width: 100%">
-                <el-option label="列表视图 (List)" value="list" />
-                <el-option label="表单视图 (Form)" value="form" />
+            <el-form-item :label="$t('column.viewType')">
+              <el-select v-model="model.type" :placeholder="$t('common.pleaseSelect') + $t('column.viewType')" style="width: 100%">
+                <el-option :label="$t('view.listView')" value="list" />
+                <el-option :label="$t('view.formView')" value="form" />
               </el-select>
             </el-form-item>
         </el-form>
@@ -545,18 +548,18 @@ const submitForm = async (formData, done) => {
       <!-- Built-in Viewer Slot -->
       <template #view-form="{ model }">
         <el-form :model="model" label-width="100px" disabled>
-          <el-form-item label="视图名称">
+          <el-form-item :label="$t('column.viewName')">
             <el-input v-model="model.name" />
           </el-form-item>
-          <el-form-item label="关联实体">
+          <el-form-item :label="$t('column.relatedEntity')">
              <el-select v-model="model.entityId" style="width: 100%">
                <el-option v-for="item in entityList" :key="item._id" :label="item.name" :value="item._id" />
              </el-select>
           </el-form-item>
-          <el-form-item label="视图类型">
+          <el-form-item :label="$t('column.viewType')">
             <el-select v-model="model.type" style="width: 100%">
-              <el-option label="列表视图 (List)" value="list" />
-              <el-option label="表单视图 (Form)" value="form" />
+              <el-option :label="$t('view.listView')" value="list" />
+              <el-option :label="$t('view.formView')" value="form" />
             </el-select>
           </el-form-item>
         </el-form>
@@ -566,12 +569,14 @@ const submitForm = async (formData, done) => {
         `,
         script: `
 import { ref, reactive, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { CirclePlus, Delete, EditPen } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
 // API
+const { t } = useI18n();
 const getViewList = (params) => request.get('/core/sys_view', { params });
 const createView = (data) => request.post('/core/sys_view', data);
 const updateView = (id, data) => request.put('/core/sys_view/' + id, data);
@@ -587,9 +592,9 @@ const entityList = ref([]);
 // Columns
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
-  { prop: 'name', label: '视图名称', search: { el: 'input' } },
-  { prop: 'entityId', label: '关联实体' },
-  { prop: 'type', label: '视图类型' }
+  { prop: 'name', label: 'column.viewName', search: { el: 'input' } },
+  { prop: 'entityId', label: 'column.relatedEntity' },
+  { prop: 'type', label: 'column.viewType' }
 ];
 
 const getTableList = async (params) => {
@@ -619,7 +624,7 @@ const openAdd = () => {
 const submitForm = async (formData, done) => {
   try {
     if (!formData.name || !formData.entityId) {
-       ElMessage.warning('名称和实体不能为空');
+       ElMessage.warning($t('common.nameAndEntityRequired'));
        done();
        return;
     }
@@ -641,7 +646,7 @@ const submitForm = async (formData, done) => {
         style: `.page-container { padding: 20px; }`
       };
       const viewSchema = await this.createOrUpdateSchema('SysViewManage', '视图管理', viewSchemaCode, entitySysView._id.toString(), viewSysView._id.toString());
-      await this.createOrUpdateMenu('/sys/view', '视图管理', 'View', 3, viewSchema._id, parentId, ['admin']);
+      await this.createOrUpdateMenu('/sys/view', 'menu.system.view', 'View', 3, viewSchema._id, parentId, ['admin']);
 
       // --- 4. 架构管理 (Schema Management) ---
       const schemaSchemaCode = {
@@ -656,7 +661,7 @@ const submitForm = async (formData, done) => {
       :deleteApi="deleteSchema"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
       :formConfig="{ 
-        label: '架构', 
+        label: $t('column.schemaName'), 
         initForm: { name: '', entityId: '', viewId: '', vue: { template: '', script: '', style: '' } },
         width: '90%',
         class: 'schema-edit-drawer',
@@ -682,13 +687,13 @@ const submitForm = async (formData, done) => {
         <div class="schema-drawer-content">
           <el-form :model="model" label-width="100px" class="schema-form-flex">
             <div class="schema-form-header">
-              <el-form-item label="架构名称">
-                <el-input v-model="model.name" placeholder="架构唯一标识 (如: UserList)" />
+              <el-form-item :label="$t('column.schemaName')">
+                <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.schemaName')" />
               </el-form-item>
               <el-row>
                 <el-col :span="12">
-                  <el-form-item label="关联实体">
-                    <el-select v-model="model.entityId" placeholder="请选择实体" style="width: 100%" @change="handleEntityChange(model)">
+                  <el-form-item :label="$t('column.relatedEntity')">
+                    <el-select v-model="model.entityId" :placeholder="$t('common.pleaseSelect') + $t('column.relatedEntity')" style="width: 100%" @change="handleEntityChange(model)">
                       <el-option
                         v-for="item in entityList"
                         :key="item._id"
@@ -699,8 +704,8 @@ const submitForm = async (formData, done) => {
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="关联视图">
-                    <el-select v-model="model.viewId" placeholder="请选择视图" style="width: 100%" :disabled="!model.entityId">
+                  <el-form-item :label="$t('column.relatedView')">
+                    <el-select v-model="model.viewId" :placeholder="$t('common.pleaseSelect') + $t('column.relatedView')" style="width: 100%" :disabled="!model.entityId">
                       <el-option
                         v-for="item in getFilteredViewList(model.entityId)"
                         :key="item._id"
@@ -713,12 +718,12 @@ const submitForm = async (formData, done) => {
               </el-row>
               
               <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-weight: bold;">代码编辑</span>
+                  <span style="font-weight: bold;">{{ $t('schema.codeEdit') }}</span>
                   <div style="display: flex; align-items: center;">
                       <span v-if="hasError" style="color: #f56c6c; margin-right: 15px; font-size: 14px;">
-                          <el-icon style="vertical-align: middle"><Warning /></el-icon> 代码存在语法错误
+                          <el-icon style="vertical-align: middle"><Warning /></el-icon> {{ $t('schema.syntaxError') }}
                       </span>
-                      <el-button type="primary" link @click="generateCode(model)" :disabled="!model.viewId">根据视图生成代码</el-button>
+                      <el-button type="primary" link @click="generateCode(model)" :disabled="!model.viewId">{{ $t('schema.generateCode') }}</el-button>
                   </div>
               </div>
             </div>
@@ -779,19 +784,19 @@ const submitForm = async (formData, done) => {
         <div class="schema-drawer-content" style="height: 70vh; display: flex; flex-direction: column; overflow: hidden;">
           <el-form :model="model" label-width="100px" class="schema-form-flex" style="height: 100%; display: flex; flex-direction: column;">
             <div class="schema-form-header" style="flex-shrink: 0;">
-              <el-form-item label="架构名称">
+              <el-form-item :label="$t('column.schemaName')">
                 <el-input v-model="model.name" readonly />
               </el-form-item>
               <el-row>
                 <el-col :span="12">
-                   <el-form-item label="关联实体">
+                   <el-form-item :label="$t('column.relatedEntity')">
                       <el-select v-model="model.entityId" style="width: 100%" disabled>
                         <el-option v-for="item in entityList" :key="item._id" :label="item.name" :value="item._id" />
                       </el-select>
                    </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                   <el-form-item label="关联视图">
+                   <el-form-item :label="$t('column.relatedView')">
                       <el-select v-model="model.viewId" style="width: 100%" disabled>
                         <el-option v-for="item in getFilteredViewList(model.entityId)" :key="item._id" :label="item.name" :value="item._id" />
                       </el-select>
@@ -843,6 +848,7 @@ const submitForm = async (formData, done) => {
         `,
         script: `
 import { ref, reactive, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { CirclePlus, Delete, EditPen, Warning } from '@element-plus/icons-vue';
 import request from 'app-request';
@@ -850,6 +856,7 @@ import ProTable from '@/components/ProTable/index.vue';
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 
 // API
+const { t } = useI18n();
 const getSchemaList = (params) => request.get('/core/sys_schema', { params });
 const createSchema = (data) => request.post('/core/sys_schema', data);
 const updateSchema = (id, data) => request.put('/core/sys_schema/' + id, data);
@@ -882,9 +889,9 @@ const getFilteredViewList = (entityId) => {
 // Columns
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
-  { prop: 'name', label: '架构名称', width: 200, search: { el: 'input' } },
-  { prop: 'entityId', label: '关联实体',},
-  { prop: 'viewId', label: '关联视图', }
+  { prop: 'name', label: 'column.schemaName', width: 200, search: { el: 'input' } },
+  { prop: 'entityId', label: 'column.relatedEntity',},
+  { prop: 'viewId', label: 'column.relatedView', }
 ];
 
 const getTableList = async (params) => {
@@ -943,7 +950,7 @@ const generateCode = (model) => {
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="handleAdd">新增</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="handleAdd">{{ $t('common.add') }}</el-button>
       </template>
     </ProTable>
   <!-- Add Dialog Here -->
@@ -981,13 +988,13 @@ const handleDelete = async (row) => { /* ... */ };
 const submitForm = async (formData, done) => {
   try {
     if (!formData.name) {
-       ElMessage.warning('架构名称不能为空');
+       ElMessage.warning($t('common.notEmpty', { name: $t('column.schemaName') }));
        done();
        return;
     }
     
     if (hasError.value) {
-       ElMessage.error('代码存在语法错误，请修正后再提交');
+       ElMessage.error($t('schema.fixSyntaxError'));
        done();
        return;
     }
@@ -1030,8 +1037,9 @@ const submitForm = async (formData, done) => {
 .editor-container { height: 100%; }
 `
       };
+
       const schemaSchema = await this.createOrUpdateSchema('SysSchemaManage', '架构管理', schemaSchemaCode, entitySysSchema._id.toString(), viewSysSchema._id.toString());
-      await this.createOrUpdateMenu('/sys/schema', '架构管理', 'Document', 4, schemaSchema._id, parentId, ['admin']);
+      await this.createOrUpdateMenu('/sys/schema', 'menu.system.schema', 'Document', 4, schemaSchema._id, parentId, ['admin']);
 
       // --- 5. 角色管理 (Role Management) ---
       const entitySysRole = await this.createOrUpdateEntity('sys_role');
@@ -1048,31 +1056,31 @@ const submitForm = async (formData, done) => {
       :batchDeleteApi="batchDeleteRole"
       :deleteApi="deleteRole"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: '角色', initForm: { name: '', code: '', description: '', status: 1 }, width: '500px' }"
+      :formConfig="{ label: $t('column.roleName'), initForm: { name: '', code: '', description: '', status: 1 }, width: '500px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增角色</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.roleName') }) }}</el-button>
       </template>
       
       <template #status="{ row }">
-        <el-tag :type="row.status === 1 ? 'success' : 'danger'">{{ row.status === 1 ? '启用' : '禁用' }}</el-tag>
+        <el-tag :type="row.status === 1 ? 'success' : 'danger'">{{ row.status === 1 ? $t('status.enabled') : $t('status.disabled') }}</el-tag>
       </template>
 
       <!-- Editor -->
       <template #edit-form="{ model }">
         <el-form :model="model" label-width="100px">
-          <el-form-item label="角色名称">
-            <el-input v-model="model.name" placeholder="如: 管理员" />
+          <el-form-item :label="$t('column.roleName')">
+            <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.roleName')" />
           </el-form-item>
-          <el-form-item label="角色标识">
-            <el-input v-model="model.code" placeholder="如: admin" />
+          <el-form-item :label="$t('column.roleCode')">
+            <el-input v-model="model.code" :placeholder="$t('common.pleaseInput') + $t('column.roleCode')" />
           </el-form-item>
-          <el-form-item label="描述">
-            <el-input v-model="model.description" type="textarea" />
+          <el-form-item :label="$t('column.description')">
+            <el-input v-model="model.description" type="textarea" :placeholder="$t('common.pleaseInput') + $t('column.description')" />
           </el-form-item>
-          <el-form-item label="状态">
+          <el-form-item :label="$t('column.status')">
              <el-switch v-model="model.status" :active-value="1" :inactive-value="0" />
           </el-form-item>
         </el-form>
@@ -1081,11 +1089,11 @@ const submitForm = async (formData, done) => {
       <!-- Viewer -->
       <template #view-form="{ model }">
         <el-form :model="model" label-width="100px" disabled>
-          <el-form-item label="角色名称"><el-input v-model="model.name" /></el-form-item>
-          <el-form-item label="角色标识"><el-input v-model="model.code" /></el-form-item>
-          <el-form-item label="描述"><el-input v-model="model.description" type="textarea" /></el-form-item>
-          <el-form-item label="状态">
-             <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? '启用' : '禁用' }}</el-tag>
+          <el-form-item :label="$t('column.roleName')"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item :label="$t('column.roleCode')"><el-input v-model="model.code" /></el-form-item>
+          <el-form-item :label="$t('column.description')"><el-input v-model="model.description" type="textarea" /></el-form-item>
+          <el-form-item :label="$t('column.status')">
+             <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? $t('status.enabled') : $t('status.disabled') }}</el-tag>
           </el-form-item>
         </el-form>
       </template>
@@ -1094,12 +1102,14 @@ const submitForm = async (formData, done) => {
         `,
         script: `
 import { ref, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { CirclePlus } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
 // API
+const { t } = useI18n();
 const getRoleList = (params) => request.get('/core/sys_role', { params });
 const createRole = (data) => request.post('/core/sys_role', data);
 const updateRole = (id, data) => request.put('/core/sys_role/' + id, data);
@@ -1111,10 +1121,10 @@ const initParam = reactive({});
 
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
-  { prop: 'name', label: '角色名称', search: { el: 'input' } },
-  { prop: 'code', label: '角色标识', search: { el: 'input' } },
-  { prop: 'description', label: '描述' },
-  { prop: 'status', label: '状态' }
+  { prop: 'name', label: 'column.roleName', search: { el: 'input' } },
+  { prop: 'code', label: 'column.roleCode', search: { el: 'input' } },
+  { prop: 'description', label: 'column.description' },
+  { prop: 'status', label: 'column.status' }
 ];
 
 const getTableList = async (params) => {
@@ -1130,7 +1140,7 @@ const openAdd = () => proTable.value?.openAdd();
 const submitForm = async (formData, done) => {
   try {
     if (!formData.name || !formData.code) {
-       ElMessage.warning('名称和标识不能为空');
+       ElMessage.warning($t('common.nameAndCodeRequired'));
        done();
        return;
     }
@@ -1152,7 +1162,7 @@ const submitForm = async (formData, done) => {
       };
       
       const roleSchema = await this.createOrUpdateSchema('SysRoleManage', '角色管理', roleSchemaCode, entitySysRole._id.toString(), viewSysRole._id.toString());
-      await this.createOrUpdateMenu('/manage/role', '角色管理', 'Avatar', 5, roleSchema._id, parentIdManage, ['admin']);
+      await this.createOrUpdateMenu('/manage/role', 'menu.system.role', 'Avatar', 5, roleSchema._id, parentIdManage, ['admin']);
 
 
       // --- 6. 用户管理 (User Management) ---
@@ -1172,12 +1182,12 @@ const submitForm = async (formData, done) => {
       :batchDeleteApi="batchDeleteUser"
       :deleteApi="deleteUser"
       :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: '用户', initForm: { username: '', password: '', name: '', role: '', status: 1 }, width: '500px' }"
+      :formConfig="{ label: $t('column.username'), initForm: { username: '', password: '', name: '', role: '', status: 1 }, width: '500px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增用户</el-button>
+        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.username') }) }}</el-button>
       </template>
 
       <template #role="{ row }">
@@ -1191,24 +1201,24 @@ const submitForm = async (formData, done) => {
       <!-- Editor -->
       <template #edit-form="{ model, isEdit }">
         <el-form :model="model" label-width="100px">
-          <el-form-item label="用户名">
-            <el-input v-model="model.username" placeholder="登录账号" :disabled="isEdit" />
+          <el-form-item :label="$t('column.username')">
+            <el-input v-model="model.username" :placeholder="$t('common.pleaseInput') + $t('column.username')" :disabled="isEdit" />
           </el-form-item>
-          <el-form-item label="密码" v-if="!isEdit">
-            <el-input v-model="model.password" type="password" show-password placeholder="初始密码" />
+          <el-form-item :label="$t('column.password')" v-if="!isEdit">
+            <el-input v-model="model.password" type="password" show-password :placeholder="$t('common.pleaseInput') + $t('column.password')" />
           </el-form-item>
-          <el-form-item label="重置密码" v-else>
-            <el-input v-model="model.password" type="password" show-password placeholder="留空则不修改" />
+          <el-form-item :label="$t('column.resetPassword')" v-else>
+            <el-input v-model="model.password" type="password" show-password :placeholder="$t('common.passwordPlaceholder')" />
           </el-form-item>
-          <el-form-item label="姓名">
-            <el-input v-model="model.name" placeholder="真实姓名" />
+          <el-form-item :label="$t('column.name')">
+            <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.name')" />
           </el-form-item>
-          <el-form-item label="角色">
-             <el-select v-model="model.role" placeholder="选择角色" style="width: 100%" clearable>
+          <el-form-item :label="$t('column.role')">
+             <el-select v-model="model.role" :placeholder="$t('common.pleaseSelect') + $t('column.role')" style="width: 100%" clearable>
                 <el-option v-for="item in roleList" :key="item.code" :label="item.name" :value="item.code" />
              </el-select>
           </el-form-item>
-          <el-form-item label="状态">
+          <el-form-item :label="$t('column.status')">
              <el-switch v-model="model.status" :active-value="1" :inactive-value="0" />
           </el-form-item>
         </el-form>
@@ -1217,11 +1227,11 @@ const submitForm = async (formData, done) => {
       <!-- Viewer -->
       <template #view-form="{ model }">
         <el-form :model="model" label-width="100px" disabled>
-          <el-form-item label="用户名"><el-input v-model="model.username" /></el-form-item>
-          <el-form-item label="姓名"><el-input v-model="model.name" /></el-form-item>
-          <el-form-item label="角色"><el-tag>{{ getRoleName(model.role) }}</el-tag></el-form-item>
-          <el-form-item label="状态">
-             <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? '启用' : '禁用' }}</el-tag>
+          <el-form-item :label="$t('column.username')"><el-input v-model="model.username" /></el-form-item>
+          <el-form-item :label="$t('column.name')"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item :label="$t('column.role')"><el-tag>{{ getRoleName(model.role) }}</el-tag></el-form-item>
+          <el-form-item :label="$t('column.status')">
+             <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? $t('status.enabled') : $t('status.disabled') }}</el-tag>
           </el-form-item>
         </el-form>
       </template>
@@ -1230,12 +1240,14 @@ const submitForm = async (formData, done) => {
         `,
         script: `
 import { ref, reactive, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { CirclePlus } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
 // API
+const { t } = useI18n();
 const getUserList = (params) => request.get('/core/sys用户', { params });
 const createUser = (data) => request.post('/core/sys用户', data);
 const updateUser = (id, data) => request.put('/core/sys用户/' + id, data);
@@ -1249,11 +1261,11 @@ const roleList = ref([]);
 
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
-  { prop: 'username', label: '用户名', search: { el: 'input' } },
-  { prop: 'name', label: '姓名', search: { el: 'input' } },
-  { prop: 'role', label: '角色' },
-  { prop: 'status', label: '状态' },
-  { prop: 'createdAt', label: '创建时间', width: 180 }
+  { prop: 'username', label: 'column.username', search: { el: 'input' } },
+  { prop: 'name', label: 'column.name', search: { el: 'input' } },
+  { prop: 'role', label: 'column.role' },
+  { prop: 'status', label: 'column.status' },
+  { prop: 'createdAt', label: 'column.createTime', width: 180 }
 ];
 
 const getTableList = async (params) => {
@@ -1282,7 +1294,7 @@ const handleStatusChange = async (row) => {
   try {
     if (row._id) {
        await updateUser(row._id, { status: row.status });
-       ElMessage.success('状态更新成功');
+       ElMessage.success($t('common.statusUpdated'));
     }
   } catch (e) {
     row.status = row.status === 1 ? 0 : 1; // revert
@@ -1293,12 +1305,12 @@ const handleStatusChange = async (row) => {
 const submitForm = async (formData, done) => {
   try {
     if (!formData.username) {
-       ElMessage.warning('用户名不能为空');
+       ElMessage.warning($t('common.notEmpty', { name: $t('column.username') }));
        done();
        return;
     }
     if (!formData._id && !formData.password) {
-       ElMessage.warning('初始密码不能为空');
+       ElMessage.warning($t('common.notEmpty', { name: $t('column.password') }));
        done();
        return;
     }
@@ -1322,7 +1334,7 @@ const submitForm = async (formData, done) => {
       };
       
       const userSchema = await this.createOrUpdateSchema('SysUserManage', '用户管理', userSchemaCode, entitySysUser._id.toString(), viewSysUser._id.toString());
-      await this.createOrUpdateMenu('/manage/user', '用户管理', 'User', 6, userSchema._id, parentIdManage, ['admin']);
+      await this.createOrUpdateMenu('/manage/user', 'menu.system.user', 'User', 6, userSchema._id, parentIdManage, ['admin']);
 
     } catch (error) {
       console.error('Failed to init sys schemas:', error);

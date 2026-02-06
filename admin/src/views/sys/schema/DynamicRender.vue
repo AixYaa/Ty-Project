@@ -118,6 +118,7 @@ import { ref, watch, defineAsyncComponent, shallowRef, reactive, computed } from
 import { useRoute } from 'vue-router';
 import { loadModule } from "vue3-sfc-loader";
 import * as Vue from "vue";
+import * as VueI18n from "vue-i18n";
 import * as ElementPlus from "element-plus";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import request from "@/utils/request";
@@ -233,6 +234,7 @@ const saveSchema = async () => {
 const options = {
   moduleCache: {
     vue: Vue,
+    "vue-i18n": VueI18n,
     "element-plus": ElementPlus,
     "@element-plus/icons-vue": ElementPlusIconsVue,
     "app-request": request,

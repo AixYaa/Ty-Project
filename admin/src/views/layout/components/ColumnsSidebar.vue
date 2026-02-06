@@ -18,7 +18,7 @@
             <el-icon v-if="menu.icon" :size="20"><component :is="menu.icon" /></el-icon>
             <el-icon v-else :size="20"><MenuIcon /></el-icon>
           </div>
-          <span class="title">{{ menu.name }}</span>
+          <span class="title">{{ $t(menu.name) }}</span>
         </div>
       </el-scrollbar>
     </div>
@@ -26,7 +26,7 @@
     <!-- Right Column: Sub Menus -->
     <div class="right-column">
       <div class="sub-menu-title">
-        {{ activeParentName }}
+        {{ $t(activeParentName) }}
       </div>
       <el-scrollbar>
         <el-menu
@@ -39,7 +39,7 @@
             <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu._id || ''">
               <template #title>
                 <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
-                <span>{{ menu.name }}</span>
+                <span>{{ $t(menu.name) }}</span>
               </template>
               <el-menu-item 
                 v-for="child in menu.children" 
@@ -47,12 +47,12 @@
                 :index="child.path"
               >
                 <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
-                <template #title>{{ child.name }}</template>
+                <template #title>{{ $t(child.name) }}</template>
               </el-menu-item>
             </el-sub-menu>
             <el-menu-item v-else :index="menu.path">
               <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
-              <template #title>{{ menu.name }}</template>
+              <template #title>{{ $t(menu.name) }}</template>
             </el-menu-item>
           </template>
         </el-menu>
@@ -99,7 +99,7 @@ const loadMenus = async () => {
     // Add Dashboard manually as it might not be in the dynamic menu tree
     const dashboardMenu: SysMenu = {
       _id: 'dashboard',
-      name: '首页',
+      name: 'common.home',
       path: '/dashboard',
       icon: 'House',
       sort: 0,
