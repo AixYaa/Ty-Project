@@ -15,25 +15,25 @@
           </div>
           <el-form :model="loginForm" class="login-form" size="large">
             <el-form-item>
-              <el-input 
-                v-model="loginForm.username" 
-                :placeholder="$t('login.placeholder.username')" 
+              <el-input
+                v-model="loginForm.username"
+                :placeholder="$t('login.placeholder.username')"
                 :prefix-icon="User"
                 @keyup.enter="handleLogin"
               />
             </el-form-item>
             <el-form-item>
-              <el-input 
-                v-model="loginForm.password" 
-                type="password" 
-                :placeholder="$t('login.placeholder.password')" 
-                :prefix-icon="Lock" 
-                show-password 
+              <el-input
+                v-model="loginForm.password"
+                type="password"
+                :placeholder="$t('login.placeholder.password')"
+                :prefix-icon="Lock"
+                show-password
                 @keyup.enter="handleLogin"
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" class="login-btn" @click="handleLogin" :loading="loading">
+              <el-button type="primary" class="login-btn" :loading="loading" @click="handleLogin">
                 {{ $t('login.loginBtn') }}
               </el-button>
             </el-form-item>
@@ -68,13 +68,13 @@ const handleLogin = async () => {
     ElMessage.warning(t('login.tips.inputRequired'));
     return;
   }
-  
+
   loading.value = true;
   try {
     await userStore.login(loginForm.value);
     ElMessage.success(t('login.success'));
     router.push('/');
-  } catch (error) {
+  } catch {
     // 错误已在 request 中处理
   } finally {
     loading.value = false;

@@ -3,7 +3,7 @@
     <!-- Classic Layout -->
     <el-container v-if="isClassic" class="main-container" direction="vertical">
       <el-header class="header">
-        <Header @openSettings="openSettings" />
+        <Header @open-settings="openSettings" />
         <TagsView v-if="settingStore.showTagsView" />
       </el-header>
       <el-container class="classic-content">
@@ -21,13 +21,13 @@
           <Sidebar />
         </el-aside>
         <el-main class="main-content">
-           <router-view v-slot="{ Component, route }">
-              <transition name="fade-transform" mode="out-in">
-                <keep-alive :include="tagsViewStore.cachedViews">
-                  <component :is="getComponent(Component, route)" :key="route.fullPath" />
-                </keep-alive>
-              </transition>
-           </router-view>
+          <router-view v-slot="{ Component, route }">
+            <transition name="fade-transform" mode="out-in">
+              <keep-alive :include="tagsViewStore.cachedViews">
+                <component :is="getComponent(Component, route)" :key="route.fullPath" />
+              </keep-alive>
+            </transition>
+          </router-view>
         </el-main>
       </el-container>
     </el-container>
@@ -48,25 +48,25 @@
       <el-aside v-if="isVertical && !settingStore.isMobile" :width="sidebarWidth" class="aside">
         <Sidebar />
       </el-aside>
-      
+
       <el-aside v-if="isColumns && !settingStore.isMobile" width="260px" class="aside">
         <ColumnsSidebar />
       </el-aside>
 
       <el-container class="is-vertical">
         <el-header class="header">
-          <Header @openSettings="openSettings" />
+          <Header @open-settings="openSettings" />
           <TagsView v-if="settingStore.showTagsView" />
         </el-header>
-        
+
         <el-main class="main-content">
-           <router-view v-slot="{ Component, route }">
-              <transition name="fade-transform" mode="out-in">
-                <keep-alive :include="tagsViewStore.cachedViews">
-                  <component :is="getComponent(Component, route)" :key="route.fullPath" />
-                </keep-alive>
-              </transition>
-           </router-view>
+          <router-view v-slot="{ Component, route }">
+            <transition name="fade-transform" mode="out-in">
+              <keep-alive :include="tagsViewStore.cachedViews">
+                <component :is="getComponent(Component, route)" :key="route.fullPath" />
+              </keep-alive>
+            </transition>
+          </router-view>
         </el-main>
       </el-container>
     </el-container>
@@ -99,7 +99,7 @@ const isClassic = computed(() => settingStore.layoutMode === 'classic');
 const isTransverse = computed(() => settingStore.layoutMode === 'transverse');
 const isColumns = computed(() => settingStore.layoutMode === 'columns');
 
-const sidebarWidth = computed(() => settingStore.isCollapse ? '64px' : '260px');
+const sidebarWidth = computed(() => (settingStore.isCollapse ? '64px' : '260px'));
 
 const layoutClasses = computed(() => ({
   'layout-vertical': isVertical.value,

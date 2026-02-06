@@ -1,10 +1,5 @@
 <template>
-  <el-drawer
-    v-model="visible"
-    title="系统配置"
-    size="300px"
-    append-to-body
-  >
+  <el-drawer v-model="visible" title="系统配置" size="300px" append-to-body>
     <div class="setting-item">
       <div class="label-row">
         <span class="label">暗黑模式</span>
@@ -22,8 +17,12 @@
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'">简体中文</el-dropdown-item>
-              <el-dropdown-item command="en-US" :disabled="locale === 'en-US'">English</el-dropdown-item>
+              <el-dropdown-item command="zh-CN" :disabled="locale === 'zh-CN'"
+                >简体中文</el-dropdown-item
+              >
+              <el-dropdown-item command="en-US" :disabled="locale === 'en-US'"
+                >English</el-dropdown-item
+              >
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -33,8 +32,8 @@
     <div class="setting-item">
       <span class="label">主题色</span>
       <div class="theme-colors">
-        <div 
-          v-for="color in themeColors" 
+        <div
+          v-for="color in themeColors"
           :key="color.value"
           class="color-block"
           :style="{ backgroundColor: color.hex }"
@@ -51,8 +50,8 @@
       <span class="label">布局模式</span>
       <div class="layout-box">
         <el-tooltip content="左侧菜单模式" placement="top" :show-after="200">
-          <div 
-            class="layout-item item-vertical" 
+          <div
+            class="layout-item item-vertical"
             :class="{ 'is-active': settingStore.layoutMode === 'vertical' }"
             @click="settingStore.setLayoutMode('vertical')"
           >
@@ -61,13 +60,15 @@
               <div class="layout-light"></div>
               <div class="layout-content"></div>
             </div>
-            <el-icon v-if="settingStore.layoutMode === 'vertical'" class="active-icon"><CircleCheckFilled /></el-icon>
+            <el-icon v-if="settingStore.layoutMode === 'vertical'" class="active-icon"
+              ><CircleCheckFilled
+            /></el-icon>
           </div>
         </el-tooltip>
 
         <el-tooltip content="经典模式" placement="top" :show-after="200">
-          <div 
-            class="layout-item item-classic" 
+          <div
+            class="layout-item item-classic"
             :class="{ 'is-active': settingStore.layoutMode === 'classic' }"
             @click="settingStore.setLayoutMode('classic')"
           >
@@ -76,32 +77,38 @@
               <div class="layout-light"></div>
               <div class="layout-content"></div>
             </div>
-            <el-icon v-if="settingStore.layoutMode === 'classic'" class="active-icon"><CircleCheckFilled /></el-icon>
+            <el-icon v-if="settingStore.layoutMode === 'classic'" class="active-icon"
+              ><CircleCheckFilled
+            /></el-icon>
           </div>
         </el-tooltip>
 
         <el-tooltip content="顶部菜单模式" placement="top" :show-after="200">
-          <div 
-            class="layout-item item-transverse" 
+          <div
+            class="layout-item item-transverse"
             :class="{ 'is-active': settingStore.layoutMode === 'transverse' }"
             @click="settingStore.setLayoutMode('transverse')"
           >
             <div class="layout-dark"></div>
             <div class="layout-content"></div>
-            <el-icon v-if="settingStore.layoutMode === 'transverse'" class="active-icon"><CircleCheckFilled /></el-icon>
+            <el-icon v-if="settingStore.layoutMode === 'transverse'" class="active-icon"
+              ><CircleCheckFilled
+            /></el-icon>
           </div>
         </el-tooltip>
 
         <el-tooltip content="分栏模式" placement="top" :show-after="200">
-          <div 
-            class="layout-item item-columns" 
+          <div
+            class="layout-item item-columns"
             :class="{ 'is-active': settingStore.layoutMode === 'columns' }"
             @click="settingStore.setLayoutMode('columns')"
           >
             <div class="layout-dark"></div>
             <div class="layout-light"></div>
             <div class="layout-content"></div>
-            <el-icon v-if="settingStore.layoutMode === 'columns'" class="active-icon"><CircleCheckFilled /></el-icon>
+            <el-icon v-if="settingStore.layoutMode === 'columns'" class="active-icon"
+              ><CircleCheckFilled
+            /></el-icon>
           </div>
         </el-tooltip>
       </div>
@@ -111,28 +118,28 @@
     <div class="setting-item">
       <div class="label">水印配置</div>
       <el-switch v-model="settingStore.showWatermark" active-text="开启水印" />
-      <el-input 
-        v-if="settingStore.showWatermark" 
-        v-model="settingStore.watermarkText" 
-        placeholder="水印文本" 
-        style="margin-top: 10px" 
-      />
-      <el-switch 
+      <el-input
         v-if="settingStore.showWatermark"
-        v-model="settingStore.watermarkShowTime" 
+        v-model="settingStore.watermarkText"
+        placeholder="水印文本"
+        style="margin-top: 10px"
+      />
+      <el-switch
+        v-if="settingStore.showWatermark"
+        v-model="settingStore.watermarkShowTime"
         active-text="显示时间"
         style="margin-top: 10px"
       />
     </div>
-    
+
     <el-divider />
 
     <div class="setting-item">
       <div class="label">界面配置</div>
       <el-switch v-model="settingStore.showTagsView" active-text="多页签 (TagsView)" />
-      
-      <div class="label-row" style="margin-top: 15px;" v-if="settingStore.showTagsView">
-        <span class="label" style="margin-bottom: 0;">页签风格</span>
+
+      <div v-if="settingStore.showTagsView" class="label-row" style="margin-top: 15px">
+        <span class="label" style="margin-bottom: 0">页签风格</span>
         <el-select v-model="settingStore.tagsViewStyle" size="small" style="width: 100px">
           <el-option label="谷歌" value="google" />
           <el-option label="按钮" value="button" />
@@ -142,11 +149,10 @@
     </div>
 
     <!-- Debug Settings (Only for Admin) -->
-    <div class="setting-item" v-if="userStore.userInfo?.username === 'admin'">
+    <div v-if="userStore.userInfo?.username === 'admin'" class="setting-item">
       <div class="label">调试配置</div>
       <el-switch v-model="settingStore.showDebugDrawer" active-text="开启调试抽屉" />
     </div>
-
   </el-drawer>
 </template>
 
@@ -174,7 +180,7 @@ const themeColors: { value: ThemeColor; hex: string }[] = [
   { value: 'dark', hex: '#000000' },
   { value: 'green', hex: '#67C23A' },
   { value: 'red', hex: '#F56C6C' },
-  { value: 'purple', hex: '#909399' },
+  { value: 'purple', hex: '#909399' }
 ];
 
 const open = () => {

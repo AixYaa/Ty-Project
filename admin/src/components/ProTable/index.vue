@@ -10,7 +10,10 @@
               v-if="!item.search?.el || item.search.el === 'input'"
               v-model="searchParam[item.search?.key || item.prop!]"
               v-bind="item.search?.props"
-              :placeholder="item.search?.props?.placeholder || `${$t('common.pleaseInput')} ${$t(item.label || '')}`"
+              :placeholder="
+                item.search?.props?.placeholder ||
+                `${$t('common.pleaseInput')} ${$t(item.label || '')}`
+              "
               clearable
             />
             <!-- Select -->
@@ -18,7 +21,10 @@
               v-if="item.search?.el === 'select'"
               v-model="searchParam[item.search?.key || item.prop!]"
               v-bind="item.search?.props"
-              :placeholder="item.search?.props?.placeholder || `${$t('common.pleaseSelect')} ${$t(item.label || '')}`"
+              :placeholder="
+                item.search?.props?.placeholder ||
+                `${$t('common.pleaseSelect')} ${$t(item.label || '')}`
+              "
               clearable
             >
               <el-option
@@ -39,7 +45,9 @@
           </el-form-item>
         </template>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="search">{{ $t('common.search') }}</el-button>
+          <el-button type="primary" :icon="Search" @click="search">{{
+            $t('common.search')
+          }}</el-button>
           <el-button :icon="Delete" @click="reset">{{ $t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
@@ -51,17 +59,12 @@
         <template #title>
           <div class="selection-content">
             <span class="selection-text">
-              已选择 <span class="selection-count">{{ selectedList.length }}</span> 项: 
+              已选择 <span class="selection-count">{{ selectedList.length }}</span> 项:
               <span class="selection-names">
-                {{ selectedList.map(item => item[labelKey] || item.name).join(', ') }}
+                {{ selectedList.map((item) => item[labelKey] || item.name).join(', ') }}
               </span>
             </span>
-            <el-button 
-              v-if="batchDeleteApi" 
-              type="primary" 
-              link 
-              @click="handleBatchDelete"
-            >
+            <el-button v-if="batchDeleteApi" type="primary" link @click="handleBatchDelete">
               批量删除
             </el-button>
           </div>
@@ -74,13 +77,13 @@
       <div class="table-header">
         <div class="header-button-lf">
           <!-- <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增菜单</el-button> -->
-          <slot name="tableHeader" :selectedList="selectedList" :selectedIds="selectedIds"></slot>
+          <slot name="tableHeader" :selected-list="selectedList" :selected-ids="selectedIds"></slot>
         </div>
         <div class="header-button-ri">
           <el-button :icon="Refresh" circle @click="getTableList" />
         </div>
       </div>
-      
+
       <el-table
         ref="tableRef"
         v-loading="loading"
@@ -90,21 +93,34 @@
         @selection-change="selectionChange"
       >
         <!-- Selection -->
-        <el-table-column v-if="columns.some(col => col.type === 'selection')" type="selection" align="center" width="55" fixed="left" />
-        
+        <el-table-column
+          v-if="columns.some((col) => col.type === 'selection')"
+          type="selection"
+          align="center"
+          width="55"
+          fixed="left"
+        />
+
         <!-- Index (Global) -->
-        <el-table-column v-if="showIndex" type="index" label="#" align="center" width="60" fixed="left" />
+        <el-table-column
+          v-if="showIndex"
+          type="index"
+          label="#"
+          align="center"
+          width="60"
+          fixed="left"
+        />
 
         <!-- Selection / Index / Expand (From Columns) -->
         <template v-for="col in tableColumns" :key="col.prop">
           <!-- Skip Selection type in loop as we handled it globally (or prevent duplicate) -->
-          <!-- Actually, if we use the global selection above, we should filter it here. 
-               Let's Refine: 
+          <!-- Actually, if we use the global selection above, we should filter it here.
+               Let's Refine:
                1. If columns has type='selection', we render it ONCE at top.
                2. If showIndex is true, we render index ONCE at top (after selection).
                3. Loop rest of columns.
           -->
-          
+
           <el-table-column
             v-if="col.type !== 'selection' && col.type !== 'index' && col.type !== 'expand'"
             v-bind="col"
@@ -120,25 +136,35 @@
             <!-- Custom Cell -->
             <template #default="scope">
               <!-- Operation Column Handling -->
-              <div v-if="col.prop === 'operation'" class="operation-cell" :class="{ 'operation-cell-hover': props.operation?.mode === 'hover' }">
+              <div
+                v-if="col.prop === 'operation'"
+                class="operation-cell"
+                :class="{ 'operation-cell-hover': props.operation?.mode === 'hover' }"
+              >
                 <template v-if="props.operation">
-                  <el-button 
-                    v-if="props.operation.view === true" 
-                    link type="primary" :icon="View" 
+                  <el-button
+                    v-if="props.operation.view === true"
+                    link
+                    type="primary"
+                    :icon="View"
                     @click="openView(scope.row)"
                   >
                     {{ props.operation.viewText || $t('common.view') }}
                   </el-button>
-                  <el-button 
-                    v-if="props.operation.edit !== false" 
-                    link type="primary" :icon="EditPen" 
+                  <el-button
+                    v-if="props.operation.edit !== false"
+                    link
+                    type="primary"
+                    :icon="EditPen"
                     @click="openEdit(scope.row)"
                   >
                     {{ props.operation.editText || $t('common.edit') }}
                   </el-button>
-                  <el-button 
-                    v-if="props.operation.delete !== false" 
-                    link type="danger" :icon="Delete" 
+                  <el-button
+                    v-if="props.operation.delete !== false"
+                    link
+                    type="danger"
+                    :icon="Delete"
                     @click="handleDelete(scope.row)"
                   >
                     {{ props.operation.deleteText || $t('common.delete') }}
@@ -146,30 +172,24 @@
                 </template>
                 <slot name="operation" :row="scope.row"></slot>
               </div>
-              
+
               <slot v-else :name="col.prop" :row="scope.row">
                 {{ scope.row[col.prop!] }}
               </slot>
             </template>
           </el-table-column>
-          
+
           <!-- Handle Expand specifically if needed, but usually expand is also a type -->
-           <el-table-column
-            v-if="col.type === 'expand'"
-            v-bind="col"
-            align="center"
-            type="expand"
-          >
+          <el-table-column v-if="col.type === 'expand'" v-bind="col" align="center" type="expand">
             <template #default="scope">
               <slot name="expand" :row="scope.row"></slot>
             </template>
           </el-table-column>
-
         </template>
       </el-table>
 
       <!-- Pagination -->
-      <div class="table-pagination" v-if="pagination">
+      <div v-if="pagination" class="table-pagination">
         <el-pagination
           v-model:current-page="pageable.pageNum"
           v-model:page-size="pageable.pageSize"
@@ -193,44 +213,51 @@
       :class="formConfig.class"
     >
       <div class="drawer-content" :style="formConfig.contentStyle">
-         <!-- Debug Info -->
-         <div v-if="settingStore.showDebugDrawer && userStore.userInfo?.username === 'admin'" class="debug-info-box">
-            <div class="debug-header" @click="isDebugExpanded = !isDebugExpanded">
-              <span class="debug-title">
-                <el-icon class="debug-icon"><Monitor /></el-icon>
-                API 数据预览
-              </span>
-              <el-icon :class="{ 'is-expanded': isDebugExpanded }" class="expand-icon"><ArrowRight /></el-icon>
+        <!-- Debug Info -->
+        <div
+          v-if="settingStore.showDebugDrawer && userStore.userInfo?.username === 'admin'"
+          class="debug-info-box"
+        >
+          <div class="debug-header" @click="isDebugExpanded = !isDebugExpanded">
+            <span class="debug-title">
+              <el-icon class="debug-icon"><Monitor /></el-icon>
+              API 数据预览
+            </span>
+            <el-icon :class="{ 'is-expanded': isDebugExpanded }" class="expand-icon"
+              ><ArrowRight
+            /></el-icon>
+          </div>
+          <el-collapse-transition>
+            <div v-show="isDebugExpanded" class="monaco-wrapper">
+              <VueMonacoEditor
+                :value="debugJsonStr"
+                language="json"
+                theme="vs"
+                :options="{
+                  readOnly: true,
+                  domReadOnly: true,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  fontSize: 12,
+                  lineNumbers: 'off',
+                  renderLineHighlight: 'none',
+                  contextmenu: false,
+                  folding: true
+                }"
+                height="200px"
+              />
             </div>
-            <el-collapse-transition>
-              <div v-show="isDebugExpanded" class="monaco-wrapper">
-                <VueMonacoEditor
-                  :value="debugJsonStr"
-                  language="json"
-                  theme="vs"
-                  :options="{
-                    readOnly: true,
-                    domReadOnly: true,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    fontSize: 12,
-                    lineNumbers: 'off',
-                    renderLineHighlight: 'none',
-                    contextmenu: false,
-                    folding: true
-                  }"
-                  height="200px"
-                />
-              </div>
-            </el-collapse-transition>
-         </div>
+          </el-collapse-transition>
+        </div>
 
-         <slot name="edit-form" :model="editor.formData" :is-edit="editor.isEdit"></slot>
+        <slot name="edit-form" :model="editor.formData" :is-edit="editor.isEdit"></slot>
       </div>
       <template #footer>
-         <el-button @click="closeDrawer">取消</el-button>
-         <el-button type="primary" @click="handleEditorSubmit" :loading="editor.loading">确定</el-button>
+        <el-button @click="closeDrawer">取消</el-button>
+        <el-button type="primary" :loading="editor.loading" @click="handleEditorSubmit"
+          >确定</el-button
+        >
       </template>
     </el-drawer>
 
@@ -244,14 +271,14 @@
       class="pro-table-view-dialog"
       top="5vh"
     >
-       <div class="view-content" style="padding: 20px;">
-          <slot name="view-form" :model="viewer.data"></slot>
-       </div>
+      <div class="view-content" style="padding: 20px">
+        <slot name="view-form" :model="viewer.data"></slot>
+      </div>
     </el-dialog>
 
     <!-- Global API Debug Button (Floating) -->
-    <div 
-      v-if="settingStore.showDebugDrawer && userStore.userInfo?.username === 'admin'" 
+    <div
+      v-if="settingStore.showDebugDrawer && userStore.userInfo?.username === 'admin'"
       class="global-debug-float-btn"
       @click="showApiDebug = true"
     >
@@ -283,7 +310,7 @@
             contextmenu: false,
             folding: true
           }"
-          style="height: 100%;"
+          style="height: 100%"
         />
       </div>
     </el-drawer>
@@ -292,7 +319,16 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { Search, Delete, Refresh, View, EditPen, Monitor, ArrowRight, Cpu } from '@element-plus/icons-vue';
+import {
+  Search,
+  Delete,
+  Refresh,
+  View,
+  EditPen,
+  Monitor,
+  ArrowRight,
+  Cpu
+} from '@element-plus/icons-vue';
 import type { ProTableColumn, Pageable } from './interface';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useSettingStore } from '@/store/setting';
@@ -303,32 +339,37 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 // Props
-const props = withDefaults(defineProps<{
-  columns: ProTableColumn[]; // Column configuration
-  requestApi: (params: any) => Promise<any>; // Request function
-  initParam?: any; // Initial parameters
-  pagination?: boolean; // Show pagination
-  border?: boolean;
-  rowKey?: string;
-  showIndex?: boolean; // New prop for showing index
-  beforeSearchSubmit?: (params: any) => any; // Callback before search
-  labelKey?: string; // Key to display for selected items
-  batchDeleteApi?: (ids: string[]) => Promise<any>; // Batch delete API
-  deleteApi?: (id: string) => Promise<any>; // Single delete API
-  operation?: any; // Operation column configuration
-  formConfig?: any; // Configuration for built-in editor (drawer)
-}>(), {
-  columns: () => [],
-  pagination: true,
-  initParam: {},
-  border: false,
-  rowKey: '_id',
-  showIndex: true, // Default to true
-  beforeSearchSubmit: (params: any) => params,
-  labelKey: 'name',
-  operation: undefined,
-  formConfig: undefined
-});
+const props = withDefaults(
+  defineProps<{
+    columns?: ProTableColumn[]; // Column configuration
+    requestApi: (params: any) => Promise<any>; // Request function
+    initParam?: any; // Initial parameters
+    pagination?: boolean; // Show pagination
+    border?: boolean;
+    rowKey?: string;
+    showIndex?: boolean; // New prop for showing index
+    beforeSearchSubmit?: (params: any) => any; // Callback before search
+    labelKey?: string; // Key to display for selected items
+    batchDeleteApi?: (ids: string[]) => Promise<any>; // Batch delete API
+    deleteApi?: (id: string) => Promise<any>; // Single delete API
+    operation?: any; // Operation column configuration
+    formConfig?: any; // Configuration for built-in editor (drawer)
+  }>(),
+  {
+    columns: () => [],
+    pagination: true,
+    initParam: {},
+    border: false,
+    rowKey: '_id',
+    showIndex: true, // Default to true
+    beforeSearchSubmit: (params: any) => params,
+    labelKey: 'name',
+    operation: undefined,
+    formConfig: undefined,
+    batchDeleteApi: undefined,
+    deleteApi: undefined
+  }
+);
 
 // Emits
 const emit = defineEmits(['view', 'edit', 'delete', 'submit']);
@@ -343,7 +384,7 @@ const loading = ref(false);
 const tableData = ref<any[]>([]);
 const searchParam = reactive<any>({ ...props.initParam });
 const selectedList = ref<any[]>([]);
-const selectedIds = computed(() => selectedList.value.map(item => item[props.rowKey]));
+const selectedIds = computed(() => selectedList.value.map((item) => item[props.rowKey]));
 
 // Debug Json
 const debugJsonStr = computed(() => JSON.stringify(editor.formData, null, 2));
@@ -351,12 +392,18 @@ const isDebugExpanded = ref(false);
 
 // Table Data Debug
 const showApiDebug = ref(false);
-const tableDataJsonStr = computed(() => JSON.stringify({
-  list: tableData.value,
-  total: pageable.total,
-  pageNum: pageable.pageNum,
-  pageSize: pageable.pageSize
-}, null, 2));
+const tableDataJsonStr = computed(() =>
+  JSON.stringify(
+    {
+      list: tableData.value,
+      total: pageable.total,
+      pageNum: pageable.pageNum,
+      pageSize: pageable.pageSize
+    },
+    null,
+    2
+  )
+);
 
 // Built-in Editor/Viewer State
 const editor = reactive({
@@ -383,16 +430,16 @@ const pageable = reactive<Pageable>({
 const tableColumns = computed(() => {
   let cols = [...props.columns];
   // Filter hidden columns (simple check)
-  cols = cols.filter(col => col.isShow !== false);
+  cols = cols.filter((col) => col.isShow !== false);
 
   // Auto-inject operation column if configured
-  if (props.operation && !props.operation.hidden && !cols.some(c => c.prop === 'operation')) {
+  if (props.operation && !props.operation.hidden && !cols.some((c) => c.prop === 'operation')) {
     const isHover = props.operation.mode === 'hover';
     cols.push({
       prop: 'operation',
-      label: isHover ? '' : (props.operation.label || t('common.operation')),
+      label: isHover ? '' : props.operation.label || t('common.operation'),
       fixed: props.operation.fixed || 'right',
-      width: isHover ? 50 : (props.operation.width || 200), // Minimal width for hover mode
+      width: isHover ? 50 : props.operation.width || 200, // Minimal width for hover mode
       type: 'operation',
       className: isHover ? 'operation-column-hover' : ''
     });
@@ -400,7 +447,7 @@ const tableColumns = computed(() => {
   return cols;
 });
 const searchColumns = computed(() => {
-  return props.columns.filter(item => item.search);
+  return props.columns.filter((item) => item.search);
 });
 const showSearch = computed(() => searchColumns.value.length > 0);
 
@@ -411,12 +458,14 @@ const getTableList = async () => {
     // Merge params
     let params = {
       ...searchParam,
-      ...(props.pagination ? {
-        pageNum: pageable.pageNum,
-        pageSize: pageable.pageSize
-      } : {})
+      ...(props.pagination
+        ? {
+            pageNum: pageable.pageNum,
+            pageSize: pageable.pageSize
+          }
+        : {})
     };
-    
+
     // Process search params (remove empty values)
     for (const key in params) {
       if (params[key] === '' || params[key] === null || params[key] === undefined) {
@@ -428,22 +477,22 @@ const getTableList = async () => {
     if (props.beforeSearchSubmit) {
       params = props.beforeSearchSubmit(params);
     }
-    
+
     const res = await props.requestApi(params);
     // Compatible with different response structures
     if (Array.isArray(res)) {
-       tableData.value = res;
-       pageable.total = res.length;
+      tableData.value = res;
+      pageable.total = res.length;
     } else if (res.data && Array.isArray(res.data)) {
-       tableData.value = res.data;
-       pageable.total = res.total || res.data.length;
+      tableData.value = res.data;
+      pageable.total = res.total || res.data.length;
     } else if (res.list && Array.isArray(res.list)) {
-       tableData.value = res.list;
-       pageable.total = res.total || res.list.length;
+      tableData.value = res.list;
+      pageable.total = res.total || res.list.length;
     } else {
-       // Fallback for simple array response or custom structure
-       tableData.value = [];
-       pageable.total = 0;
+      // Fallback for simple array response or custom structure
+      tableData.value = [];
+      pageable.total = 0;
     }
   } catch (error) {
     console.error(error);
@@ -462,7 +511,7 @@ const reset = () => {
   if (!searchFormRef.value) return;
   searchFormRef.value.resetFields();
   // Manually clear searchParam based on initParam
-  Object.keys(searchParam).forEach(key => {
+  Object.keys(searchParam).forEach((key) => {
     searchParam[key] = props.initParam[key] || '';
   });
   search();
@@ -486,16 +535,22 @@ const selectionChange = (val: any[]) => {
 const handleDelete = async (row: any) => {
   if (props.deleteApi) {
     try {
-       await ElMessageBox.confirm(t('table.confirmDelete', { name: row[props.labelKey || 'name'] }), t('common.warning'), {
-         type: 'warning',
-         dangerouslyUseHTMLString: true,
-         confirmButtonText: t('common.confirm'),
-         cancelButtonText: t('common.cancel')
-       });
-       await props.deleteApi(row[props.rowKey]);
-       ElMessage.success(t('table.deleteSuccess'));
-       getTableList();
-    } catch (e) { /* cancel */ }
+      await ElMessageBox.confirm(
+        t('table.confirmDelete', { name: row[props.labelKey || 'name'] }),
+        t('common.warning'),
+        {
+          type: 'warning',
+          dangerouslyUseHTMLString: true,
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel')
+        }
+      );
+      await props.deleteApi(row[props.rowKey]);
+      ElMessage.success(t('table.deleteSuccess'));
+      getTableList();
+    } catch {
+      /* cancel */
+    }
   } else {
     emit('delete', row);
   }
@@ -507,17 +562,21 @@ const handleBatchDelete = async () => {
   if (ids.length === 0) return;
 
   try {
-    await ElMessageBox.confirm(t('table.confirmBatchDelete', { count: ids.length }), t('common.warning'), {
-      type: 'warning',
-      dangerouslyUseHTMLString: true,
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel')
-    });
+    await ElMessageBox.confirm(
+      t('table.confirmBatchDelete', { count: ids.length }),
+      t('common.warning'),
+      {
+        type: 'warning',
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
+      }
+    );
     await props.batchDeleteApi(ids);
     ElMessage.success(t('table.batchDeleteSuccess'));
     getTableList();
     tableRef.value?.clearSelection();
-  } catch (e) {
+  } catch {
     // Cancel or Error
   }
 };
@@ -655,7 +714,7 @@ defineExpose({
   pointer-events: none;
   transition: opacity 0.2s;
   z-index: 10;
-  box-shadow: -10px 0 10px -5px rgba(0,0,0,0.1);
+  box-shadow: -10px 0 10px -5px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
   width: max-content; /* Ensure it adapts to content width */
 }
@@ -737,7 +796,7 @@ defineExpose({
   align-items: center;
   cursor: pointer;
   z-index: 999;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
   color: #fff;
   font-size: 20px;
   transition: all 0.3s;

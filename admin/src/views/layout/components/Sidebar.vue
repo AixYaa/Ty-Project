@@ -1,6 +1,6 @@
 <template>
   <div class="sidebar-container" :class="{ 'is-collapse': settingStore.isCollapse }">
-    <div class="logo" v-if="showLogo">
+    <div v-if="showLogo" class="logo">
       <span v-if="!settingStore.isCollapse">管理平台</span>
       <span v-else>Aix</span>
     </div>
@@ -49,7 +49,7 @@ const menuTextColor = computed(() => {
   text-align: center;
   font-size: 20px;
   font-weight: bold;
-  background-color: rgba(0,0,0,0.02);
+  background-color: rgba(0, 0, 0, 0.02);
   color: v-bind(menuTextColor);
   white-space: nowrap;
   overflow: hidden;

@@ -29,9 +29,9 @@
           <template #label>
             Template
             <el-badge
+              v-if="errors.template.length > 0"
               :value="errors.template.length"
               class="error-badge"
-              v-if="errors.template.length > 0"
             />
           </template>
           <vue-monaco-editor
@@ -41,7 +41,7 @@
             :options="{
               automaticLayout: true,
               scrollBeyondLastLine: false,
-              mouseWheelZoom: true,
+              mouseWheelZoom: true
             }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'template')"
@@ -52,9 +52,9 @@
           <template #label>
             Script
             <el-badge
+              v-if="errors.script.length > 0"
               :value="errors.script.length"
               class="error-badge"
-              v-if="errors.script.length > 0"
             />
           </template>
           <vue-monaco-editor
@@ -64,7 +64,7 @@
             :options="{
               automaticLayout: true,
               scrollBeyondLastLine: false,
-              mouseWheelZoom: true,
+              mouseWheelZoom: true
             }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'script')"
@@ -75,9 +75,9 @@
           <template #label>
             Style
             <el-badge
+              v-if="errors.style.length > 0"
               :value="errors.style.length"
               class="error-badge"
-              v-if="errors.style.length > 0"
             />
           </template>
           <vue-monaco-editor
@@ -87,7 +87,7 @@
             :options="{
               automaticLayout: true,
               scrollBeyondLastLine: false,
-              mouseWheelZoom: true,
+              mouseWheelZoom: true
             }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'style')"
@@ -101,20 +101,21 @@
               <el-icon><Warning /></el-icon> 代码存在语法错误: {{ errorSummary }}
             </span>
             <span v-else class="context-info">
-               <el-tag size="small" type="info">User: {{ userStore.userInfo?.username }}</el-tag>
-               <el-tag size="small" type="info">Role: {{ userStore.userInfo?.roles?.join(', ') || 'user' }}</el-tag>
-               <el-tooltip content="Global variables available in template: $t, $user, $utils" placement="top">
-                  <el-icon class="info-icon"><InfoFilled /></el-icon>
-               </el-tooltip>
+              <el-tag size="small" type="info">User: {{ userStore.userInfo?.username }}</el-tag>
+              <el-tag size="small" type="info"
+                >Role: {{ userStore.userInfo?.roles?.join(', ') || 'user' }}</el-tag
+              >
+              <el-tooltip
+                content="Global variables available in template: $t, $user, $utils"
+                placement="top"
+              >
+                <el-icon class="info-icon"><InfoFilled /></el-icon>
+              </el-tooltip>
             </span>
           </div>
           <div>
             <el-button @click="editDialogVisible = false">取消</el-button>
-            <el-button
-              type="primary"
-              @click="saveSchema"
-              :loading="saving"
-              :disabled="hasError"
+            <el-button type="primary" :loading="saving" :disabled="hasError" @click="saveSchema"
               >保存</el-button
             >
           </div>
@@ -125,21 +126,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineAsyncComponent, shallowRef, reactive, computed, getCurrentInstance } from "vue";
+import {
+  ref,
+  watch,
+  defineAsyncComponent,
+  shallowRef,
+  reactive,
+  computed,
+  getCurrentInstance
+} from 'vue';
 import { useRoute } from 'vue-router';
-import { loadModule } from "vue3-sfc-loader";
-import * as Vue from "vue";
-import * as VueI18n from "vue-i18n";
-import * as ElementPlus from "element-plus";
-import * as ElementPlusIconsVue from "@element-plus/icons-vue";
-import request from "@/utils/request";
-import { getSchemaById, updateSchema } from "@/api/schema";
-import { ElMessage } from "element-plus";
-import { Edit, Warning, InfoFilled } from "@element-plus/icons-vue";
-import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
-import * as MonacoEditor from "@guolao/vue-monaco-editor";
-import ProTable from "@/components/ProTable/index.vue";
-import IconSelect from "@/components/IconSelect/index.vue";
+import { loadModule } from 'vue3-sfc-loader';
+import * as Vue from 'vue';
+import * as VueI18n from 'vue-i18n';
+import * as ElementPlus from 'element-plus';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import request from '@/utils/request';
+import { getSchemaById, updateSchema } from '@/api/schema';
+import { ElMessage } from 'element-plus';
+import { Edit, Warning, InfoFilled } from '@element-plus/icons-vue';
+import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
+import * as MonacoEditor from '@guolao/vue-monaco-editor';
+import ProTable from '@/components/ProTable/index.vue';
+import IconSelect from '@/components/IconSelect/index.vue';
 import { useUserStore } from '@/store/user';
 
 const props = defineProps<{
@@ -164,16 +173,16 @@ const dynamicComponent = shallowRef<any>(null);
 
 // Edit Logic
 const editDialogVisible = ref(false);
-const activeTab = ref("template");
+const activeTab = ref('template');
 const saving = ref(false);
 const editForm = reactive({
-  _id: "",
-  name: "",
+  _id: '',
+  name: '',
   vue: {
-    template: "",
-    script: "",
-    style: "",
-  },
+    template: '',
+    script: '',
+    style: ''
+  }
 });
 
 // Syntax Validation Logic
@@ -184,41 +193,32 @@ const errors = reactive<{
 }>({
   template: [],
   script: [],
-  style: [],
+  style: []
 });
 
 const hasError = computed(
-  () =>
-    errors.template.length > 0 ||
-    errors.script.length > 0 ||
-    errors.style.length > 0,
+  () => errors.template.length > 0 || errors.script.length > 0 || errors.style.length > 0
 );
 
 const errorSummary = computed(() => {
   const summary: string[] = [];
-  if (errors.template.length > 0)
-    summary.push(`Template: ${errors.template.length} 个错误`);
-  if (errors.script.length > 0)
-    summary.push(`Script: ${errors.script.length} 个错误`);
-  if (errors.style.length > 0)
-    summary.push(`Style: ${errors.style.length} 个错误`);
-  return summary.join(" | ");
+  if (errors.template.length > 0) summary.push(`Template: ${errors.template.length} 个错误`);
+  if (errors.script.length > 0) summary.push(`Script: ${errors.script.length} 个错误`);
+  if (errors.style.length > 0) summary.push(`Style: ${errors.style.length} 个错误`);
+  return summary.join(' | ');
 });
 
-const handleValidate = (
-  markers: any[],
-  type: "template" | "script" | "style",
-) => {
+const handleValidate = (markers: any[], type: 'template' | 'script' | 'style') => {
   // MarkerSeverity.Error = 8
   const errorMarkers = markers.filter((marker) => marker.severity === 8);
   errors[type] = errorMarkers;
 };
 
-    // Syntax Validation Logic
-    // ...
-    const handleMount = (_editor: any, monaco: any) => {
-      // 1. Configure JavaScript/TypeScript Intellisense
-      const libSource = `
+// Syntax Validation Logic
+// ...
+const handleMount = (_editor: any, monaco: any) => {
+  // 1. Configure JavaScript/TypeScript Intellisense
+  const libSource = `
         declare var $user: {
           token: string;
           userInfo: {
@@ -241,90 +241,150 @@ const handleValidate = (
           delete: (url: string, config?: any) => Promise<any>;
         };
       `;
-      // Check if already disposed to avoid duplicates (though addExtraLib returns a disposable, we can just add)
-      // Actually addExtraLib replaces if path matches? No, it adds.
-      // But monaco instance is global usually.
-      // We'll add it once.
-      const libUri = 'ts:filename/global.d.ts';
-      
-      // Try to clean up previous (not easy without reference), but defaults are usually safe to append
-      monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource, libUri);
-      monaco.languages.typescript.typescriptDefaults.addExtraLib(libSource, libUri);
+  // Check if already disposed to avoid duplicates (though addExtraLib returns a disposable, we can just add)
+  // Actually addExtraLib replaces if path matches? No, it adds.
+  // But monaco instance is global usually.
+  // We'll add it once.
+  const libUri = 'ts:filename/global.d.ts';
 
-      // 2. Configure HTML Completion for {{ $user }}
-      // We register a provider only if not already registered (using a custom property on monaco object or just try/catch)
-      if (!monaco._htmlProviderRegistered) {
-        monaco.languages.registerCompletionItemProvider('html', {
-          triggerCharacters: ['.', '$', '<', ' ', ':'],
-          provideCompletionItems: (model: any, position: any) => {
-            const word = model.getWordUntilPosition(position);
-            const range = {
-              startLineNumber: position.lineNumber,
-              endLineNumber: position.lineNumber,
-              startColumn: word.startColumn,
-              endColumn: word.endColumn
-            };
-            
-            const suggestions = [
-                // Global Variables
-                {
-                  label: '$user',
-                  kind: monaco.languages.CompletionItemKind.Variable,
-                  documentation: 'Global User Store',
-                  insertText: '$user',
-                  range: range
-                },
-                {
-                  label: '$user.userInfo',
-                  kind: monaco.languages.CompletionItemKind.Property,
-                  insertText: '$user.userInfo',
-                  range: range
-                },
-                {
-                  label: '$api',
-                  kind: monaco.languages.CompletionItemKind.Variable,
-                  documentation: 'Global API Request',
-                  insertText: '$api',
-                  range: range
-                },
-                // Global Components
-                {
-                  label: 'ProTable',
-                  kind: monaco.languages.CompletionItemKind.Class,
-                  documentation: 'Powerful Table Component',
-                  insertText: 'ProTable',
-                  range: range
-                },
-                {
-                  label: 'IconSelect',
-                  kind: monaco.languages.CompletionItemKind.Class,
-                  documentation: 'Icon Selector Component',
-                  insertText: 'IconSelect',
-                  range: range
-                },
-                // Common Element Plus Components
-                { label: 'el-button', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-button', range },
-                { label: 'el-input', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-input', range },
-                { label: 'el-select', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-select', range },
-                { label: 'el-option', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-option', range },
-                { label: 'el-form', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-form', range },
-                { label: 'el-form-item', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-form-item', range },
-                { label: 'el-table', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-table', range },
-                { label: 'el-table-column', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-table-column', range },
-                { label: 'el-dialog', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-dialog', range },
-                { label: 'el-row', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-row', range },
-                { label: 'el-col', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-col', range },
-                { label: 'el-card', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-card', range }
-            ];
+  // Try to clean up previous (not easy without reference), but defaults are usually safe to append
+  monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource, libUri);
+  monaco.languages.typescript.typescriptDefaults.addExtraLib(libSource, libUri);
 
-            return { suggestions };
+  // 2. Configure HTML Completion for {{ $user }}
+  // We register a provider only if not already registered (using a custom property on monaco object or just try/catch)
+  if (!monaco._htmlProviderRegistered) {
+    monaco.languages.registerCompletionItemProvider('html', {
+      triggerCharacters: ['.', '$', '<', ' ', ':'],
+      provideCompletionItems: (model: any, position: any) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn
+        };
+
+        const suggestions = [
+          // Global Variables
+          {
+            label: '$user',
+            kind: monaco.languages.CompletionItemKind.Variable,
+            documentation: 'Global User Store',
+            insertText: '$user',
+            range: range
+          },
+          {
+            label: '$user.userInfo',
+            kind: monaco.languages.CompletionItemKind.Property,
+            insertText: '$user.userInfo',
+            range: range
+          },
+          {
+            label: '$api',
+            kind: monaco.languages.CompletionItemKind.Variable,
+            documentation: 'Global API Request',
+            insertText: '$api',
+            range: range
+          },
+          // Global Components
+          {
+            label: 'ProTable',
+            kind: monaco.languages.CompletionItemKind.Class,
+            documentation: 'Powerful Table Component',
+            insertText: 'ProTable',
+            range: range
+          },
+          {
+            label: 'IconSelect',
+            kind: monaco.languages.CompletionItemKind.Class,
+            documentation: 'Icon Selector Component',
+            insertText: 'IconSelect',
+            range: range
+          },
+          // Common Element Plus Components
+          {
+            label: 'el-button',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-button',
+            range
+          },
+          {
+            label: 'el-input',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-input',
+            range
+          },
+          {
+            label: 'el-select',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-select',
+            range
+          },
+          {
+            label: 'el-option',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-option',
+            range
+          },
+          {
+            label: 'el-form',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-form',
+            range
+          },
+          {
+            label: 'el-form-item',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-form-item',
+            range
+          },
+          {
+            label: 'el-table',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-table',
+            range
+          },
+          {
+            label: 'el-table-column',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-table-column',
+            range
+          },
+          {
+            label: 'el-dialog',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-dialog',
+            range
+          },
+          {
+            label: 'el-row',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-row',
+            range
+          },
+          {
+            label: 'el-col',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-col',
+            range
+          },
+          {
+            label: 'el-card',
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: 'el-card',
+            range
           }
-        });
-        monaco._htmlProviderRegistered = true;
-      }
-    };
+        ];
 
-    const openEditDialog = async () => {
+        return { suggestions };
+      }
+    });
+    monaco._htmlProviderRegistered = true;
+  }
+};
+
+const openEditDialog = async () => {
   if (!currentSchemaId.value) return;
   try {
     const res = await getSchemaById(currentSchemaId.value);
@@ -338,8 +398,8 @@ const handleValidate = (
       errors.style = [];
       editDialogVisible.value = true;
     }
-  } catch (error) {
-    ElMessage.error("无法加载 Schema 数据");
+  } catch {
+    ElMessage.error('无法加载 Schema 数据');
   }
 };
 
@@ -348,12 +408,12 @@ const saveSchema = async () => {
   saving.value = true;
   try {
     await updateSchema(editForm._id, { vue: editForm.vue });
-    ElMessage.success("Schema 更新成功");
+    ElMessage.success('Schema 更新成功');
     editDialogVisible.value = false;
     // Reload component
     loadSchema(currentSchemaId.value);
   } catch (error: any) {
-    ElMessage.error("更新失败: " + error.message);
+    ElMessage.error('更新失败: ' + error.message);
   } finally {
     saving.value = false;
   }
@@ -362,13 +422,13 @@ const saveSchema = async () => {
 const options = {
   moduleCache: {
     vue: Vue,
-    "vue-i18n": VueI18n,
-    "element-plus": ElementPlus,
-    "@element-plus/icons-vue": ElementPlusIconsVue,
-    "app-request": request,
-    "@/components/ProTable/index.vue": ProTable,
-    "@/components/IconSelect/index.vue": IconSelect,
-    "@guolao/vue-monaco-editor": MonacoEditor,
+    'vue-i18n': VueI18n,
+    'element-plus': ElementPlus,
+    '@element-plus/icons-vue': ElementPlusIconsVue,
+    'app-request': request,
+    '@/components/ProTable/index.vue': ProTable,
+    '@/components/IconSelect/index.vue': IconSelect,
+    '@guolao/vue-monaco-editor': MonacoEditor
   },
   async getFile(url: string) {
     // 这里我们模拟 url 就是 schemaId
@@ -376,11 +436,11 @@ const options = {
     return Promise.resolve(url);
   },
   addStyle(textContent: string) {
-    const style = document.createElement("style");
+    const style = document.createElement('style');
     style.textContent = textContent;
-    const ref = document.head.getElementsByTagName("style")[0] || null;
+    const ref = document.head.getElementsByTagName('style')[0] || null;
     document.head.insertBefore(style, ref);
-  },
+  }
 };
 
 const loadSchema = async (id: string) => {
@@ -391,15 +451,15 @@ const loadSchema = async (id: string) => {
   try {
     const res = await getSchemaById(id);
     if (!res || !res.vue) {
-      throw new Error("Invalid schema data");
+      throw new Error('Invalid schema data');
     }
 
     const { template, script, style } = res.vue;
 
     // 构造 SFC 字符串
     // 自动检测是否使用 script setup (如果没有 export default 则认为是 script setup)
-    const isSetup = !script.includes("export default");
-    const scriptTag = isSetup ? "<script setup>" : "<script>";
+    const isSetup = !script.includes('export default');
+    const scriptTag = isSetup ? '<script setup>' : '<script>';
 
     const sfcContent = `
           <template>
@@ -412,19 +472,19 @@ ${script}
 ${style}
 </style>
     `;
-    
+
     // 使用 vue3-sfc-loader 加载
     // 强制使用新的 URL 以绕过缓存 (添加时间戳)
     const cacheBuster = Date.now();
     dynamicComponent.value = defineAsyncComponent(() =>
-      loadModule(id + ".vue?t=" + cacheBuster, {
+      loadModule(id + '.vue?t=' + cacheBuster, {
         ...options,
-        getFile: () => Promise.resolve(sfcContent),
-      }),
+        getFile: () => Promise.resolve(sfcContent)
+      })
     );
   } catch (error: any) {
-    console.error("Failed to load schema:", error);
-    ElMessage.error("加载页面失败: " + error.message);
+    console.error('Failed to load schema:', error);
+    ElMessage.error('加载页面失败: ' + error.message);
   } finally {
     loading.value = false;
   }
@@ -436,7 +496,7 @@ watch(
     console.log('DynamicRender watched newId:', newId);
     if (newId) loadSchema(newId);
   },
-  { immediate: true },
+  { immediate: true }
 );
 </script>
 

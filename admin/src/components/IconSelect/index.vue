@@ -1,23 +1,18 @@
 <template>
   <el-select
     :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
     filterable
     placeholder="请选择图标"
     clearable
     class="icon-select"
+    @update:model-value="emit('update:modelValue', $event)"
   >
     <template #prefix>
       <el-icon v-if="modelValue" class="selected-icon">
         <component :is="modelValue" />
       </el-icon>
     </template>
-    <el-option
-      v-for="name in iconNames"
-      :key="name"
-      :label="name"
-      :value="name"
-    >
+    <el-option v-for="name in iconNames" :key="name" :label="name" :value="name">
       <div class="icon-option">
         <el-icon>
           <component :is="name" />
@@ -33,7 +28,7 @@ import { ref } from 'vue';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 
 defineProps<{
-  modelValue: string
+  modelValue: string;
 }>();
 
 const emit = defineEmits(['update:modelValue']);

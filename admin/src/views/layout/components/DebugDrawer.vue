@@ -22,11 +22,11 @@
             <span class="label">Meta:</span>
             <pre class="json-box">{{ JSON.stringify(route.meta, null, 2) }}</pre>
           </div>
-          <div class="debug-item" v-if="Object.keys(route.params).length">
+          <div v-if="Object.keys(route.params).length" class="debug-item">
             <span class="label">Params:</span>
             <pre class="json-box">{{ JSON.stringify(route.params, null, 2) }}</pre>
           </div>
-          <div class="debug-item" v-if="Object.keys(route.query).length">
+          <div v-if="Object.keys(route.query).length" class="debug-item">
             <span class="label">Query:</span>
             <pre class="json-box">{{ JSON.stringify(route.query, null, 2) }}</pre>
           </div>
@@ -58,13 +58,13 @@
       <!-- If we had a way to access current component data, we'd put it here. 
            For now, we can show something if it's a dynamic route. -->
       <el-collapse-item v-if="route.meta.schemaId" title="动态Schema (Dynamic)" name="4">
-         <div class="debug-section">
-           <div class="debug-item">
-             <span class="label">SchemaID:</span>
-             <span class="value">{{ route.meta.schemaId }}</span>
-           </div>
-           <!-- Maybe add a button to fetch schema detail? -->
-         </div>
+        <div class="debug-section">
+          <div class="debug-item">
+            <span class="label">SchemaID:</span>
+            <span class="value">{{ route.meta.schemaId }}</span>
+          </div>
+          <!-- Maybe add a button to fetch schema detail? -->
+        </div>
       </el-collapse-item>
     </el-collapse>
   </el-drawer>

@@ -3,12 +3,12 @@
     <!-- Left Column: Top Level Menus -->
     <div class="left-column">
       <div class="logo">
-        <img src="@/assets/logo.png" alt="logo" v-if="false" />
+        <img v-if="false" src="@/assets/logo.png" alt="logo" />
         <span v-else>Aix</span>
       </div>
       <el-scrollbar>
-        <div 
-          v-for="menu in menuTree" 
+        <div
+          v-for="menu in menuTree"
           :key="menu._id"
           class="column-item"
           :class="{ 'is-active': activeParentId === menu._id }"
@@ -29,23 +29,14 @@
         {{ $t(activeParentName) }}
       </div>
       <el-scrollbar>
-        <el-menu
-          router
-          :default-active="activeMenu"
-          class="sub-menu"
-          :unique-opened="true"
-        >
+        <el-menu router :default-active="activeMenu" class="sub-menu" :unique-opened="true">
           <template v-for="menu in subMenus" :key="menu._id">
             <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu._id || ''">
               <template #title>
                 <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
                 <span>{{ $t(menu.name) }}</span>
               </template>
-              <el-menu-item 
-                v-for="child in menu.children" 
-                :key="child._id" 
-                :index="child.path"
-              >
+              <el-menu-item v-for="child in menu.children" :key="child._id" :index="child.path">
                 <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
                 <template #title>{{ $t(child.name) }}</template>
               </el-menu-item>
@@ -77,14 +68,14 @@ const activeParentName = ref<string>('');
 const activeMenu = computed(() => route.path);
 
 const subMenus = computed(() => {
-  const parent = menuTree.value.find(m => m._id === activeParentId.value);
-  return parent ? (parent.children || []) : [];
+  const parent = menuTree.value.find((m) => m._id === activeParentId.value);
+  return parent ? parent.children || [] : [];
 });
 
 const handleParentClick = (menu: SysMenu) => {
   activeParentId.value = menu._id!;
   activeParentName.value = menu.name;
-  
+
   // Optional: Automatically jump to first child if no child is active
   // But usually we just show the submenu and let user click.
   // However, if the user clicks a top level menu that IS a route itself (no children), we should navigate.
@@ -117,33 +108,39 @@ const initActiveMenu = () => {
 
   // Find which parent contains the current route
   const currentPath = route.path;
-  
+
   // Helper to check if a menu or its children contains the path
   const containsPath = (menu: SysMenu, path: string): boolean => {
     if (menu.path === path) return true;
     if (menu.children) {
-      return menu.children.some(child => containsPath(child, path));
+      return menu.children.some((child) => containsPath(child, path));
     }
     return false;
   };
 
-  const activeParent = menuTree.value.find(m => containsPath(m, currentPath));
-  
+  const activeParent = menuTree.value.find((m) => containsPath(m, currentPath));
+
   if (activeParent) {
     activeParentId.value = activeParent._id!;
     activeParentName.value = activeParent.name;
   } else {
     // Default to first one if not found (or maybe dashboard?)
     if (menuTree.value.length > 0) {
-      activeParentId.value = menuTree.value[0]?._id!;
-      activeParentName.value = menuTree.value[0]?.name || '';
+      const first = menuTree.value[0];
+      if (first) {
+        activeParentId.value = first._id!;
+        activeParentName.value = first.name || '';
+      }
     }
   }
 };
 
-watch(() => route.path, () => {
-  initActiveMenu();
-});
+watch(
+  () => route.path,
+  () => {
+    initActiveMenu();
+  }
+);
 
 onMounted(() => {
   loadMenus();
@@ -187,7 +184,8 @@ onMounted(() => {
   transition: all 0.3s;
 }
 
-.column-item:hover, .column-item.is-active {
+.column-item:hover,
+.column-item.is-active {
   color: #fff;
   background-color: var(--el-color-primary);
 }

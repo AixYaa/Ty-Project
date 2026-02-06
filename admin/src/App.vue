@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-// @ts-ignore
+// @ts-expect-error element-plus locale types
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs';
-// @ts-ignore
+// @ts-expect-error element-plus locale types
 import en from 'element-plus/dist/locale/en.mjs';
 
 const { locale } = useI18n();
