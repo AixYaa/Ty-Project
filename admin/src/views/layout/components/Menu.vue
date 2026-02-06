@@ -58,11 +58,13 @@ const isCollapse = computed(() => props.mode === 'vertical' && settingStore.isCo
 // If Horizontal: usually transparent or white in header, unless dark mode
 // If Vertical: based on sidebar theme
 const bgColor = computed(() => {
+  if (settingStore.isDark) return '#1d1e1f';
   if (props.mode === 'horizontal') return 'transparent';
   return settingStore.themeColor === 'dark' ? '#001529' : '#ffffff';
 });
 
 const textColor = computed(() => {
+  if (settingStore.isDark) return '#CFD3DC';
   if (props.mode === 'horizontal') return '#303133';
   return settingStore.themeColor === 'dark' ? '#fff' : '#303133';
 });

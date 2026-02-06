@@ -3,3 +3,100 @@ html, body, #app {
   margin: 0;
   padding: 0;
 }
+
+/* Dark Mode Global Overrides */
+html.dark body {
+  background-color: var(--el-bg-color);
+  color: var(--el-text-color-primary);
+}
+
+/* Layout Containers */
+html.dark .el-header,
+html.dark .el-aside,
+html.dark .tags-view-container,
+html.dark .columns-sidebar,
+html.dark .left-column,
+html.dark .right-column,
+html.dark .header-container {
+  background-color: var(--el-bg-color-overlay) !important;
+  border-color: var(--el-border-color-light) !important;
+}
+
+html.dark .header-container .username {
+  color: var(--el-text-color-primary) !important;
+}
+
+html.dark .main-content {
+  background-color: var(--el-bg-color);
+}
+
+/* Columns Layout Specifics */
+html.dark .left-column {
+  background-color: #1d1e1f !important; /* Match Element Plus dark bg */
+}
+
+html.dark .logo {
+  background-color: transparent !important;
+  color: var(--el-text-color-primary) !important;
+}
+
+html.dark .column-item {
+  color: var(--el-text-color-regular) !important;
+}
+
+html.dark .column-item:hover, 
+html.dark .column-item.is-active {
+  background-color: var(--el-color-primary-light-9) !important;
+  color: var(--el-color-primary) !important;
+}
+
+html.dark .sub-menu-title {
+  color: var(--el-text-color-primary) !important;
+  border-bottom-color: var(--el-border-color-light) !important;
+}
+
+/* Tags View */
+html.dark .tags-view-item {
+  background-color: var(--el-bg-color-overlay) !important;
+  border-color: var(--el-border-color-light) !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+html.dark .tags-view-item.active {
+  background-color: var(--el-color-primary) !important;
+  border-color: var(--el-color-primary) !important;
+  color: #fff !important;
+}
+
+html.dark .contextmenu {
+  background-color: var(--el-bg-color-overlay) !important;
+  border-color: var(--el-border-color-light) !important;
+  color: var(--el-text-color-primary) !important;
+  box-shadow: var(--el-box-shadow-light) !important;
+}
+
+html.dark .contextmenu li:hover {
+  background-color: var(--el-color-primary-light-9) !important;
+  color: var(--el-color-primary) !important;
+}
+
+/* Breadcrumb */
+html.dark .breadcrumb-card {
+  background-color: var(--el-bg-color-overlay) !important;
+  border-color: var(--el-border-color-light) !important;
+}
+
+html.dark .debug-btn {
+  background-color: var(--el-bg-color-overlay) !important;
+  border-color: var(--el-border-color-light) !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+html.dark .debug-btn:hover {
+  background-color: var(--el-color-primary-light-9) !important;
+  color: var(--el-color-primary) !important;
+}
+
+html.dark .no-redirect {
+  color: var(--el-text-color-placeholder) !important;
+}

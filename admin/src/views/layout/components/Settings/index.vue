@@ -6,6 +6,13 @@
     append-to-body
   >
     <div class="setting-item">
+      <div class="label-row">
+        <span class="label">暗黑模式</span>
+        <el-switch :model-value="settingStore.isDark" @change="settingStore.toggleDark" />
+      </div>
+    </div>
+
+    <div class="setting-item">
       <span class="label">主题色</span>
       <div class="theme-colors">
         <div 
@@ -143,15 +150,20 @@ defineExpose({ open });
 
 <style scoped>
 .setting-item {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-  gap: 10px;
+  margin-bottom: 24px;
 }
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .label {
   font-size: 14px;
-  color: #606266;
-  margin-bottom: 8px;
+  color: var(--el-text-color-primary);
+  margin-bottom: 12px;
+  display: block;
 }
 .theme-colors {
   display: flex;

@@ -158,11 +158,11 @@ onMounted(() => {
 
 <style scoped>
 .tags-view-container {
-  height: 34px;
+  height: 38px;
   width: 100%;
   background: #fff;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 0 3px 0 rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid #e4e7ed;
+  /* box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); */
 }
 
 .tags-view-wrapper {
@@ -170,16 +170,18 @@ onMounted(() => {
     display: inline-block;
     position: relative;
     cursor: pointer;
-    height: 26px;
-    line-height: 26px;
-    border: 1px solid #d8dce5;
-    color: #495060;
+    height: 30px;
+    line-height: 30px;
+    border: 1px solid #dcdfe6;
+    color: #606266;
     background: #fff;
-    padding: 0 8px;
+    padding: 0 12px;
     font-size: 12px;
-    margin-left: 5px;
+    margin-left: 6px;
     margin-top: 4px;
     text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
     
     &:first-of-type {
       margin-left: 15px;
@@ -189,20 +191,28 @@ onMounted(() => {
       margin-right: 15px;
     }
 
+    &:hover {
+      border-color: var(--el-color-primary-light-5);
+      color: var(--el-color-primary);
+      background-color: var(--el-color-primary-light-9);
+    }
+
     &.active {
       background-color: var(--el-color-primary);
       color: #fff;
       border-color: var(--el-color-primary);
+      box-shadow: 0 2px 4px 0 rgba(var(--el-color-primary-rgb), 0.3);
       
       &::before {
         content: '';
         background: #fff;
         display: inline-block;
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         position: relative;
-        margin-right: 2px;
+        margin-right: 4px;
+        vertical-align: 1px;
       }
     }
   }
@@ -213,24 +223,30 @@ onMounted(() => {
 }
 
 .el-icon-close {
-  width: 16px;
-  height: 16px;
-  vertical-align: -2px;
+  width: 14px;
+  height: 14px;
+  vertical-align: -1px;
   border-radius: 50%;
   text-align: center;
   transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
   transform-origin: 100% 50%;
+  margin-left: 4px;
   
   &:before {
-    transform: scale(0.6);
+    transform: scale(0.7);
     display: inline-block;
-    vertical-align: -3px;
+    vertical-align: -2px;
   }
   
   &:hover {
-    background-color: #b4bccc;
+    background-color: rgba(0,0,0,0.2);
     color: #fff;
   }
+}
+
+/* Modify hover style for active tag close icon */
+.tags-view-item.active .el-icon-close:hover {
+  background-color: rgba(255,255,255,0.3);
 }
 
 .contextmenu {
@@ -244,15 +260,18 @@ onMounted(() => {
   font-size: 12px;
   font-weight: 400;
   color: #333;
-  box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #ebeef5;
   
   li {
     margin: 0;
     padding: 7px 16px;
     cursor: pointer;
+    transition: background 0.3s;
     
     &:hover {
-      background: #eee;
+      background: #f5f7fa;
+      color: var(--el-color-primary);
     }
   }
 }

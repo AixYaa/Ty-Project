@@ -31,14 +31,9 @@ export class DataInitializer {
               </div>
             `,
             script: `
-              export default {
-                data() {
-                  return {
-                    name: 'World',
-                    count: 0
-                  }
-                }
-              }
+              import { ref } from 'vue';
+              const name = ref('World');
+              const count = ref(0);
             `,
             style: `
               .hello-world {
@@ -55,7 +50,39 @@ export class DataInitializer {
         console.log('Created HelloWorld schema:', schemaId);
       } else {
         schemaId = schemas[0]._id;
-        console.log('HelloWorld schema already exists:', schemaId);
+        // Force update to ensure latest code
+        await SysService.updateSchema(schemaId.toString(), {
+          vue: {
+            template: `
+              <div class="hello-world">
+                <el-card>
+                  <template #header>
+                    <div class="card-header">
+                      <span>动态组件示例</span>
+                    </div>
+                  </template>
+                  <h1>Hello {{ name }}!</h1>
+                  <p>这是一个从服务端加载的动态 Vue 组件。</p>
+                  <el-button type="primary" @click="count++">Count is: {{ count }}</el-button>
+                </el-card>
+              </div>
+            `,
+            script: `
+              import { ref } from 'vue';
+              const name = ref('World');
+              const count = ref(0);
+            `,
+            style: `
+              .hello-world {
+                padding: 20px;
+              }
+              h1 {
+                color: #409EFF;
+              }
+            `
+          }
+        });
+        console.log('HelloWorld schema updated:', schemaId);
       }
 
       // 2. Check if menu exists

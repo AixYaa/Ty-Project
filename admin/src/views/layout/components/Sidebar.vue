@@ -18,8 +18,14 @@ import Menu from './Menu.vue';
 const settingStore = useSettingStore();
 
 const showLogo = computed(() => settingStore.layoutMode !== 'classic');
-const menuBgColor = computed(() => settingStore.themeColor === 'dark' ? '#001529' : '#ffffff');
-const menuTextColor = computed(() => settingStore.themeColor === 'dark' ? '#fff' : '#303133');
+const menuBgColor = computed(() => {
+  if (settingStore.isDark) return '#1d1e1f';
+  return settingStore.themeColor === 'dark' ? '#001529' : '#ffffff';
+});
+const menuTextColor = computed(() => {
+  if (settingStore.isDark) return '#CFD3DC';
+  return settingStore.themeColor === 'dark' ? '#fff' : '#303133';
+});
 </script>
 
 <style scoped>

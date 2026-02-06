@@ -96,7 +96,16 @@ const handleParentClick = (menu: SysMenu) => {
 const loadMenus = async () => {
   try {
     const res = await getMenuTree();
-    menuTree.value = res;
+    // Add Dashboard manually as it might not be in the dynamic menu tree
+    const dashboardMenu: SysMenu = {
+      _id: 'dashboard',
+      name: '首页',
+      path: '/dashboard',
+      icon: 'House',
+      sort: 0,
+      children: []
+    };
+    menuTree.value = [dashboardMenu, ...res];
     initActiveMenu();
   } catch (e) {
     console.error('Failed to load menus', e);

@@ -14,6 +14,7 @@ export const useSettingStore = defineStore('setting', () => {
   // Theme Config
   const themeColor = ref<ThemeColor>('default');
   const primaryColor = ref('#409EFF');
+  const isDark = ref(false); // Dark mode state
   
   // Feature Config
   const showWatermark = ref(false);
@@ -78,14 +79,18 @@ export const useSettingStore = defineStore('setting', () => {
     debugDrawerVisible.value = !debugDrawerVisible.value;
   };
 
+  const toggleDark = () => {
+    isDark.value = !isDark.value;
+    updateTheme();
+  };
+
   // Helper to update CSS variables
   const updateTheme = () => {
     const el = document.documentElement;
     el.style.setProperty('--el-color-primary', primaryColor.value);
-    // Add logic to generate light/dark variants if needed
-    // For now, basic primary color switch
     
-    if (themeColor.value === 'dark') {
+    // Toggle dark class on html element
+    if (isDark.value) {
       el.classList.add('dark');
     } else {
       el.classList.remove('dark');
@@ -96,6 +101,7 @@ export const useSettingStore = defineStore('setting', () => {
     isCollapse,
     layoutMode,
     isMobile,
+    isDark,
     mobileDrawerVisible,
     themeColor,
     primaryColor,
@@ -114,8 +120,11 @@ export const useSettingStore = defineStore('setting', () => {
     setWatermark,
     setTagsView,
     setDebugDrawer,
-    toggleDebugDrawer
+    toggleDebugDrawer,
+    toggleDark
   };
 }, {
-  persist: true
+  persist: {
+    pick: ['layoutMode', 'themeColor', 'primaryColor', 'isDark', 'showWatermark', 'watermarkText', 'showTagsView']
+  }
 });

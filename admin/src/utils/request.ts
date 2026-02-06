@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
 
+const BASE_URL = 'http://localhost:6632/api/admin';
+
 const service = axios.create({
-  baseURL: 'http://localhost:6632/api/admin', // 指向后台管理接口 (修正为 /api/admin)
+  baseURL: BASE_URL, // 指向后台管理接口 (修正为 /api/admin)
   timeout: 5000
 });
 
@@ -20,6 +22,9 @@ service.interceptors.request.use(
   }
 );
 
+let isRefreshing = false;
+let requests: any[] = [];
+
 // Response interceptor
 service.interceptors.response.use(
   (response) => {
@@ -32,14 +37,62 @@ service.interceptors.response.use(
       return res.data;
     }
   },
-  (error) => {
+  async (error) => {
     console.error('err' + error);
-    if (error.response && error.response.status === 401) {
-      ElMessage.error('登录过期，请重新登录');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      // 避免循环依赖，这里使用 window.location 跳转
-      window.location.href = '/login';
+    const originalRequest = error.config;
+    
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (refreshToken) {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          originalRequest._retry = true;
+
+          try {
+            // Call refresh token API
+            const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
+              refreshToken
+            });
+
+            if (data.status === 200) {
+              const { accessToken } = data.data;
+              localStorage.setItem('accessToken', accessToken);
+              service.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+              
+              // Execute queued requests
+              requests.forEach(cb => cb(accessToken));
+              requests = [];
+              
+              return service(originalRequest);
+            } else {
+              throw new Error('Refresh failed');
+            }
+          } catch (refreshError) {
+            // Refresh failed, clear tokens and redirect
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          } finally {
+            isRefreshing = false;
+          }
+        } else {
+          // Queue requests while refreshing
+          return new Promise((resolve) => {
+            requests.push((token: string) => {
+              originalRequest.headers['Authorization'] = `Bearer ${token}`;
+              resolve(service(originalRequest));
+            });
+          });
+        }
+      } else {
+        // No refresh token, redirect to login
+        ElMessage.error('登录过期，请重新登录');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+      }
     } else {
       ElMessage.error(error.message);
     }
