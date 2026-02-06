@@ -151,6 +151,9 @@ export class DataInitializer {
       </template>
 
       <!-- Custom Columns -->
+      <template #name="{ row }">
+        {{ $t(row.name) }}
+      </template>
       <template #icon="{ row }">
         <el-icon v-if="row.icon">
           <component :is="row.icon" />
@@ -408,6 +411,10 @@ const submitForm = async (formData, done) => {
         <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.entityName') }) }}</el-button>
       </template>
 
+      <template #name="{ row }">
+        {{ $t(row.name) }}
+      </template>
+
       <!-- Built-in Editor Slot -->
       <template #edit-form="{ model }">
         <el-form :model="model" label-width="100px">
@@ -514,6 +521,10 @@ const submitForm = async (formData, done) => {
     >
       <template #tableHeader>
         <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.viewName') }) }}</el-button>
+      </template>
+
+      <template #name="{ row }">
+        {{ $t(row.name) }}
       </template>
 
       <template #entityId="{ row }">
@@ -672,6 +683,10 @@ const submitForm = async (formData, done) => {
     >
       <template #tableHeader>
         <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增架构</el-button>
+      </template>
+
+      <template #name="{ row }">
+        {{ $t(row.name) }}
       </template>
 
       <template #entityId="{ row }">
