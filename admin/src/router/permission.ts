@@ -2,6 +2,10 @@ import router from './index';
 import { getMenuTree, type SysMenu } from '@/api/sys';
 import { useTagsViewStore } from '@/store/tagsView';
 import type { RouteRecordRaw } from 'vue-router';
+import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
+
+NProgress.configure({ showSpinner: false });
 
 let isRoutesLoaded = false;
 
@@ -37,6 +41,7 @@ const generateRoutes = (menus: SysMenu[]): RouteRecordRaw[] => {
 };
 
 router.beforeEach(async (to, _from, next) => {
+  NProgress.start();
   console.log('Router beforeEach:', to.path);
   const token = localStorage.getItem('accessToken');
 
@@ -90,4 +95,8 @@ router.beforeEach(async (to, _from, next) => {
       next();
     }
   }
+});
+
+router.afterEach(() => {
+  NProgress.done();
 });
