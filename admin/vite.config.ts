@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './', // Use relative path for assets to support deployment in any subdirectory
   plugins: [vue()],
   resolve: {
     alias: {

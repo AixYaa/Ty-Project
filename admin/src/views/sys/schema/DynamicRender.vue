@@ -5,7 +5,7 @@
 
     <!-- Edit Schema Button -->
     <el-button
-      v-if="currentSchemaId && userStore.userInfo?.username === 'admin'"
+      v-if="currentSchemaId && userStore.userInfo?.role === 'admin'"
       type="primary"
       circle
       size="large"
@@ -45,6 +45,7 @@
             }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'template')"
+            @mount="handleMount"
           />
         </el-tab-pane>
         <el-tab-pane label="Script" name="script">
@@ -67,6 +68,7 @@
             }"
             height="100%"
             @validate="(markers) => handleValidate(markers, 'script')"
+            @mount="handleMount"
           />
         </el-tab-pane>
         <el-tab-pane label="Style" name="style">
@@ -212,7 +214,117 @@ const handleValidate = (
   errors[type] = errorMarkers;
 };
 
-const openEditDialog = async () => {
+    // Syntax Validation Logic
+    // ...
+    const handleMount = (_editor: any, monaco: any) => {
+      // 1. Configure JavaScript/TypeScript Intellisense
+      const libSource = `
+        declare var $user: {
+          token: string;
+          userInfo: {
+            id: string;
+            username: string;
+            name: string;
+            role: string;
+            avatar: {
+              original: string;
+              compressed: string;
+              name: string;
+            };
+          };
+        };
+        declare var $t: (key: string) => string;
+        declare var $api: {
+          get: (url: string, config?: any) => Promise<any>;
+          post: (url: string, data?: any, config?: any) => Promise<any>;
+          put: (url: string, data?: any, config?: any) => Promise<any>;
+          delete: (url: string, config?: any) => Promise<any>;
+        };
+      `;
+      // Check if already disposed to avoid duplicates (though addExtraLib returns a disposable, we can just add)
+      // Actually addExtraLib replaces if path matches? No, it adds.
+      // But monaco instance is global usually.
+      // We'll add it once.
+      const libUri = 'ts:filename/global.d.ts';
+      
+      // Try to clean up previous (not easy without reference), but defaults are usually safe to append
+      monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource, libUri);
+      monaco.languages.typescript.typescriptDefaults.addExtraLib(libSource, libUri);
+
+      // 2. Configure HTML Completion for {{ $user }}
+      // We register a provider only if not already registered (using a custom property on monaco object or just try/catch)
+      if (!monaco._htmlProviderRegistered) {
+        monaco.languages.registerCompletionItemProvider('html', {
+          triggerCharacters: ['.', '$', '<', ' ', ':'],
+          provideCompletionItems: (model: any, position: any) => {
+            const word = model.getWordUntilPosition(position);
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: word.startColumn,
+              endColumn: word.endColumn
+            };
+            
+            const suggestions = [
+                // Global Variables
+                {
+                  label: '$user',
+                  kind: monaco.languages.CompletionItemKind.Variable,
+                  documentation: 'Global User Store',
+                  insertText: '$user',
+                  range: range
+                },
+                {
+                  label: '$user.userInfo',
+                  kind: monaco.languages.CompletionItemKind.Property,
+                  insertText: '$user.userInfo',
+                  range: range
+                },
+                {
+                  label: '$api',
+                  kind: monaco.languages.CompletionItemKind.Variable,
+                  documentation: 'Global API Request',
+                  insertText: '$api',
+                  range: range
+                },
+                // Global Components
+                {
+                  label: 'ProTable',
+                  kind: monaco.languages.CompletionItemKind.Class,
+                  documentation: 'Powerful Table Component',
+                  insertText: 'ProTable',
+                  range: range
+                },
+                {
+                  label: 'IconSelect',
+                  kind: monaco.languages.CompletionItemKind.Class,
+                  documentation: 'Icon Selector Component',
+                  insertText: 'IconSelect',
+                  range: range
+                },
+                // Common Element Plus Components
+                { label: 'el-button', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-button', range },
+                { label: 'el-input', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-input', range },
+                { label: 'el-select', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-select', range },
+                { label: 'el-option', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-option', range },
+                { label: 'el-form', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-form', range },
+                { label: 'el-form-item', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-form-item', range },
+                { label: 'el-table', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-table', range },
+                { label: 'el-table-column', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-table-column', range },
+                { label: 'el-dialog', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-dialog', range },
+                { label: 'el-row', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-row', range },
+                { label: 'el-col', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-col', range },
+                { label: 'el-card', kind: monaco.languages.CompletionItemKind.Class, insertText: 'el-card', range }
+            ];
+
+            return { suggestions };
+          }
+        });
+        monaco._htmlProviderRegistered = true;
+      }
+    };
+
+    const openEditDialog = async () => {
   if (!currentSchemaId.value) return;
   try {
     const res = await getSchemaById(currentSchemaId.value);

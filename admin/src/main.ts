@@ -9,6 +9,9 @@ import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import IconSelect from '@/components/IconSelect/index.vue'
+import ProTable from '@/components/ProTable/index.vue'
+import request from '@/utils/request'
+import { useUserStore } from '@/store/user'
 
 const app = createApp(App)
 
@@ -28,6 +31,13 @@ app.use(router)
 app.use(i18n)
 app.use(ElementPlus)
 app.component('IconSelect', IconSelect)
+app.component('ProTable', ProTable)
+
+// Register global property $user (after pinia is active)
+// This allows {{ $user }} in templates
+const userStore = useUserStore()
+app.config.globalProperties.$user = userStore
+app.config.globalProperties.$api = request
 
 // 引入权限控制 (要在 use(router) 之后)
 import './router/permission';

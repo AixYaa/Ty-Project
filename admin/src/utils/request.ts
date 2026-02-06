@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-
-const BASE_URL = 'http://localhost:6632/api/admin';
-
+// 开发环境下的接口地址
+// const BASE_URL = 'http://localhost:6632/api/admin';
+// 生产环境下的接口地址
+const BASE_URL = 'https://ty.haix.fun/api/admin';
 const service = axios.create({
   baseURL: BASE_URL, // 指向后台管理接口 (修正为 /api/admin)
   timeout: 5000

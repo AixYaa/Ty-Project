@@ -9,6 +9,13 @@ const app = express();
 // Serve static files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Serve frontend static files (from ../admin/dist)
+// Resolve path relative to current file location (works for both src/ and dist/)
+// src: /back/src/app.ts -> ../../admin/dist
+// dist: /back/dist/index.js -> ../../admin/dist
+const frontendPath = path.resolve(__dirname, '../../admin/dist');
+app.use(express.static(frontendPath));
+
 // 1. 定义允许的来源 (白名单)
 // 从环境变量获取，默认为空数组
 const whitelist = (process.env.CORS_WHITELIST || '').split(',').filter(Boolean);
@@ -55,6 +62,22 @@ app.use(express.json());
 
 // 所有子路由统一挂载到 /api 下：/api/health, /api/admin, /api/client, /api/common
 app.use('/api', router);
+
+// Handle SPA fallback - must be after API routes
+app.get('*', (req, res, next) => {
+  // Skip if request is for API or uploads (though API should be caught above)
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  
+  const indexFile = path.join(frontendPath, 'index.html');
+  res.sendFile(indexFile, (err) => {
+    if (err) {
+      // If index.html is not found (e.g. frontend not built), call next() to likely 404
+      next();
+    }
+  });
+});
 
 app.get('/', (req, res) => res.json({ message: 'Hello from Express + TypeScript' }));
 

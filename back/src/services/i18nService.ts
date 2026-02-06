@@ -32,11 +32,18 @@ export class I18nService {
   }
 
   static getLocalesDir() {
+    // Priority 0: Environment Variable
+    if (process.env.ADMIN_LOCALES_PATH) {
+      if (fs.existsSync(process.env.ADMIN_LOCALES_PATH)) {
+        return process.env.ADMIN_LOCALES_PATH;
+      }
+      console.warn(`[I18n] Env ADMIN_LOCALES_PATH set to ${process.env.ADMIN_LOCALES_PATH} but does not exist.`);
+    }
+
     // Strategy 1: Relative to __dirname (Source layout)
     // D:\Hx\AixProject\back\src\services -> ../../../ -> D:\Hx\AixProject
     // Target: D:\Hx\AixProject\admin\public\locales
     let dir = path.resolve(__dirname, '../../../admin/public/locales');
-    
     if (fs.existsSync(dir)) return dir;
 
     // Strategy 2: Relative to process.cwd() (Project root layout)
@@ -44,8 +51,21 @@ export class I18nService {
     dir = path.resolve(process.cwd(), '../admin/public/locales');
     if (fs.existsSync(dir)) return dir;
 
-    // Strategy 3: Try to find common parent 'AixProject'
-    // This is a desperate fallback
+    // Strategy 3: Production Deployment (Sibling directories)
+    // /www/wwwroot/ty.haix.fun.api (back) -> ../ty.haix.fun/locales
+    // Assuming admin is deployed at ../<admin-domain-dir>/locales or ../<admin-domain-dir>/public/locales
+    // We try to guess the sibling admin directory
+    
+    // Fallback for user's specific production path: /www/wwwroot/ty.haix.fun/locales
+    // CWD: /www/wwwroot/ty.haix.fun.api
+    dir = path.resolve(process.cwd(), '../ty.haix.fun/locales'); 
+    if (fs.existsSync(dir)) return dir;
+    
+    // Also try public/locales just in case
+    dir = path.resolve(process.cwd(), '../ty.haix.fun/public/locales');
+    if (fs.existsSync(dir)) return dir;
+
+    // Strategy 4: Try to find common parent 'AixProject'
     const root = process.cwd().split('back')[0]; // D:\Hx\AixProject\
     if (root) {
       dir = path.join(root, 'admin/public/locales');
@@ -54,9 +74,13 @@ export class I18nService {
 
     console.error('Could not find locales directory. Checked:', [
         path.resolve(__dirname, '../../../admin/public/locales'),
-        path.resolve(process.cwd(), '../admin/public/locales')
+        path.resolve(process.cwd(), '../admin/public/locales'),
+        path.resolve(process.cwd(), '../ty.haix.fun/locales'),
+        path.resolve(process.cwd(), '../ty.haix.fun/public/locales')
     ]);
-    return dir; // Return the most likely one to generate a useful error
+    
+    // Return a default path even if not exists, to show in error
+    return path.resolve(process.cwd(), '../admin/public/locales');
   }
 
   static async getLocales() {

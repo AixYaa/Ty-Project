@@ -190,7 +190,7 @@ export class DataInitializer {
                 <el-tree-select
                   v-model="model.parentId"
                   :data="menuTreeData"
-                  :props="{ label: 'name', value: '_id', children: 'children' }"
+                  :props="{ label: (data) => $t(data.name), value: '_id', children: 'children' }"
                   check-strictly
                   :placeholder="$t('common.pleaseSelect') + $t('menu.parentMenu')"
                   clearable
@@ -198,7 +198,11 @@ export class DataInitializer {
                 />
               </el-form-item>
               <el-form-item :label="$t('column.menuName')">
-                <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.menuName')" />
+                <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.menuName')">
+                   <template #append v-if="model.name && model.name.includes('.')">
+                      {{ $t(model.name) }}
+                   </template>
+                </el-input>
               </el-form-item>
               <el-form-item :label="$t('column.routePath')">
                 <el-input v-model="model.path" :placeholder="$t('common.pleaseInput') + $t('column.routePath')" />
@@ -247,9 +251,12 @@ export class DataInitializer {
       <template #view-form="{ model }">
         <el-form :model="model" label-width="80px" disabled>
           <el-form-item :label="$t('menu.parentMenu')">
-             <el-tree-select v-model="model.parentId" :data="menuTreeData" :props="{ label: 'name', value: '_id', children: 'children' }" style="width: 100%" />
+             <el-tree-select v-model="model.parentId" :data="menuTreeData" :props="{ label: (data) => $t(data.name), value: '_id', children: 'children' }" style="width: 100%" />
           </el-form-item>
-          <el-form-item :label="$t('column.menuName')"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item :label="$t('column.menuName')">
+             <span v-if="model.name && model.name.includes('.')">{{ $t(model.name) }} ({{ model.name }})</span>
+             <span v-else>{{ model.name }}</span>
+          </el-form-item>
           <el-form-item :label="$t('column.routePath')"><el-input v-model="model.path" /></el-form-item>
           <el-form-item :label="$t('column.icon')"><IconSelect v-model="model.icon" disabled /></el-form-item>
           <el-form-item :label="$t('column.sort')"><el-input-number v-model="model.sort" /></el-form-item>
@@ -551,7 +558,13 @@ const submitForm = async (formData, done) => {
               <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.viewName')" />
             </el-form-item>
             <el-form-item :label="$t('column.relatedEntity')">
-              <el-select v-model="model.entityId" :placeholder="$t('common.pleaseSelect') + $t('column.relatedEntity')" style="width: 100%">
+              <el-select 
+                v-model="model.entityId" 
+                filterable 
+                :placeholder="$t('common.pleaseSelect') + $t('column.relatedEntity')" 
+                style="width: 100%" 
+                @visible-change="handleEntitySelectVisible"
+              >
                 <el-option
                   v-for="item in entityList"
                   :key="item._id"
@@ -632,6 +645,14 @@ const getTableList = async (params) => {
 const getEntityName = (id) => {
   const entity = entityList.value.find(e => e._id === id);
   return entity ? entity.name : id;
+};
+
+const handleEntitySelectVisible = (visible) => {
+  if (visible) {
+    getEntityListAll().then(res => {
+      entityList.value = Array.isArray(res) ? res : res.list || [];
+    });
+  }
 };
 
 // Initialize
@@ -721,7 +742,14 @@ const submitForm = async (formData, done) => {
               <el-row>
                 <el-col :span="12">
                   <el-form-item :label="$t('column.relatedEntity')">
-                    <el-select v-model="model.entityId" :placeholder="$t('common.pleaseSelect') + $t('column.relatedEntity')" style="width: 100%" @change="handleEntityChange(model)">
+                    <el-select 
+                      v-model="model.entityId" 
+                      filterable 
+                      :placeholder="$t('common.pleaseSelect') + $t('column.relatedEntity')" 
+                      style="width: 100%" 
+                      @change="handleEntityChange(model)"
+                      @visible-change="handleEntitySelectVisible"
+                    >
                       <el-option
                         v-for="item in entityList"
                         :key="item._id"
@@ -956,6 +984,14 @@ const openAdd = () => {
 
 const handleEntityChange = (model) => {
   model.viewId = '';
+};
+
+const handleEntitySelectVisible = (visible) => {
+  if (visible) {
+    getEntityListAll().then(res => {
+      entityList.value = Array.isArray(res) ? res : res.list || [];
+    });
+  }
 };
 
 const generateCode = (model) => {
