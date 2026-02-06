@@ -4,6 +4,7 @@
     <el-container v-if="isClassic" class="main-container" direction="vertical">
       <el-header class="header">
         <Header @openSettings="openSettings" />
+        <TagsView v-if="settingStore.showTagsView" />
       </el-header>
       <el-container class="classic-content">
         <el-drawer
@@ -22,7 +23,9 @@
         <el-main class="main-content">
            <router-view v-slot="{ Component, route }">
               <transition name="fade-transform" mode="out-in">
-                <component :is="Component" :key="route.fullPath" />
+                <keep-alive :include="tagsViewStore.cachedViews">
+                  <component :is="getComponent(Component, route)" :key="route.fullPath" />
+                </keep-alive>
               </transition>
            </router-view>
         </el-main>
@@ -50,15 +53,18 @@
         <ColumnsSidebar />
       </el-aside>
 
-      <el-container>
+      <el-container class="is-vertical">
         <el-header class="header">
           <Header @openSettings="openSettings" />
+          <TagsView v-if="settingStore.showTagsView" />
         </el-header>
         
         <el-main class="main-content">
            <router-view v-slot="{ Component, route }">
               <transition name="fade-transform" mode="out-in">
-                <component :is="Component" :key="route.fullPath" />
+                <keep-alive :include="tagsViewStore.cachedViews">
+                  <component :is="getComponent(Component, route)" :key="route.fullPath" />
+                </keep-alive>
               </transition>
            </router-view>
         </el-main>
@@ -70,16 +76,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, h } from 'vue';
 import Sidebar from './components/Sidebar.vue';
 import ColumnsSidebar from './components/ColumnsSidebar.vue';
 import Header from './components/Header.vue';
+import TagsView from './components/TagsView/index.vue';
 import Settings from './components/Settings/index.vue';
 import { useSettingStore } from '@/store/setting';
 import { useWatermark } from '@/hooks/useWatermark';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useTagsViewStore } from '@/store/tagsView';
+import type { RouteLocationNormalizedLoaded } from 'vue-router';
 
 const settingStore = useSettingStore();
+const tagsViewStore = useTagsViewStore();
 const settingsRef = ref();
 const { setWatermark, clear } = useWatermark();
 useResponsive();
@@ -119,16 +129,46 @@ onMounted(() => {
   // Init theme
   settingStore.setThemeColor(settingStore.themeColor);
 });
+
+// KeepAlive Component Wrapper
+const wrapperMap = new Map<string, any>();
+const getComponent = (component: any, route: RouteLocationNormalizedLoaded) => {
+  if (!component) return null;
+  const name = route.name as string;
+  if (!name) return component;
+
+  if (wrapperMap.has(name)) {
+    return wrapperMap.get(name);
+  }
+
+  // Create wrapper with route name to ensure KeepAlive works
+  const wrapper = {
+    name: name,
+    render() {
+      return h(component);
+    }
+  };
+  wrapperMap.set(name, wrapper);
+  return wrapper;
+};
 </script>
 
 <style scoped>
 .app-layout {
   height: 100vh;
-  width: 100%;
+  width: 100vw;
+  display: flex;
+  overflow: hidden;
 }
 
 .main-container {
   height: 100%;
+  width: 100%;
+  display: flex;
+}
+
+.is-vertical {
+  flex-direction: column;
 }
 
 .classic-content {
@@ -146,7 +186,7 @@ onMounted(() => {
 
 .header {
   padding: 0;
-  height: 60px;
+  height: auto;
 }
 
 .main-content {

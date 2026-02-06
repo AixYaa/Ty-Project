@@ -19,6 +19,7 @@ export const useSettingStore = defineStore('setting', () => {
   const showWatermark = ref(false);
   const watermarkText = ref('Aix Admin');
   const watermarkShowTime = ref(false);
+  const showTagsView = ref(true);
 
   // Debug Config
   const showDebugDrawer = ref(false);
@@ -65,6 +66,10 @@ export const useSettingStore = defineStore('setting', () => {
     if (showTime !== undefined) watermarkShowTime.value = showTime;
   };
 
+  const setTagsView = (show: boolean) => {
+    showTagsView.value = show;
+  };
+
   const setDebugDrawer = (show: boolean) => {
     showDebugDrawer.value = show;
   };
@@ -97,6 +102,7 @@ export const useSettingStore = defineStore('setting', () => {
     showWatermark,
     watermarkText,
     watermarkShowTime,
+    showTagsView,
     showDebugDrawer,
     debugDrawerVisible,
     toggleCollapse,
@@ -106,6 +112,7 @@ export const useSettingStore = defineStore('setting', () => {
     setLayoutMode,
     setThemeColor,
     setWatermark,
+    setTagsView,
     setDebugDrawer,
     toggleDebugDrawer
   };

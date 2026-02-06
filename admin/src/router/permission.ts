@@ -1,5 +1,6 @@
 import router from './index';
 import { getMenuTree, type SysMenu } from '@/api/sys';
+import { useTagsViewStore } from '@/store/tagsView';
 import type { RouteRecordRaw } from 'vue-router';
 
 let isRoutesLoaded = false;
@@ -58,11 +59,16 @@ router.beforeEach(async (to, _from, next) => {
           // 添加一个 404 捕获路由 (可选)
           router.addRoute({
             path: '/:pathMatch(.*)*',
+            name: 'NotFound',
             redirect: '/dashboard' // 或者 404 页面
           });
 
           isRoutesLoaded = true;
           
+          // 清理无效的 Tags
+          const tagsViewStore = useTagsViewStore();
+          tagsViewStore.pruneVisitedViews(router);
+
           // 替换当前跳转，确保新路由生效
           next({ ...to, replace: true });
         } catch (error: any) {
@@ -80,6 +86,7 @@ router.beforeEach(async (to, _from, next) => {
     if (to.path !== '/login') {
       next('/login');
     } else {
+      isRoutesLoaded = false;
       next();
     }
   }

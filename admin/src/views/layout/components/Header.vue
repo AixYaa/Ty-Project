@@ -88,7 +88,8 @@ const handleLogout = () => {
   })
     .then(async () => {
       await userStore.logout();
-      router.push('/login');
+      // Force reload to clear all states (router, store, etc.)
+      window.location.href = '/login';
     })
     .catch(() => {
       // cancel

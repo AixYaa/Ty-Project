@@ -99,6 +99,13 @@
         style="margin-top: 10px"
       />
     </div>
+    
+    <el-divider />
+
+    <div class="setting-item">
+      <div class="label">界面配置</div>
+      <el-switch v-model="settingStore.showTagsView" active-text="多页签 (TagsView)" />
+    </div>
 
     <!-- Debug Settings (Only for Admin) -->
     <div class="setting-item" v-if="userStore.userInfo?.username === 'admin'">

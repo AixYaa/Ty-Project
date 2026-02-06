@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import request from '../utils/request';
+import { resetRouter } from '@/router';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -27,6 +28,9 @@ export const useUserStore = defineStore('user', {
         this.userInfo = null;
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        // Clear tagsView persistence
+        localStorage.removeItem('tagsView');
+        resetRouter();
       }
     }
   },

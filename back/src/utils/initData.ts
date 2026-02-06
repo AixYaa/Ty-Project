@@ -85,8 +85,8 @@ export class DataInitializer {
       console.log('Initializing System Management Schemas...');
 
       // --- 0. Ensure Parent Menu (System Management) ---
-      const parentMenu = await this.createOrUpdateMenu('/sys', '系统管理', 'Setting', 900, null, null);
-      const parentMenuManage = await this.createOrUpdateMenu('/manage', '管理中心', 'Monitor', 900, null, null);
+      const parentMenu = await this.createOrUpdateMenu('/sys', '系统管理', 'Setting', 900, null, null, ['admin']);
+      const parentMenuManage = await this.createOrUpdateMenu('/manage', '管理中心', 'Monitor', 900, null, null, ['admin']);
       const parentId = parentMenu._id.toString();
       const parentIdManage = parentMenuManage._id.toString();
 
@@ -358,7 +358,7 @@ const submitForm = async (formData, done) => {
       };
 
       const menuSchema = await this.createOrUpdateSchema('SysMenuManage', '菜单管理', menuSchemaCode, entitySysMenu._id.toString(), viewSysMenu._id.toString());
-      await this.createOrUpdateMenu('/sys/menu', '菜单管理', 'Menu', 1, menuSchema._id, parentId);
+      await this.createOrUpdateMenu('/sys/menu', '菜单管理', 'Menu', 1, menuSchema._id, parentId, ['admin']);
 
       // --- 2. 实体管理 (Entity Management) ---
       const entitySchemaCode = {
@@ -464,7 +464,7 @@ const submitForm = async (formData, done) => {
         style: `.page-container { padding: 20px; } .code-tabs { height: 500px; } .editor-container { height: 400px; }`
       };
       const entitySchema = await this.createOrUpdateSchema('SysEntityManage', '实体管理', entitySchemaCode, entitySysEntity._id.toString(), viewSysEntity._id.toString());
-      await this.createOrUpdateMenu('/sys/entity', '实体管理', 'DataBoard', 2, entitySchema._id, parentId);
+      await this.createOrUpdateMenu('/sys/entity', '实体管理', 'DataBoard', 2, entitySchema._id, parentId, ['admin']);
 
       // --- 3. 视图管理 (View Management) ---
       const viewSchemaCode = {
@@ -614,7 +614,7 @@ const submitForm = async (formData, done) => {
         style: `.page-container { padding: 20px; }`
       };
       const viewSchema = await this.createOrUpdateSchema('SysViewManage', '视图管理', viewSchemaCode, entitySysView._id.toString(), viewSysView._id.toString());
-      await this.createOrUpdateMenu('/sys/view', '视图管理', 'View', 3, viewSchema._id, parentId);
+      await this.createOrUpdateMenu('/sys/view', '视图管理', 'View', 3, viewSchema._id, parentId, ['admin']);
 
       // --- 4. 架构管理 (Schema Management) ---
       const schemaSchemaCode = {
@@ -1004,7 +1004,7 @@ const submitForm = async (formData, done) => {
 `
       };
       const schemaSchema = await this.createOrUpdateSchema('SysSchemaManage', '架构管理', schemaSchemaCode, entitySysSchema._id.toString(), viewSysSchema._id.toString());
-      await this.createOrUpdateMenu('/sys/schema', '架构管理', 'Document', 4, schemaSchema._id, parentId);
+      await this.createOrUpdateMenu('/sys/schema', '架构管理', 'Document', 4, schemaSchema._id, parentId, ['admin']);
 
       // --- 5. 角色管理 (Role Management) ---
       const entitySysRole = await this.createOrUpdateEntity('sys_role');
@@ -1125,7 +1125,7 @@ const submitForm = async (formData, done) => {
       };
       
       const roleSchema = await this.createOrUpdateSchema('SysRoleManage', '角色管理', roleSchemaCode, entitySysRole._id.toString(), viewSysRole._id.toString());
-      await this.createOrUpdateMenu('/manage/role', '角色管理', 'Avatar', 5, roleSchema._id, parentIdManage);
+      await this.createOrUpdateMenu('/manage/role', '角色管理', 'Avatar', 5, roleSchema._id, parentIdManage, ['admin']);
 
 
       // --- 6. 用户管理 (User Management) ---
@@ -1295,7 +1295,7 @@ const submitForm = async (formData, done) => {
       };
       
       const userSchema = await this.createOrUpdateSchema('SysUserManage', '用户管理', userSchemaCode, entitySysUser._id.toString(), viewSysUser._id.toString());
-      await this.createOrUpdateMenu('/manage/user', '用户管理', 'User', 6, userSchema._id, parentIdManage);
+      await this.createOrUpdateMenu('/manage/user', '用户管理', 'User', 6, userSchema._id, parentIdManage, ['admin']);
 
     } catch (error) {
       console.error('Failed to init sys schemas:', error);
@@ -1390,21 +1390,39 @@ const submitForm = async (formData, done) => {
   }
 
   // Helper: Create or Update Menu
-  static async createOrUpdateMenu(path: string, name: string, icon: string, sort: number, schemaId: any, parentId: string | null) {
+  static async createOrUpdateMenu(path: string, name: string, icon: string, sort: number, schemaId: any, parentId: string | null, roles?: string[]) {
     const menus = await SysService.getMenus({ path });
     let menu;
 
     if (menus.length > 0) {
       menu = menus[0];
       // Update existing menu if schemaId is missing or different
+      const updates: any = {};
+      let needsUpdate = false;
+
       if (schemaId && (!menu.schemaId || menu.schemaId !== schemaId.toString())) {
-        await SysService.updateMenu(menu._id.toString(), { schemaId: schemaId.toString() });
-        console.log(`Updated menu schemaId for ${path}`);
+        updates.schemaId = schemaId.toString();
+        needsUpdate = true;
       }
-      // Also ensure parentId is correct if provided
+      
       if (parentId && (!menu.parentId || menu.parentId !== parentId)) {
-        await SysService.updateMenu(menu._id.toString(), { parentId });
-        console.log(`Updated menu parentId for ${path}`);
+        updates.parentId = parentId;
+        needsUpdate = true;
+      }
+
+      // Update roles if provided and different
+      if (roles) {
+        const currentRoles = menu.roles || [];
+        const rolesChanged = roles.length !== currentRoles.length || !roles.every(r => currentRoles.includes(r));
+        if (rolesChanged) {
+          updates.roles = roles;
+          needsUpdate = true;
+        }
+      }
+
+      if (needsUpdate) {
+        await SysService.updateMenu(menu._id.toString(), updates);
+        console.log(`Updated menu for ${path}: ${Object.keys(updates).join(', ')}`);
       }
     } else {
       // Create new menu
@@ -1414,7 +1432,8 @@ const submitForm = async (formData, done) => {
         icon,
         sort,
         schemaId: schemaId ? schemaId.toString() : undefined,
-        parentId: parentId || undefined
+        parentId: parentId || undefined,
+        roles: roles
       };
       const result = await SysService.createMenu(menuData);
       menu = { ...menuData, _id: result._id };

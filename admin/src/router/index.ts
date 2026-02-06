@@ -27,5 +27,15 @@ const router = createRouter({
   routes
 });
 
+export const resetRouter = () => {
+  const whiteList = ['Login', 'Layout', 'Dashboard'];
+  router.getRoutes().forEach((route) => {
+    const name = route.name as string;
+    if (name && !whiteList.includes(name)) {
+      router.removeRoute(name);
+    }
+  });
+};
+
 // 移除这里的 beforeEach，统一在 permission.ts 处理
 export default router;
