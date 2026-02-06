@@ -69,14 +69,18 @@ app.use(express.json());
 // 所有子路由统一挂载到 /api 下：/api/health, /api/admin, /api/client, /api/common
 app.use('/api', router);
 
+import { ErrorCode } from './types/errorCode';
+
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('[Global Error]', err);
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
+  const code = err.code || ErrorCode.INTERNAL_ERROR;
   
   res.status(status).json({
     status, // Match frontend expected format
+    code,
     msg: message, // Match frontend expected format (msg vs message)
     data: null
   });

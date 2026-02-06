@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
+import { getToken, getRefreshToken, setToken, clearTokens } from '@/utils/auth';
+import { ErrorCode } from '@/api/errorCode';
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 const service = axios.create({
   baseURL: BASE_URL, // 指向后台管理接口 (修正为 /api/admin)
@@ -9,7 +12,7 @@ const service = axios.create({
 // Request interceptor
 service.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = getToken();
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -27,11 +30,21 @@ let requests: any[] = [];
 service.interceptors.response.use(
   (response) => {
     const res = response.data;
-    // 假设后端返回结构 { status: 200, msg: 'success', data: ... }
+    // 假设后端返回结构 { status: 200, code: 0, msg: 'success', data: ... }
     if (res.status !== 200) {
+      // 优先显示后端返回的 msg，后续可接入 i18n 根据 code 显示多语言错误
       ElMessage.error(res.msg || 'Error');
       return Promise.reject(new Error(res.msg || 'Error'));
     } else {
+      // 检查业务状态码
+      if (res.code !== undefined && res.code !== ErrorCode.SUCCESS) {
+        // 特殊处理 token 过期等业务错误
+        if (res.code === ErrorCode.TOKEN_EXPIRED || res.code === ErrorCode.INVALID_TOKEN) {
+          // Let 401 handler below handle this or handle it here
+        }
+        ElMessage.error(res.msg || 'Error');
+        return Promise.reject(new Error(res.msg || 'Error'));
+      }
       return res.data;
     }
   },
@@ -40,7 +53,7 @@ service.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      const refreshToken = localStorage.getItem('refreshToken');
+      const refreshToken = getRefreshToken();
 
       if (refreshToken) {
         if (!isRefreshing) {
@@ -55,7 +68,7 @@ service.interceptors.response.use(
 
             if (data.status === 200) {
               const { accessToken } = data.data;
-              localStorage.setItem('accessToken', accessToken);
+              setToken(accessToken);
               service.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
               // Execute queued requests
@@ -68,8 +81,7 @@ service.interceptors.response.use(
             }
           } catch (refreshError) {
             // Refresh failed, clear tokens and redirect
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            clearTokens();
             window.location.href = '/login';
             return Promise.reject(refreshError);
           } finally {
@@ -87,8 +99,7 @@ service.interceptors.response.use(
       } else {
         // No refresh token, redirect to login
         ElMessage.error('登录过期，请重新登录');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        clearTokens();
         window.location.href = '/login';
       }
     } else {

@@ -1,47 +1,49 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
-import router from './router'
-import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import 'element-plus/theme-chalk/dark/css-vars.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import IconSelect from '@/components/IconSelect/index.vue'
-import ProTable from '@/components/ProTable/index.vue'
-import request from '@/utils/request'
-import { useUserStore } from '@/store/user'
+import { createApp } from 'vue';
+import './style.css';
+import App from './App.vue';
+import router from './router';
+import { createPinia } from 'pinia';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
+import 'element-plus/theme-chalk/dark/css-vars.css';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import IconSelect from '@/components/IconSelect/index.vue';
+import ProTable from '@/components/ProTable/index.vue';
+import request from '@/utils/request';
+import { useUserStore } from '@/store/user';
 
-const app = createApp(App)
+const app = createApp(App);
 
 // 注册所有图标
 try {
   for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-    app.component(key, component)
+    app.component(key, component);
   }
 } catch (error) {
   console.error('Failed to register icons:', error);
 }
 
-const pinia = createPinia()
-pinia.use(piniaPluginPersistedstate)
-app.use(pinia)
-app.use(router)
-app.use(i18n)
-app.use(ElementPlus)
-app.component('IconSelect', IconSelect)
-app.component('ProTable', ProTable)
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
+app.use(pinia);
+app.use(router);
+app.use(i18n);
+app.use(ElementPlus);
+app.component('IconSelect', IconSelect);
+app.component('ProTable', ProTable);
 
 // Register global property $user (after pinia is active)
 // This allows {{ $user }} in templates
-const userStore = useUserStore()
-app.config.globalProperties.$user = userStore
-app.config.globalProperties.$api = request
+const userStore = useUserStore();
+app.config.globalProperties.$user = userStore;
+app.config.globalProperties.$api = request;
 
 // 引入权限控制 (要在 use(router) 之后)
-import './router/permission';
-import i18n, { loadLocaleMessages } from './locales'
+import { setupRouterGuard } from './router/permission';
+setupRouterGuard(router);
+
+import i18n, { loadLocaleMessages } from './locales';
 
 // Load initial locale
 const defaultLocale = localStorage.getItem('language') || 'zh-CN';

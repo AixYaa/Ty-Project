@@ -1,0 +1,28 @@
+// NOTE: This file should ideally be shared or generated from backend definition
+// For now, we manually sync with backend/src/types/errorCode.ts
+
+export enum ErrorCode {
+  // System Errors (10000 - 10999)
+  SUCCESS = 0,
+  INTERNAL_ERROR = 10000,
+  INVALID_PARAMS = 10001,
+
+  // Auth Errors (11000 - 11999)
+  UNAUTHORIZED = 11000,
+  FORBIDDEN = 11001,
+  TOKEN_EXPIRED = 11002,
+  INVALID_TOKEN = 11003,
+
+  // User Errors (12000 - 12999)
+  USER_NOT_FOUND = 12000,
+  USER_EXIST = 12001,
+  PASSWORD_ERROR = 12002,
+
+  // Menu/System Errors (13000 - 13999)
+  MENU_NOT_FOUND = 13000,
+
+  // Upload Errors (14000 - 14999)
+  UPLOAD_FAILED = 14000,
+  FILE_TOO_LARGE = 14001,
+  INVALID_FILE_TYPE = 14002
+}

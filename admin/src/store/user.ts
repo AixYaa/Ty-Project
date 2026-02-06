@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia';
 import request from '../utils/request';
 import { resetRouter } from '@/router';
+import { getToken, setToken, setRefreshToken, clearTokens } from '@/utils/auth';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    token: localStorage.getItem('accessToken') || '',
+    token: getToken() || '',
     userInfo: null as any
   }),
   actions: {
@@ -13,8 +14,8 @@ export const useUserStore = defineStore('user', {
         const res: any = await request.post('/auth/login', loginForm);
         this.token = res.accessToken;
         this.userInfo = res.user;
-        localStorage.setItem('accessToken', res.accessToken);
-        localStorage.setItem('refreshToken', res.refreshToken);
+        setToken(res.accessToken);
+        setRefreshToken(res.refreshToken);
         return res;
       } catch (error) {
         throw error;
@@ -26,8 +27,7 @@ export const useUserStore = defineStore('user', {
       } finally {
         this.token = '';
         this.userInfo = null;
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        clearTokens();
         // Clear tagsView persistence
         localStorage.removeItem('tagsView');
         resetRouter();
