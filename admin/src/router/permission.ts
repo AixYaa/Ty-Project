@@ -65,7 +65,7 @@ router.beforeEach(async (to, _from, next) => {
           router.addRoute({
             path: '/:pathMatch(.*)*',
             name: 'NotFound',
-            redirect: '/dashboard' // 或者 404 页面
+            redirect: '/404'
           });
 
           isRoutesLoaded = true;
