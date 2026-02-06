@@ -1,9 +1,6 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-// 开发环境下的接口地址
-// const BASE_URL = 'http://localhost:6632/api/admin';
-// 生产环境下的接口地址
-const BASE_URL = 'https://ty.haix.fun/api/admin';
+const BASE_URL = import.meta.env.VITE_API_URL;
 const service = axios.create({
   baseURL: BASE_URL, // 指向后台管理接口 (修正为 /api/admin)
   timeout: 5000
@@ -41,10 +38,10 @@ service.interceptors.response.use(
   async (error) => {
     console.error('err' + error);
     const originalRequest = error.config;
-    
+
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       const refreshToken = localStorage.getItem('refreshToken');
-      
+
       if (refreshToken) {
         if (!isRefreshing) {
           isRefreshing = true;
@@ -60,11 +57,11 @@ service.interceptors.response.use(
               const { accessToken } = data.data;
               localStorage.setItem('accessToken', accessToken);
               service.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-              
+
               // Execute queued requests
-              requests.forEach(cb => cb(accessToken));
+              requests.forEach((cb) => cb(accessToken));
               requests = [];
-              
+
               return service(originalRequest);
             } else {
               throw new Error('Refresh failed');

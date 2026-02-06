@@ -1,10 +1,16 @@
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import router from './routes';
 
 import path from 'path';
 
 const app = express();
+
+// Security Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Allow resources to be loaded from different origins (needed for uploads/images)
+}));
 
 // Serve static files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -62,6 +68,19 @@ app.use(express.json());
 
 // 所有子路由统一挂载到 /api 下：/api/health, /api/admin, /api/client, /api/common
 app.use('/api', router);
+
+// Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[Global Error]', err);
+  const status = err.status || 500;
+  const message = err.message || 'Internal Server Error';
+  
+  res.status(status).json({
+    status, // Match frontend expected format
+    msg: message, // Match frontend expected format (msg vs message)
+    data: null
+  });
+});
 
 // Handle SPA fallback - must be after API routes
 app.get('*', (req, res, next) => {
