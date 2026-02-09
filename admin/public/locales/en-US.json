@@ -50,7 +50,23 @@
     "warning": "Warning"
   },
   "dashboard": {
-    "overview": "This is your dashboard overview."
+    "overview": "This is your dashboard overview.",
+    "projectUpdates": "Project Updates",
+    "noHistory": "No commit history found",
+    "commit": "Commit",
+    "author": "Author",
+    "message": "Message",
+    "date": "Date",
+    "statistics": {
+      "users": "Total Users",
+      "visits": "Today's Visits",
+      "orders": "Orders",
+      "income": "Total Income"
+    },
+    "charts": {
+      "visitsTrend": "Visits Trend (Last 7 Days)",
+      "userDistribution": "User Distribution"
+    }
   },
   "error": {
     "403": "Sorry, you are not authorized to access this page.",

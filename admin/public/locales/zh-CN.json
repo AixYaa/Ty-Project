@@ -50,7 +50,23 @@
     "warning": "警告"
   },
   "dashboard": {
-    "overview": "这是您的仪表盘首页。"
+    "overview": "这是您的仪表盘首页。",
+    "projectUpdates": "项目更新日志",
+    "noHistory": "暂无提交记录",
+    "commit": "提交ID",
+    "author": "作者",
+    "message": "内容",
+    "date": "时间",
+    "statistics": {
+      "users": "总用户数",
+      "visits": "今日访问",
+      "orders": "订单数",
+      "income": "总收入"
+    },
+    "charts": {
+      "visitsTrend": "访问趋势 (近7天)",
+      "userDistribution": "用户分布"
+    }
   },
   "error": {
     "403": "抱歉，您无权访问该页面",
