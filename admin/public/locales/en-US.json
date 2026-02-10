@@ -1,4 +1,112 @@
 {
+  "visualEditor": {
+    "components": {
+      "form": "Form",
+      "button": "Button",
+      "card": "Card",
+      "col": "Col",
+      "datePicker": "Date Picker",
+      "h1": "Heading (H1)",
+      "input": "Input",
+      "inputNumber": "Input Number",
+      "p": "Paragraph (P)",
+      "proTable": "Pro Table",
+      "row": "Row",
+      "select": "Select",
+      "switch": "Switch"
+    },
+    "buttons": {
+      "addColumn": "Add Column",
+      "addOption": "Add Option",
+      "cancel": "Cancel",
+      "clear": "Clear",
+      "confirmAdd": "Confirm Add",
+      "readFromApi": "Read Fields from API",
+      "save": "Apply to Code"
+    },
+    "componentGroups": {
+      "advanced": "Advanced Components",
+      "basic": "Basic Components",
+      "layout": "Layout Components"
+    },
+    "enum": {
+      "default": "Default",
+      "large": "Large",
+      "small": "Small"
+    },
+    "labels": {
+      "search": "Search"
+    },
+    "messages": {
+      "addedFields": "Added {count} fields",
+      "apiEmpty": "API returned empty data or unrecognized format",
+      "apiError": "API Request Failed: {msg}"
+    },
+    "placeholders": {
+      "dragTip": "Drag components from left",
+      "emptyList": "List Configurator in progress... Please use code to edit ProTable columns for now",
+      "labelName": "Label",
+      "optionLabel": "Label",
+      "optionValue": "Value",
+      "propName": "Prop Name",
+      "selectComponent": "Select a component to configure",
+      "width": "Width"
+    },
+    "props": {
+      "apiUrl": "API URL",
+      "circle": "Circle",
+      "clearable": "Clearable",
+      "disabled": "Disabled",
+      "gutter": "Gutter",
+      "header": "Header",
+      "max": "Max",
+      "min": "Min",
+      "pagination": "Pagination",
+      "placeholder": "Placeholder",
+      "plain": "Plain",
+      "round": "Round",
+      "shadow": "Shadow",
+      "size": "Size",
+      "span": "Span",
+      "stripe": "Stripe",
+      "title": "Table Title",
+      "toolButton": "Tool Button",
+      "type": "Type"
+    },
+    "tabs": {
+      "form": "Form Design",
+      "list": "List Design"
+    },
+    "titles": {
+      "column": "Column",
+      "columns": "Columns Config",
+      "componentId": "Component ID",
+      "componentName": "Component Name",
+      "displayText": "Display Text",
+      "options": "Options",
+      "props": "Props",
+      "propsConfig": "Component Props Config",
+      "selectFields": "Select Fields",
+      "vModel": "Bind Field (v-model)"
+    }
+  },
+  "audit": {
+    "duration": "Duration",
+    "ip": "IP Address",
+    "method": "Method",
+    "noSnapshot": "No snapshot available, cannot rollback",
+    "params": "Params",
+    "path": "Path",
+    "requestParams": "Request Params",
+    "rollback": "Rollback",
+    "rollbackConfirm": "Are you sure to rollback? This will restore data to previous state.",
+    "rollbackSuccess": "Rollback successful",
+    "rolledBack": "Rolled Back",
+    "snapshot": "Snapshot",
+    "status": "Status",
+    "viewParams": "View Params",
+    "viewSnapshot": "View Snapshot"
+  },
   "column": {
     "avatar": "Avatar",
     "bindSchema": "Bind Schema",
@@ -50,22 +158,22 @@
     "warning": "Warning"
   },
   "dashboard": {
+    "author": "Author",
+    "charts": {
+      "userDistribution": "User Distribution",
+      "visitsTrend": "Visits Trend (Last 7 Days)"
+    },
+    "commit": "Commit",
+    "date": "Date",
+    "message": "Message",
+    "noHistory": "No commit history found",
     "overview": "This is your dashboard overview.",
     "projectUpdates": "Project Updates",
-    "noHistory": "No commit history found",
-    "commit": "Commit",
-    "author": "Author",
-    "message": "Message",
-    "date": "Date",
     "statistics": {
-      "users": "Total Users",
-      "visits": "Today's Visits",
+      "income": "Total Income",
       "orders": "Orders",
-      "income": "Total Income"
-    },
-    "charts": {
-      "visitsTrend": "Visits Trend (Last 7 Days)",
-      "userDistribution": "User Distribution"
+      "users": "Total Users",
+      "visits": "Today's Visits"
     }
   },
   "error": {
@@ -85,10 +193,10 @@
   },
   "i18n": {
     "confirmDeleteKey": "Are you sure to delete this key?",
-    "keyRequired": "Key cannot be empty",
     "duplicateKeys": "Duplicate keys exist",
-    "saveSuccess": "Saved successfully",
-    "saveFailed": "Failed to save"
+    "keyRequired": "Key cannot be empty",
+    "saveFailed": "Failed to save",
+    "saveSuccess": "Saved successfully"
   },
   "login": {
     "loginBtn": "Login",
@@ -110,6 +218,7 @@
     "parentMenu": "Parent Menu",
     "rolePermission": "Role Permission",
     "system": {
+      "audit": "Audit Logs",
       "center": "Management Center",
       "entity": "Entity Management",
       "i18n": "Language Management",

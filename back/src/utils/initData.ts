@@ -1,5 +1,6 @@
 import { SysService } from '../services/sysService';
 import { GeneralService } from '../services/generalService';
+import { AuditLogService } from '../services/auditService';
 import { SysSchema, SysMenu } from '../types/sys';
 
 export class DataInitializer {
@@ -1708,6 +1709,167 @@ const handleSave = async () => {
 
       const i18nSchema = await this.createOrUpdateSchema('sys国际化管理', '国际化管理', i18nSchemaCode, entitySysI18n._id.toString(), viewSysI18n._id.toString());
       await this.createOrUpdateMenu('/sys/i18n', 'menu.system.i18n', 'Connection', 7, i18nSchema._id, parentId, ['admin']);
+
+      // --- 8. 审计日志 (Audit Log) ---
+      // Sync rollback status for existing logs
+      await AuditLogService.syncRollbackStatus();
+      
+      const entitySysAudit = await this.createOrUpdateEntity('sys审计日志');
+      const viewSysAudit = await this.createOrUpdateView('sys审计日志列表', entitySysAudit._id.toString());
+
+      const auditSchemaCode = {
+        template: `
+<div class="page-container">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getAuditLogs"
+      :initParam="initParam"
+      :toolButton="false"
+      row-key="_id"
+    >
+      <!-- Custom Columns -->
+      <template #method="{ row }">
+        <el-tag :type="getMethodType(row.method)">{{ row.method }}</el-tag>
+      </template>
+
+      <template #status="{ row }">
+        <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+      </template>
+      
+      <template #duration="{ row }">
+        <span :class="getDurationClass(row.duration)">{{ row.duration }}ms</span>
+      </template>
+
+      <template #params="{ row }">
+         <el-popover placement="left" :title="$t('audit.requestParams')" :width="400" trigger="click">
+            <template #reference>
+              <el-button link type="primary">{{ $t('audit.viewParams') }}</el-button>
+            </template>
+            <pre style="max-height: 400px; overflow: auto;">{{ formatParams(row.params) }}</pre>
+         </el-popover>
+      </template>
+
+      <template #snapshot="{ row }">
+         <el-popover v-if="row.snapshot" placement="left" :title="$t('audit.snapshot')" :width="400" trigger="click">
+            <template #reference>
+              <el-button link type="primary">{{ $t('audit.viewSnapshot') }}</el-button>
+            </template>
+            <pre style="max-height: 400px; overflow: auto;">{{ formatParams(row.snapshot) }}</pre>
+         </el-popover>
+         <span v-else>-</span>
+      </template>
+
+      <template #operation="{ row }">
+        <el-button 
+          v-if="(row.snapshot || row.method === 'POST') && row.method !== 'ROLLBACK' && !row.isRolledBack" 
+          link 
+          type="danger" 
+          :icon="RefreshLeft" 
+          @click="handleRollback(row)"
+        >
+          {{ $t('audit.rollback') }}
+        </el-button>
+        <el-tag v-else-if="row.isRolledBack" type="info" size="small">{{ $t('audit.rolledBack') }}</el-tag>
+        <el-tag v-else type="info" size="small">{{ $t('audit.noSnapshot') }}</el-tag>
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive } from 'vue';
+import ProTable from '@/components/ProTable/index.vue';
+import request from 'app-request';
+import { useI18n } from 'vue-i18n';
+import { RefreshLeft } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+
+// API
+const getAuditLogs = (params) => request.get('/audit', { params });
+const rollbackAuditLog = (id) => request.post(\`/audit/\${id}/rollback\`);
+
+const { t } = useI18n();
+
+const proTable = ref();
+const initParam = reactive({});
+
+const columns = [
+  { type: 'index', label: '#', width: 80 },
+  { prop: 'username', label: 'column.username', search: { el: 'input' } },
+  { prop: 'method', label: 'audit.method', width: 120, search: { el: 'select', props: { style: { width: '200px' } }, options: [
+      { label: 'POST', value: 'POST' },
+      { label: 'PUT', value: 'PUT' },
+      { label: 'DELETE', value: 'DELETE' },
+      { label: 'PATCH', value: 'PATCH' }
+    ] } 
+  },
+  { prop: 'path', label: 'audit.path', minWidth: 200 },
+  { prop: 'status', label: 'audit.status', width: 100 },
+  { prop: 'duration', label: 'audit.duration', width: 100, sortable: true },
+  { prop: 'ip', label: 'audit.ip', width: 140 },
+  { prop: 'createdAt', label: 'column.createTime', width: 180, sortable: true },
+  { prop: 'params', label: 'audit.params', width: 100 },
+  { prop: 'snapshot', label: 'audit.snapshot', width: 100 },
+  { prop: 'operation', label: 'common.operation', width: 150, fixed: 'right' }
+];
+
+const getMethodType = (method) => {
+  const map = {
+    GET: 'info',
+    POST: 'success',
+    PUT: 'warning',
+    DELETE: 'danger',
+    PATCH: 'warning'
+  };
+  return map[method] || 'info';
+};
+
+const getStatusType = (status) => {
+  if (status >= 200 && status < 300) return 'success';
+  if (status >= 300 && status < 400) return 'warning';
+  return 'danger';
+};
+
+const getDurationClass = (duration) => {
+  if (duration > 1000) return 'text-danger';
+  if (duration > 500) return 'text-warning';
+  return 'text-success';
+};
+
+const formatParams = (params) => {
+  try {
+    return typeof params === 'string' ? JSON.stringify(JSON.parse(params), null, 2) : JSON.stringify(params, null, 2);
+  } catch (e) {
+    return params;
+  }
+};
+
+const handleRollback = (row) => {
+  ElMessageBox.confirm(t('audit.rollbackConfirm'), t('common.warning'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await rollbackAuditLog(row._id);
+      ElMessage.success(t('audit.rollbackSuccess'));
+      proTable.value?.getTableList();
+    } catch (error) {
+      console.error(error);
+    }
+  });
+};
+        `,
+        style: `
+.page-container { padding: 20px; height: 100%; }
+.text-danger { color: #f56c6c; }
+.text-warning { color: #e6a23c; }
+.text-success { color: #67c23a; }
+        `
+      };
+
+      const auditSchema = await this.createOrUpdateSchema('sys审计日志', '操作日志', auditSchemaCode, entitySysAudit._id.toString(), viewSysAudit._id.toString());
+      await this.createOrUpdateMenu('/sys/audit', 'menu.system.audit', 'DocumentCopy', 8, auditSchema._id, parentId, ['admin']);
 
     } catch (error) {
       console.error('Failed to init sys schemas:', error);

@@ -1,15 +1,20 @@
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import viteCompression from 'vite-plugin-compression';
+import { viteMockServe } from 'vite-plugin-mock';
 import path from 'path';
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd());
   return {
     base: './', // Use relative path for assets to support deployment in any subdirectory
     plugins: [
       vue(),
+      viteMockServe({
+        mockPath: 'mock',
+        enable: command === 'serve'
+      }),
       viteCompression({
         verbose: true,
         disable: false,

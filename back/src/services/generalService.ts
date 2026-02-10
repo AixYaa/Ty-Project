@@ -12,6 +12,12 @@ export class GeneralService {
     return typeof id === 'string' ? new ObjectId(id) : id;
   }
 
+  // Get By Id
+  static async getById(collectionName: string, id: string) {
+    const col = await this.getCollection(collectionName);
+    return col.findOne({ _id: this.toObjectId(id) });
+  }
+
   // List / Search
   static async getList(collectionName: string, query: any = {}, pageNum: number = 1, pageSize: number = 10) {
     const col = await this.getCollection(collectionName);

@@ -3,17 +3,37 @@
     <component :is="dynamicComponent" v-if="dynamicComponent" />
     <el-empty v-else-if="!loading" description="暂无内容或加载失败" />
 
-    <!-- Edit Schema Button -->
-    <el-button
-      v-if="currentSchemaId && userStore.userInfo?.role === 'admin'"
-      type="primary"
-      circle
-      size="large"
-      class="edit-schema-btn"
-      @click="openEditDialog"
+    <!-- Schema Actions -->
+    <div v-if="currentSchemaId && userStore.userInfo?.role === 'admin'" class="schema-actions">
+      <el-tooltip content="可视化编辑" placement="left">
+        <el-button type="success" circle size="large" @click="openVisualEditor">
+          <el-icon><MagicStick /></el-icon>
+        </el-button>
+      </el-tooltip>
+      <el-tooltip content="代码编辑" placement="left">
+        <el-button type="primary" circle size="large" @click="openEditDialog">
+          <el-icon><Edit /></el-icon>
+        </el-button>
+      </el-tooltip>
+    </div>
+
+    <!-- Visual Editor Dialog -->
+    <el-dialog
+      v-model="visualDialogVisible"
+      title="可视化编辑器"
+      fullscreen
+      append-to-body
+      destroy-on-close
+      class="visual-editor-dialog"
+      :close-on-click-modal="false"
     >
-      <el-icon><Edit /></el-icon>
-    </el-button>
+      <VisualEditor
+        v-if="visualDialogVisible"
+        :initial-config="currentVisualConfig"
+        :raw-vue="currentRawVue"
+        @save="handleVisualSave"
+      />
+    </el-dialog>
 
     <!-- Edit Schema Dialog -->
     <el-dialog
@@ -144,12 +164,13 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import request from '@/utils/request';
 import { getSchemaById, updateSchema } from '@/api/schema';
 import { ElMessage } from 'element-plus';
-import { Edit, Warning, InfoFilled } from '@element-plus/icons-vue';
+import { Edit, Warning, InfoFilled, MagicStick } from '@element-plus/icons-vue';
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 import * as MonacoEditor from '@guolao/vue-monaco-editor';
 import ProTable from '@/components/ProTable/index.vue';
 import IconSelect from '@/components/IconSelect/index.vue';
 import { useUserStore } from '@/store/user';
+import VisualEditor from './visual-editor/index.vue';
 
 const props = defineProps<{
   schemaId?: string;
@@ -419,6 +440,55 @@ const saveSchema = async () => {
   }
 };
 
+// Visual Editor Logic
+const visualDialogVisible = ref(false);
+const currentVisualConfig = ref('');
+const currentRawVue = ref<any>(null);
+
+const openVisualEditor = async () => {
+  if (!currentSchemaId.value) return;
+  try {
+    const res = await getSchemaById(currentSchemaId.value);
+    if (res) {
+      editForm._id = res._id || currentSchemaId.value;
+      editForm.name = res.name;
+      // Extract __VISUAL_CONFIG__ from existing script if possible
+      let initialConfig = '';
+      if (res.vue?.script) {
+        const match = res.vue.script.match(/\/\/ __VISUAL_CONFIG__ = (.+)/);
+        if (match && match[1]) {
+          initialConfig = match[1];
+        } else {
+          // Fallback: Try to construct config from template if ProTable exists
+          // This is a basic heuristic for existing pages like User Management
+          if (res.vue.template && res.vue.template.includes('<ProTable')) {
+            // We can't easily parse full template to visual components yet
+            // But we can at least initialize an empty structure or a specific "ProTable" component
+            // to show something instead of blank.
+            // Better: Pass the whole template content to VisualEditor to decide?
+            // Or just leave it blank but add a prompt.
+          }
+        }
+      }
+
+      currentVisualConfig.value = initialConfig;
+      // Pass raw vue code for potential reverse engineering (advanced)
+      currentRawVue.value = res.vue;
+      visualDialogVisible.value = true;
+    }
+  } catch {
+    ElMessage.error('无法加载 Schema 数据');
+  }
+};
+
+const handleVisualSave = async (code: { template: string; script: string; style: string }) => {
+  editForm.vue.template = code.template;
+  editForm.vue.script = code.script;
+  editForm.vue.style = code.style || '';
+  await saveSchema();
+  visualDialogVisible.value = false;
+};
+
 const options = {
   moduleCache: {
     vue: Vue,
@@ -426,6 +496,7 @@ const options = {
     'element-plus': ElementPlus,
     '@element-plus/icons-vue': ElementPlusIconsVue,
     'app-request': request,
+    '@/utils/request': request,
     '@/components/ProTable/index.vue': ProTable,
     '@/components/IconSelect/index.vue': IconSelect,
     '@guolao/vue-monaco-editor': MonacoEditor
@@ -505,13 +576,20 @@ watch(
   min-height: 100%;
   position: relative; /* For absolute positioning of button */
 }
-.edit-schema-btn {
+.schema-actions {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.schema-actions .el-button {
+  margin-left: 0;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
+
 :deep(.schema-edit-dialog) {
   margin-top: 5vh !important;
   height: 89vh;
@@ -567,5 +645,21 @@ watch(
 .error-badge :deep(.el-badge__content) {
   margin-top: 8px;
   transform: scale(0.8);
+}
+</style>
+
+<style>
+.visual-editor-dialog {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.visual-editor-dialog .el-dialog__body {
+  flex: 1;
+  overflow: hidden;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 </style>

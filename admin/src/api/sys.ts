@@ -21,6 +21,19 @@ export interface SysEntity {
   fields?: any[];
 }
 
+export interface AuditLog {
+  _id: string;
+  userId: string;
+  username: string;
+  method: string;
+  path: string;
+  params: string;
+  status: number;
+  duration: number;
+  ip: string;
+  createdAt: string;
+}
+
 // --- Menu API ---
 export const getMenuTree = () => {
   return request.get<any, SysMenu[]>('/sys/menu/tree');
@@ -49,4 +62,13 @@ export const getEntities = (params?: any) => {
 
 export const createEntity = (data: SysEntity) => {
   return request.post<any, SysEntity>('/sys/entity', data);
+};
+
+// --- Audit API ---
+export const getAuditLogs = (params?: any) => {
+  return request.get<any, { list: AuditLog[]; total: number }>('/admin/audit', { params });
+};
+
+export const rollbackAuditLog = (id: string) => {
+  return request.post<any, any>(`/admin/audit/${id}/rollback`);
 };

@@ -15,10 +15,10 @@ async function start() {
     await connectRedis();
     
     // 初始化默认用户 admin password123 初始化测试数据 初始化系统管理页面架构 初始化默认角色
-    // await AuthService.initSuperAdmin();
-    // await DataInitializer.initTestSchemaAndMenu();
-    // await DataInitializer.initSysManagementSchemas();
-    // await DataInitializer.initDefaultRoles();
+    await AuthService.initSuperAdmin();
+    await DataInitializer.initTestSchemaAndMenu();
+    await DataInitializer.initSysManagementSchemas();
+    await DataInitializer.initDefaultRoles();
 
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

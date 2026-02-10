@@ -12,6 +12,11 @@ const service = axios.create({
 // Request interceptor
 service.interceptors.request.use(
   (config) => {
+    // 如果 URL 以 /mock 开头，则移除 baseURL，使其直接请求根路径以便被 vite-plugin-mock 拦截
+    if (config.url?.startsWith('/mock')) {
+      config.baseURL = '';
+    }
+
     const token = getToken();
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;

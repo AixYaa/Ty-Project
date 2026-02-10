@@ -76,10 +76,11 @@
     <el-card class="table-card" shadow="never">
       <div class="table-header">
         <div class="header-button-lf">
+          <span v-if="title" class="table-title">{{ title }}</span>
           <!-- <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增菜单</el-button> -->
           <slot name="tableHeader" :selected-list="selectedList" :selected-ids="selectedIds"></slot>
         </div>
-        <div class="header-button-ri">
+        <div v-if="toolButton" class="header-button-ri">
           <el-button :icon="Refresh" circle @click="getTableList" />
         </div>
       </div>
@@ -89,6 +90,8 @@
         v-loading="loading"
         :data="tableData"
         :border="border"
+        :stripe="stripe"
+        :size="size"
         :row-key="rowKey"
         @selection-change="selectionChange"
       >
@@ -354,6 +357,10 @@ const props = withDefaults(
     deleteApi?: (id: string) => Promise<any>; // Single delete API
     operation?: any; // Operation column configuration
     formConfig?: any; // Configuration for built-in editor (drawer)
+    title?: string; // Table title
+    toolButton?: boolean; // Show tool buttons
+    stripe?: boolean; // Stripe style
+    size?: 'large' | 'default' | 'small'; // Table size
   }>(),
   {
     columns: () => [],
@@ -367,7 +374,11 @@ const props = withDefaults(
     operation: undefined,
     formConfig: undefined,
     batchDeleteApi: undefined,
-    deleteApi: undefined
+    deleteApi: undefined,
+    title: '',
+    toolButton: true,
+    stripe: false,
+    size: 'default'
   }
 );
 
@@ -476,6 +487,15 @@ const getTableList = async () => {
     // Transform params if callback provided
     if (props.beforeSearchSubmit) {
       params = props.beforeSearchSubmit(params);
+    }
+
+    if (!props.requestApi) {
+      // In Visual Editor preview or misconfiguration, requestApi might be missing.
+      // Treat as empty result to avoid crash.
+      console.warn('ProTable: requestApi prop is missing. Returning empty data.');
+      tableData.value = [];
+      pageable.total = 0;
+      return;
     }
 
     const res = await props.requestApi(params);
@@ -686,7 +706,15 @@ defineExpose({
 .table-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
+}
+
+.table-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--el-text-color-primary);
+  margin-right: 15px;
 }
 
 .table-pagination {

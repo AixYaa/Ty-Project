@@ -1,4 +1,112 @@
 {
+  "visualEditor": {
+    "components": {
+      "form": "表单",
+      "button": "按钮",
+      "card": "卡片 (Card)",
+      "col": "列容器 (Col)",
+      "datePicker": "日期选择",
+      "h1": "标题 (H1)",
+      "input": "输入框",
+      "inputNumber": "数字输入",
+      "p": "段落 (P)",
+      "proTable": "超级表格",
+      "row": "行容器 (Row)",
+      "select": "选择器",
+      "switch": "开关"
+    },
+    "buttons": {
+      "addColumn": "添加列",
+      "addOption": "添加选项",
+      "cancel": "取消",
+      "clear": "清空",
+      "confirmAdd": "确定添加",
+      "readFromApi": "从 API 读取字段",
+      "save": "应用到代码"
+    },
+    "componentGroups": {
+      "advanced": "高级组件",
+      "basic": "基础组件",
+      "layout": "布局组件"
+    },
+    "enum": {
+      "default": "默认",
+      "large": "大型",
+      "small": "小型"
+    },
+    "labels": {
+      "search": "搜索"
+    },
+    "messages": {
+      "addedFields": "已添加 {count} 个字段",
+      "apiEmpty": "API 返回数据为空或格式不识别",
+      "apiError": "API 请求失败: {msg}"
+    },
+    "placeholders": {
+      "dragTip": "从左侧拖入组件",
+      "emptyList": "列表配置器开发中... 目前请使用代码编辑 ProTable columns",
+      "labelName": "标题 (label)",
+      "optionLabel": "标签",
+      "optionValue": "值",
+      "propName": "字段名 (prop)",
+      "selectComponent": "请选择组件进行配置",
+      "width": "宽度"
+    },
+    "props": {
+      "apiUrl": "API 地址",
+      "circle": "圆形按钮",
+      "clearable": "可清空",
+      "disabled": "禁用",
+      "gutter": "栅格间隔",
+      "header": "标题",
+      "max": "最大值",
+      "min": "最小值",
+      "pagination": "分页",
+      "placeholder": "占位文本",
+      "plain": "朴素按钮",
+      "round": "圆角按钮",
+      "shadow": "阴影显示",
+      "size": "尺寸",
+      "span": "栅格占位",
+      "stripe": "斑马纹",
+      "title": "表格标题",
+      "toolButton": "工具栏",
+      "type": "类型"
+    },
+    "tabs": {
+      "form": "表单设计 (Form)",
+      "list": "列表设计 (List)"
+    },
+    "titles": {
+      "column": "列",
+      "columns": "列配置 (Columns)",
+      "componentId": "组件 ID",
+      "componentName": "组件名称",
+      "displayText": "显示文本",
+      "options": "选项 (Options)",
+      "props": "属性 (Props)",
+      "propsConfig": "组件属性配置",
+      "selectFields": "选择字段 (Select Fields)",
+      "vModel": "绑定字段 (v-model)"
+    }
+  },
+  "audit": {
+    "duration": "耗时",
+    "ip": "IP地址",
+    "method": "请求方法",
+    "noSnapshot": "无可用快照，无法回滚",
+    "params": "参数",
+    "path": "请求路径",
+    "requestParams": "请求参数",
+    "rollback": "回滚",
+    "rollbackConfirm": "确定要回滚此操作吗？这将恢复数据到修改前的状态。",
+    "rollbackSuccess": "回滚成功",
+    "rolledBack": "已回滚",
+    "snapshot": "源数据",
+    "status": "状态码",
+    "viewParams": "查看参数",
+    "viewSnapshot": "查看源数据"
+  },
   "column": {
     "avatar": "头像",
     "bindSchema": "绑定架构",
@@ -50,22 +158,22 @@
     "warning": "警告"
   },
   "dashboard": {
+    "author": "作者",
+    "charts": {
+      "userDistribution": "用户分布",
+      "visitsTrend": "访问趋势 (近7天)"
+    },
+    "commit": "提交ID",
+    "date": "时间",
+    "message": "内容",
+    "noHistory": "暂无提交记录",
     "overview": "这是您的仪表盘首页。",
     "projectUpdates": "项目更新日志",
-    "noHistory": "暂无提交记录",
-    "commit": "提交ID",
-    "author": "作者",
-    "message": "内容",
-    "date": "时间",
     "statistics": {
-      "users": "总用户数",
-      "visits": "今日访问",
+      "income": "总收入",
       "orders": "订单数",
-      "income": "总收入"
-    },
-    "charts": {
-      "visitsTrend": "访问趋势 (近7天)",
-      "userDistribution": "用户分布"
+      "users": "总用户数",
+      "visits": "今日访问"
     }
   },
   "error": {
@@ -85,10 +193,10 @@
   },
   "i18n": {
     "confirmDeleteKey": "确定删除这个键吗？",
-    "keyRequired": "键名不能为空",
     "duplicateKeys": "存在重复的键名",
-    "saveSuccess": "保存成功",
-    "saveFailed": "保存失败"
+    "keyRequired": "键名不能为空",
+    "saveFailed": "保存失败",
+    "saveSuccess": "保存成功"
   },
   "login": {
     "loginBtn": "登 录",
@@ -110,6 +218,7 @@
     "parentMenu": "父菜单",
     "rolePermission": "角色权限",
     "system": {
+      "audit": "操作日志",
       "center": "管理中心",
       "entity": "实体管理",
       "i18n": "国际化管理",
