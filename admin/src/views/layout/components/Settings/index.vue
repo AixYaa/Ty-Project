@@ -149,7 +149,7 @@
     </div>
 
     <!-- Debug Settings (Only for Admin) -->
-    <div v-if="userStore.userInfo?.username === 'admin'" class="setting-item">
+    <div v-if="userStore.userInfo?.role === 'admin'" class="setting-item">
       <div class="label">调试配置</div>
       <el-switch v-model="settingStore.showDebugDrawer" active-text="开启调试抽屉" />
     </div>

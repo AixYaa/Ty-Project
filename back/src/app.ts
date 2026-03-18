@@ -27,7 +27,7 @@ app.use(express.static(frontendPath));
 const whitelist = (process.env.CORS_WHITELIST || '').split(',').filter(Boolean);
 if (whitelist.length === 0) {
   // 开发环境默认值，防止配置漏掉导致无法访问
-  whitelist.push('http://localhost:5173', 'http://localhost:6632');
+  whitelist.push('http://localhost:5173', 'http://localhost:6632','https://ty.haix.fun','http://localhost:6631');
 }
 
 // 2. 通用 API 日志中间件

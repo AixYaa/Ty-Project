@@ -828,7 +828,6 @@ onMounted(() => {
 const cloneComponent = (origin: EditorComponent) => {
   const clone = JSON.parse(JSON.stringify(origin));
   clone.id = origin.type + '_' + Date.now() + Math.floor(Math.random() * 1000);
-  // Reset children if container
   if (clone.isContainer) {
     clone.children = [];
   }
@@ -839,7 +838,6 @@ const setActiveComponent = (comp: EditorComponent) => {
   activeComponent.value = comp;
 };
 
-// Recursive delete
 const deleteFromTree = (list: EditorComponent[], id: string): boolean => {
   const idx = list.findIndex((item) => item.id === id);
   if (idx !== -1) {
@@ -866,7 +864,6 @@ const handleClear = () => {
   activeComponent.value = null;
 };
 
-// Code Generation
 const generatePropsString = (props: Record<string, any>, model?: string) => {
   let str = '';
   if (model) {
@@ -882,10 +879,8 @@ const generatePropsString = (props: Record<string, any>, model?: string) => {
       continue; // default usually false
     else if (typeof val === 'string') str += ` ${key}="${val}"`;
     else if (typeof val === 'number') str += ` :${key}="${val}"`;
-    else if (key === 'requestApi' || key === 'apiUrl')
-      continue; // Skip functions/internal api url
-    else if (String(key).startsWith('_'))
-      continue; // Skip internal props
+    else if (key === 'requestApi' || key === 'apiUrl') continue;
+    else if (String(key).startsWith('_')) continue;
     else str += ` :${key}='${JSON.stringify(val)}'`;
   }
   return str;
@@ -896,7 +891,6 @@ const generateTemplate = (components: EditorComponent[], indent = 2): string => 
   const spaces = ' '.repeat(indent);
 
   for (const comp of components) {
-    // Check for children or text
     const hasChildren = comp.children && comp.children.length > 0;
     const hasText = !!comp.text;
     const hasOptions = comp.options && comp.options.length > 0;
@@ -904,7 +898,6 @@ const generateTemplate = (components: EditorComponent[], indent = 2): string => 
       comp.type
     );
 
-    // Generate component content
     let compCode = '';
     if (!hasChildren && !hasText && !hasOptions && !isHeaderTag) {
       compCode = ` />\n`;
@@ -940,14 +933,11 @@ const generateTemplate = (components: EditorComponent[], indent = 2): string => 
       compCode += `${spaces}</${comp.type}>\n`;
     }
 
-    // Remove label prop from the component itself as it's used by the wrapper
-    // Also remove label from the component props string if it was rendered in el-form-item
     const propsWithoutLabel = { ...comp.props };
     if (comp.props && comp.props.label && !comp.isContainer && comp.type !== 'el-button') {
       delete propsWithoutLabel.label;
     }
 
-    // Wrap in el-form-item if label is present and not a container/layout component
     if (comp.props && comp.props.label && !comp.isContainer && comp.type !== 'el-button') {
       const propAttr = comp.model ? ` prop="${comp.model}"` : '';
       code += `${spaces}<el-form-item label="${comp.props.label}"${propAttr}>\n`;
@@ -965,7 +955,6 @@ const generateTemplate = (components: EditorComponent[], indent = 2): string => 
 };
 
 const generateScript = (components: EditorComponent[]) => {
-  // Collect v-models and ProTable
   const models: Record<string, any> = {};
   let hasProTable = false;
   let proTableColumns: any[] = [];
@@ -983,12 +972,10 @@ const generateScript = (components: EditorComponent[]) => {
         if (item.type === 'el-input-number') {
           models[item.model] = 0;
         } else {
-          models[item.model] = ''; // Default value
+          models[item.model] = '';
         }
       }
-      // Special handling for button click events involving data properties
       if (item.type === 'el-button' && item.text && item.text.includes('{{')) {
-        // Extract variable names from interpolation
         const matches = item.text.matchAll(/{{(.*?)}}/g);
         for (const m of matches) {
           if (!m[1]) continue;
@@ -1002,7 +989,6 @@ const generateScript = (components: EditorComponent[]) => {
           }
         }
       }
-      // Handle H1/P interpolation too
       if ((item.type === 'h1' || item.type === 'p') && item.text && item.text.includes('{{')) {
         const matches = item.text.matchAll(/{{(.*?)}}/g);
         for (const m of matches) {
@@ -1010,7 +996,7 @@ const generateScript = (components: EditorComponent[]) => {
           const varName = m[1].trim();
           if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) {
             if (!models[varName]) {
-              models[varName] = 'World'; // Default for name
+              models[varName] = 'World';
             }
           }
         }
@@ -1021,15 +1007,12 @@ const generateScript = (components: EditorComponent[]) => {
   };
   traverse(components);
 
-  // Serialize current config for persistence
   const visualConfig = {
     form: components
   };
 
   const keys = Object.keys(models);
   const hasModels = keys.length > 0;
-
-  // Check for el-form to include FormInstance and ref
   let hasForm = false;
   let formSubmitUrl = '';
   let formSubmitMethod = 'post';
@@ -1147,6 +1130,7 @@ const onReset = () => {
 
 const generateFullTemplate = (components: EditorComponent[]) => {
   // ProTable Special Handling
+  // Avoid errors if components[0] is undefined
   const firstComponent = components[0];
   if (components.length === 1 && firstComponent && firstComponent.type === 'ProTable') {
     const table = firstComponent;

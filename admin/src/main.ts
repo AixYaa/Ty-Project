@@ -13,6 +13,13 @@ import ProTable from '@/components/ProTable/index.vue';
 import request from '@/utils/request';
 import { useUserStore } from '@/store/user';
 
+// Production Mock Server Setup
+if (import.meta.env.PROD) {
+  import('./mockProdServer').then(({ setupProdMockServer }) => {
+    setupProdMockServer();
+  });
+}
+
 const app = createApp(App);
 
 // 注册所有图标

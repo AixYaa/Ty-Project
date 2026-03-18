@@ -10,7 +10,6 @@
     :style="wrapperStyle"
     @click.stop="onSelect(element)"
   >
-    <!-- Action Bar -->
     <div v-if="activeId === element.id" class="component-actions">
       <div class="action-label">{{ element.label }}</div>
       <el-button
@@ -22,7 +21,6 @@
       />
     </div>
 
-    <!-- Case 1: Container (Row, Card, etc) -->
     <component
       :is="element.type"
       v-if="element.isContainer"
@@ -50,9 +48,7 @@
       </draggable>
     </component>
 
-    <!-- Case 2: Leaf Component -->
     <div v-else class="component-mask">
-      <!-- Wrap in el-form-item if it has a label property -->
       <el-form-item
         v-if="element.props.label && element.type !== 'el-button'"
         :label="element.props.label"
@@ -115,8 +111,6 @@
             <el-button link type="danger" :icon="Delete">删除</el-button>
           </template>
         </template>
-
-        <!-- Dynamic Input Slots -->
         <template
           v-for="col in element.props.columns?.filter((c: any) => c._renderInput)"
           :key="col.prop"
@@ -125,7 +119,6 @@
           <el-input v-model="row[col.prop]" placeholder="请输入" />
         </template>
       </component>
-      <!-- Overlay -->
       <div class="mask-overlay"></div>
     </div>
   </div>
@@ -147,18 +140,15 @@ const props = defineProps<{
   activeId?: string;
 }>();
 
-// Helper to resolve icon component dynamically
 const getIcon = (name: string) => {
   if (!name) return undefined;
   const icons: any = { Delete, EditPen, CirclePlus, Check, Refresh };
   return icons[name] || undefined;
 };
 
-// Use computed for props to ensure reactivity
 const componentProps = computed(() => {
   const element = props.element;
   const p = { ...element.props };
-  // If apiUrl is present (e.g. for ProTable), inject requestApi
   if (p.apiUrl && typeof p.apiUrl === 'string') {
     p.requestApi = async (params: any) => {
       const res = await request.get(p.apiUrl, { params });
@@ -193,7 +183,6 @@ const wrapperStyle = computed(() => {
   return {};
 });
 
-// Wrapper to avoid eslint prop mutation error
 const childrenList = computed({
   get: () => props.element.children || [],
   set: (val) => {
@@ -222,11 +211,10 @@ const onDelete = (id: string | undefined) => {
   transition: all 0.2s;
 }
 
-/* Ensure ProTable fits nicely */
 .editor-component-wrapper :deep(.pro-table) {
   height: 100%;
-  min-height: 400px; /* Give it some minimum height */
-  overflow: hidden; /* Prevent table overflow */
+  min-height: 400px;
+  overflow: hidden;
 }
 /* Fix table card flex expansion in editor */
 .editor-component-wrapper :deep(.table-card) {
@@ -234,13 +222,9 @@ const onDelete = (id: string | undefined) => {
   min-height: 0;
 }
 
-/* When active, allow interaction with inner elements (e.g. table sorting/pagination) if needed,
-   OR keep it blocked to force selection via wrapper.
-   Currently we prefer blocking to avoid accidental edits, but ProTable needs interaction.
-*/
 .editor-component-wrapper.is-active .mask-overlay {
   pointer-events: none;
-  display: none; /* Hide overlay when active to allow interaction */
+  display: none;
 }
 
 .editor-component-wrapper:hover {
@@ -249,8 +233,8 @@ const onDelete = (id: string | undefined) => {
 }
 
 .editor-component-wrapper:hover .mask-overlay {
-  pointer-events: auto; /* Capture hover on overlay */
-  background: rgba(64, 158, 255, 0); /* Transparent but capturable */
+  pointer-events: auto;
+  background: rgba(64, 158, 255, 0);
 }
 
 .editor-component-wrapper.is-active {
@@ -288,10 +272,8 @@ const onDelete = (id: string | undefined) => {
   display: flex;
   flex-wrap: wrap;
   width: 100%;
-  gap: 0; /* Remove gap from flex container, let col padding handle it (standard el-row behavior) */
+  gap: 0;
 }
-/* Ensure draggable item inside row (which wraps col) takes up space correctly */
-/* Removed: :deep(.row-container) .drag-area > .editor-component-wrapper { flex: 1; } */
 
 .empty-container {
   background-color: var(--el-fill-color-lighter);
@@ -299,7 +281,7 @@ const onDelete = (id: string | undefined) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60px; /* Ensure drop target is visible */
+  min-height: 60px;
 }
 .empty-container::after {
   content: '拖拽组件到此处';
@@ -307,7 +289,6 @@ const onDelete = (id: string | undefined) => {
   font-size: 12px;
 }
 
-/* Row/Col Visual Indicators */
 .editor-component-wrapper.is-row {
   border: 1px dashed #ccc;
   padding: 5px;
@@ -335,7 +316,7 @@ const onDelete = (id: string | undefined) => {
 
 .component-mask {
   position: relative;
-  pointer-events: none; /* Disable interaction with inner inputs */
+  pointer-events: none;
 }
 
 .mask-overlay {
@@ -346,16 +327,10 @@ const onDelete = (id: string | undefined) => {
   bottom: 0;
   z-index: 2;
   cursor: pointer;
-  background: transparent; /* Allows clicks but blocks interaction with inputs inside */
-  pointer-events: none; /* Let clicks pass through to wrapper */
+  background: transparent;
+  pointer-events: none;
 }
 
-/* Only intercept pointer events on overlay if we want to block inner interaction */
-/*.component-mask:hover .mask-overlay {
-   border: 1px solid var(--el-color-primary);
-}*/
-
-/* Re-enable pointer events for the wrapper to allow selection */
 .editor-component-wrapper {
   cursor: grab;
   pointer-events: auto;
