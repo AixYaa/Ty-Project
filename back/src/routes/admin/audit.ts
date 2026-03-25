@@ -7,7 +7,14 @@ const router = Router();
 // Get audit logs list
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const result = await AuditLogService.getLogs(req.query);
+    const result = await AuditLogService.getLogs({
+      page: req.query.pageNum || 1,
+      pageSize: req.query.pageSize || 20,
+      username: req.query.username,
+      method: req.query.method,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate
+    });
     res.json(ApiResult.success(result));
   } catch (error: any) {
     res.json(ApiResult.error(error.message));

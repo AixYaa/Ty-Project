@@ -503,14 +503,23 @@ const getTableList = async () => {
     if (Array.isArray(res)) {
       tableData.value = res;
       pageable.total = res.length;
-    } else if (res.data && Array.isArray(res.data)) {
-      tableData.value = res.data;
-      pageable.total = res.total || res.data.length;
+    } else if (res.data) {
+      if (Array.isArray(res.data)) {
+        tableData.value = res.data;
+        pageable.total = res.total || res.data.length;
+      } else if (Array.isArray(res.data.list)) {
+        tableData.value = res.data.list;
+        pageable.total = res.data.total || res.data.list.length;
+        if (res.data.pageNum) pageable.pageNum = res.data.pageNum;
+        if (res.data.pageSize) pageable.pageSize = res.data.pageSize;
+      } else {
+        tableData.value = [];
+        pageable.total = 0;
+      }
     } else if (res.list && Array.isArray(res.list)) {
       tableData.value = res.list;
       pageable.total = res.total || res.list.length;
     } else {
-      // Fallback for simple array response or custom structure
       tableData.value = [];
       pageable.total = 0;
     }
