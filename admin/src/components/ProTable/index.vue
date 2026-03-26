@@ -146,7 +146,7 @@
               >
                 <template v-if="props.operation">
                   <el-button
-                    v-if="props.operation.view === true"
+                    v-if="showOperation('view')"
                     link
                     type="primary"
                     :icon="View"
@@ -155,7 +155,7 @@
                     {{ props.operation.viewText || $t('common.view') }}
                   </el-button>
                   <el-button
-                    v-if="props.operation.edit !== false"
+                    v-if="showOperation('edit')"
                     link
                     type="primary"
                     :icon="EditPen"
@@ -164,7 +164,7 @@
                     {{ props.operation.editText || $t('common.edit') }}
                   </el-button>
                   <el-button
-                    v-if="props.operation.delete !== false"
+                    v-if="showOperation('delete')"
                     link
                     type="danger"
                     :icon="Delete"
@@ -211,9 +211,10 @@
       v-if="formConfig"
       v-model="editor.visible"
       :title="editor.title"
-      :size="formConfig.width || '500px'"
+      :size="editorDrawerWidth + 'px'"
       append-to-body
       :class="formConfig.class"
+      direction="rtl"
     >
       <div class="drawer-content" :style="formConfig.contentStyle">
         <!-- Debug Info -->
@@ -263,6 +264,16 @@
         >
       </template>
     </el-drawer>
+
+    <!-- Resize Handle for Editor Drawer -->
+    <div
+      v-if="editor.visible && formConfig"
+      class="drawer-resize-handle"
+      title="拖动调整宽度"
+      @mousedown.prevent="startResize"
+    >
+      <div class="resize-dots"><span></span><span></span><span></span></div>
+    </div>
 
     <!-- Built-in Viewer Dialog -->
     <el-dialog
@@ -355,7 +366,18 @@ const props = withDefaults(
     labelKey?: string; // Key to display for selected items
     batchDeleteApi?: (ids: string[]) => Promise<any>; // Batch delete API
     deleteApi?: (id: string) => Promise<any>; // Single delete API
-    operation?: any; // Operation column configuration
+    operation?: {
+      view?: boolean | string;
+      edit?: boolean | string;
+      delete?: boolean | string;
+      permissions?: { view?: string; edit?: string; delete?: string };
+      hidden?: boolean;
+      label?: string;
+      fixed?: 'left' | 'right';
+      width?: string | number;
+      mode?: 'hover';
+      [key: string]: any;
+    }; // Operation column configuration
     formConfig?: any; // Configuration for built-in editor (drawer)
     title?: string; // Table title
     toolButton?: boolean; // Show tool buttons
@@ -425,6 +447,44 @@ const editor = reactive({
   loading: false
 });
 
+const editorDrawerWidth = ref(600);
+
+let resizeStartX = 0;
+let resizeStartWidth = 0;
+
+const startResize = (e: MouseEvent) => {
+  resizeStartX = e.clientX;
+  resizeStartWidth = editorDrawerWidth.value;
+
+  // Prevent iframe interfering with mouse events if any exist
+  const iframes = document.querySelectorAll('iframe');
+  iframes.forEach((iframe) => (iframe.style.pointerEvents = 'none'));
+
+  document.addEventListener('mousemove', onResize);
+  document.addEventListener('mouseup', stopResize);
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+};
+
+const onResize = (e: MouseEvent) => {
+  // Since drawer is on the right (direction="rtl"), moving left means increasing width.
+  // When moving left, e.clientX gets smaller, so delta is positive.
+  const delta = resizeStartX - e.clientX;
+  const newWidth = Math.min(Math.max(resizeStartWidth + delta, 300), window.innerWidth * 0.9);
+  editorDrawerWidth.value = Math.round(newWidth);
+};
+
+const stopResize = () => {
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+
+  // Restore iframe pointer events
+  const iframes = document.querySelectorAll('iframe');
+  iframes.forEach((iframe) => (iframe.style.pointerEvents = ''));
+};
+
 const viewer = reactive({
   visible: false,
   title: '',
@@ -461,6 +521,21 @@ const searchColumns = computed(() => {
   return props.columns.filter((item) => item.search);
 });
 const showSearch = computed(() => searchColumns.value.length > 0);
+
+// Permission helper
+const showOperation = (action: 'view' | 'edit' | 'delete') => {
+  if (!props.operation) return false;
+  const permConfig = props.operation.permissions as Record<string, string | undefined> | undefined;
+  if (!permConfig) {
+    if (action === 'view') return props.operation.view === true;
+    if (action === 'edit') return props.operation.edit !== false;
+    if (action === 'delete') return props.operation.delete !== false;
+  }
+  const requiredPerm = permConfig?.[action];
+  if (!requiredPerm) return false;
+  if (userStore.permissions.includes('*')) return true;
+  return userStore.permissions.includes(requiredPerm);
+};
 
 // Methods
 const getTableList = async () => {
@@ -847,5 +922,44 @@ defineExpose({
 .monaco-full-height {
   height: 100%;
   border: 1px solid #dcdfe6;
+}
+
+.drawer-resize-handle {
+  position: fixed;
+  right: v-bind("editorDrawerWidth + 'px'");
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: col-resize;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: background-color 0.2s;
+  transform: translateX(5px); /* 居中于边界 */
+}
+
+.drawer-resize-handle:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.drawer-resize-handle:active {
+  background-color: rgba(64, 158, 255, 0.2);
+}
+
+.resize-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.resize-dots span {
+  display: block;
+  width: 2px;
+  height: 2px;
+  background-color: #909399;
+  border-radius: 50%;
 }
 </style>

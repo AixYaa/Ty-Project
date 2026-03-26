@@ -46,6 +46,15 @@ router.post('/logout', adminAuthMiddleware, async (req: Request, res: Response) 
   }
 });
 
+router.get('/permissions', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const permissions = req.user?.permissions || [];
+    res.json(ApiResult.success({ permissions }));
+  } catch (error: any) {
+    res.json(ApiResult.error(error.message));
+  }
+});
+
 // 开发测试用注册接口
 router.post('/register', async (req: Request, res: Response) => {
   try {

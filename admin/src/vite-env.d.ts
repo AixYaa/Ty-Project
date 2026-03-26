@@ -1,18 +1,16 @@
 /// <reference types="vite/client" />
 /// <reference types="pinia-plugin-persistedstate" />
 
-interface ImportMetaEnv {
-  readonly VITE_API_URL: string;
-  readonly VITE_PROXY_TARGET: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
 declare module '*.vue' {
   import type { DefineComponent } from 'vue';
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  const component: DefineComponent<{}, {}, any>;
+  const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>;
   export default component;
 }
+
+declare module 'vue' {
+  interface HTMLElement {
+    __permissionParents?: HTMLElement[];
+  }
+}
+
+export {};

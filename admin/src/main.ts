@@ -12,6 +12,7 @@ import IconSelect from '@/components/IconSelect/index.vue';
 import ProTable from '@/components/ProTable/index.vue';
 import request from '@/utils/request';
 import { useUserStore } from '@/store/user';
+import { permissionDirective } from '@/directives/permission';
 
 // Production Mock Server Setup
 if (import.meta.env.PROD) {
@@ -21,6 +22,9 @@ if (import.meta.env.PROD) {
 }
 
 const app = createApp(App);
+
+// 注册权限指令
+app.directive('permission', permissionDirective);
 
 // 注册所有图标
 try {
@@ -40,8 +44,6 @@ app.use(ElementPlus);
 app.component('IconSelect', IconSelect);
 app.component('ProTable', ProTable);
 
-// Register global property $user (after pinia is active)
-// This allows {{ $user }} in templates
 const userStore = useUserStore();
 app.config.globalProperties.$user = userStore;
 app.config.globalProperties.$api = request;
@@ -52,7 +54,6 @@ setupRouterGuard(router);
 
 import i18n, { loadLocaleMessages } from './locales';
 
-// Load initial locale
 const defaultLocale = localStorage.getItem('language') || 'zh-CN';
 loadLocaleMessages(defaultLocale).then(() => {
   app.mount('#app');

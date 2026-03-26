@@ -154,14 +154,14 @@ export class DataInitializer {
       :beforeSearchSubmit="beforeSearchSubmit"
       :batchDeleteApi="batchDeleteMenu"
       :deleteApi="deleteMenu"
-      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :operation="{ permissions: { view: 'menu:view', edit: 'menu:edit', delete: 'menu:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
       :formConfig="{ label: $t('column.menuName'), initForm: { name: '', path: '', icon: '', sort: 0, parentId: undefined, schemaId: '', roles: [] }, width: '600px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <!-- Table Header Buttons -->
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.menuName') }) }}</el-button>
+        <el-button v-permission="'menu:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.menuName') }) }}</el-button>
       </template>
 
       <!-- Custom Columns -->
@@ -179,7 +179,7 @@ export class DataInitializer {
       </template>
 
       <template #operation="{ row }">
-        <el-button link type="primary" :icon="CirclePlus" @click="handleAdd(row)">{{ $t('table.addSubMenu') }}</el-button>
+        <el-button v-permission="'menu:edit'" link type="primary" :icon="CirclePlus" @click="handleAdd(row)">{{ $t('table.addSubMenu') }}</el-button>
       </template>
 
       <!-- Built-in Editor Slot -->
@@ -423,13 +423,13 @@ const submitForm = async (formData, done) => {
       :initParam="initParam"
       :batchDeleteApi="batchDeleteEntity"
       :deleteApi="deleteEntity"
-      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :operation="{ permissions: { view: 'entity:view', edit: 'entity:edit', delete: 'entity:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
       :formConfig="{ label: $t('column.entityName'), initForm: { name: '' }, width: '500px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.entityName') }) }}</el-button>
+        <el-button v-permission="'entity:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.entityName') }) }}</el-button>
       </template>
 
       <template #name="{ row }">
@@ -535,13 +535,13 @@ const submitForm = async (formData, done) => {
       :initParam="initParam"
       :batchDeleteApi="batchDeleteView"
       :deleteApi="deleteView"
-      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :operation="{ permissions: { view: 'entity:view', edit: 'entity:edit', delete: 'entity:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
       :formConfig="{ label: $t('column.viewName'), initForm: { name: '', entityId: '', type: 'list', config: {} } }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.viewName') }) }}</el-button>
+        <el-button v-permission="'entity:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.viewName') }) }}</el-button>
       </template>
 
       <template #name="{ row }">
@@ -705,7 +705,7 @@ const submitForm = async (formData, done) => {
       :initParam="initParam"
       :batchDeleteApi="batchDeleteSchema"
       :deleteApi="deleteSchema"
-      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :operation="{ permissions: { view: 'schema:view', edit: 'schema:edit', delete: 'schema:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
       :formConfig="{ 
         label: $t('column.schemaName'), 
         initForm: { name: '', entityId: '', viewId: '', vue: { template: '', script: '', style: '' } },
@@ -717,7 +717,7 @@ const submitForm = async (formData, done) => {
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">新增架构</el-button>
+        <el-button v-permission="'schema:edit'" type="primary" :icon="CirclePlus" @click="openAdd">新增架构</el-button>
       </template>
 
       <template #name="{ row }">
@@ -1009,13 +1009,13 @@ const generateCode = (model) => {
       ref="proTable"
       :columns="columns"
       :requestApi="getTableList"
-      :operation="{ edit: true, delete: true, mode: 'hover' }"
+      :operation="{ permissions: { edit: 'i18n:edit' }, edit: true, delete: false, mode: 'hover' }"
       @edit="handleEdit"
       @delete="handleDelete"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="handleAdd">{{ $t('common.add') }}</el-button>
+        <el-button v-permission="'i18n:edit'" type="primary" :icon="CirclePlus" @click="handleAdd">{{ $t('common.add') }}</el-button>
       </template>
     </ProTable>
   <!-- Add Dialog Here -->
@@ -1120,13 +1120,18 @@ const submitForm = async (formData, done) => {
       :initParam="initParam"
       :batchDeleteApi="batchDeleteRole"
       :deleteApi="deleteRole"
-      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
-      :formConfig="{ label: $t('column.roleName'), initForm: { name: '', code: '', description: '', status: 1 }, width: '500px' }"
+      :operation="{ permissions: { view: 'role:view', edit: 'role:edit', delete: 'role:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: $t('column.roleName'), initForm: { name: '', code: '', description: '', permissions: [], status: 1 }, width: '600px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.roleName') }) }}</el-button>
+        <el-button v-permission="'role:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.roleName') }) }}</el-button>
+      </template>
+      
+      <template #permissions="{ row }">
+        <el-tag v-for="p in row.permissions" :key="p" type="info" class="mr-2" size="small">{{ getPermissionName(p) }}</el-tag>
+        <span v-if="!row.permissions || row.permissions.length === 0" class="text-gray-400">-</span>
       </template>
       
       <template #status="{ row }">
@@ -1145,6 +1150,11 @@ const submitForm = async (formData, done) => {
           <el-form-item :label="$t('column.description')">
             <el-input v-model="model.description" type="textarea" :placeholder="$t('common.pleaseInput') + $t('column.description')" />
           </el-form-item>
+          <el-form-item :label="$t('column.permissions')">
+            <el-select v-model="model.permissions" multiple collapse-tags collapse-tags-max-length="3" :placeholder="$t('common.pleaseSelect') + $t('column.permissions')" style="width: 100%">
+              <el-option v-for="item in allPermissions" :key="item.code" :label="item.name + ' (' + item.code + ')'" :value="item.code" />
+            </el-select>
+          </el-form-item>
           <el-form-item :label="$t('column.status')">
              <el-switch v-model="model.status" :active-value="1" :inactive-value="0" />
           </el-form-item>
@@ -1157,6 +1167,10 @@ const submitForm = async (formData, done) => {
           <el-form-item :label="$t('column.roleName')"><el-input v-model="model.name" /></el-form-item>
           <el-form-item :label="$t('column.roleCode')"><el-input v-model="model.code" /></el-form-item>
           <el-form-item :label="$t('column.description')"><el-input v-model="model.description" type="textarea" /></el-form-item>
+          <el-form-item :label="$t('column.permissions')">
+            <el-tag v-for="p in model.permissions" :key="p" type="info" class="mr-2">{{ getPermissionName(p) }}</el-tag>
+            <span v-if="!model.permissions || model.permissions.length === 0">-</span>
+          </el-form-item>
           <el-form-item :label="$t('column.status')">
              <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? $t('status.enabled') : $t('status.disabled') }}</el-tag>
           </el-form-item>
@@ -1166,28 +1180,30 @@ const submitForm = async (formData, done) => {
 </div>
         `,
         script: `
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { CirclePlus } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
-// API
 const { t } = useI18n();
 const getRoleList = (params) => request.get('/core/sys角色', { params });
 const createRole = (data) => request.post('/core/sys角色', data);
 const updateRole = (id, data) => request.put('/core/sys角色/' + id, data);
 const deleteRole = (id) => request.delete('/core/sys角色/' + id);
 const batchDeleteRole = (ids) => request.post('/core/sys角色/batch-delete', { ids });
+const getPermissionList = (params) => request.get('/core/sys权限', { params });
 
 const proTable = ref();
 const initParam = reactive({});
+const allPermissions = ref([]);
 
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
   { prop: 'name', label: 'column.roleName', search: { el: 'input' } },
   { prop: 'code', label: 'column.roleCode', search: { el: 'input' } },
+  { prop: 'permissions', label: 'column.permissions', width: 300 },
   { prop: 'description', label: 'column.description' },
   { prop: 'status', label: 'column.status' }
 ];
@@ -1200,7 +1216,18 @@ const getTableList = async (params) => {
   };
 };
 
+onMounted(async () => {
+  const permRes = await getPermissionList({ pageSize: 100 });
+  allPermissions.value = Array.isArray(permRes) ? permRes : permRes.list || [];
+});
+
 const openAdd = () => proTable.value?.openAdd();
+
+const getPermissionName = (code) => {
+  if (code === '*') return t('common.allPermissions');
+  const perm = allPermissions.value.find(p => p.code === code);
+  return perm ? perm.name + ' (' + perm.code + ')' : code;
+};
 
 const submitForm = async (formData, done) => {
   try {
@@ -1223,11 +1250,139 @@ const submitForm = async (formData, done) => {
   }
 };
         `,
-        style: `.page-container { padding: 20px; }`
+        style: `.page-container { padding: 20px; } .mr-2 { margin-right: 8px; }`
       };
       
       const roleSchema = await this.createOrUpdateSchema('sys角色管理', '角色管理', roleSchemaCode, entitySysRole._id.toString(), viewSysRole._id.toString());
       await this.createOrUpdateMenu('/manage/role', 'menu.system.role', 'Avatar', 5, roleSchema._id, parentIdManage, ['admin']);
+
+
+      // --- 5.1 权限管理 (Permission Management) ---
+      const entitySysPermission = await this.createOrUpdateEntity('sys权限');
+      const viewSysPermission = await this.createOrUpdateView('sys权限列表', entitySysPermission._id.toString());
+
+      const permissionSchemaCode = {
+        template: `
+<div class="page-container">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :initParam="initParam"
+      :batchDeleteApi="batchDeletePermission"
+      :deleteApi="deletePermission"
+      :operation="{ permissions: { view: 'permission:view', edit: 'permission:edit', delete: 'permission:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: $t('column.permissionCode'), initForm: { code: '', name: '', type: 'menu', description: '' }, width: '500px' }"
+      @submit="submitForm"
+      row-key="_id"
+    >
+      <template #tableHeader>
+        <el-button v-permission="'permission:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.permissionName') }) }}</el-button>
+      </template>
+      
+      <template #type="{ row }">
+        <el-tag :type="typeTagMap[row.type] || 'info'">{{ row.type }}</el-tag>
+      </template>
+
+      <!-- Editor -->
+      <template #edit-form="{ model, isEdit }">
+        <el-form :model="model" label-width="100px">
+          <el-form-item :label="$t('column.permissionCode')">
+            <el-input v-model="model.code" :placeholder="$t('common.pleaseInput') + $t('column.permissionCode')" :disabled="isEdit" />
+          </el-form-item>
+          <el-form-item :label="$t('column.permissionName')">
+            <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.permissionName')" />
+          </el-form-item>
+          <el-form-item :label="$t('column.permissionType')">
+            <el-select v-model="model.type" style="width: 100%">
+              <el-option label="菜单权限" value="menu" />
+              <el-option label="按钮权限" value="button" />
+              <el-option label="字段权限" value="field" />
+              <el-option label="API权限" value="api" />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('column.description')">
+            <el-input v-model="model.description" type="textarea" :placeholder="$t('common.pleaseInput') + $t('column.description')" />
+          </el-form-item>
+        </el-form>
+      </template>
+
+      <!-- Viewer -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="100px" disabled>
+          <el-form-item :label="$t('column.permissionCode')"><el-input v-model="model.code" /></el-form-item>
+          <el-form-item :label="$t('column.permissionName')"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item :label="$t('column.permissionType')"><el-tag>{{ model.type }}</el-tag></el-form-item>
+          <el-form-item :label="$t('column.description')"><el-input v-model="model.description" type="textarea" /></el-form-item>
+        </el-form>
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { ElMessage } from 'element-plus';
+import { CirclePlus } from '@element-plus/icons-vue';
+import request from 'app-request';
+import ProTable from '@/components/ProTable/index.vue';
+
+const { t } = useI18n();
+const getPermissionList = (params) => request.get('/core/sys权限', { params });
+const createPermission = (data) => request.post('/core/sys权限', data);
+const updatePermission = (id, data) => request.put('/core/sys权限/' + id, data);
+const deletePermission = (id) => request.delete('/core/sys权限/' + id);
+const batchDeletePermission = (ids) => request.post('/core/sys权限/batch-delete', { ids });
+
+const proTable = ref();
+const initParam = reactive({});
+
+const typeTagMap = { menu: 'primary', button: 'success', field: 'warning', api: 'danger' };
+
+const columns = [
+  { type: 'selection', fixed: 'left', width: 55 },
+  { prop: 'code', label: 'column.permissionCode', search: { el: 'input' } },
+  { prop: 'name', label: 'column.permissionName', search: { el: 'input' } },
+  { prop: 'type', label: 'column.permissionType' },
+  { prop: 'description', label: 'column.description' }
+];
+
+const getTableList = async (params) => {
+  const res = await getPermissionList(params);
+  return {
+    data: Array.isArray(res) ? res : res.list || [],
+    total: Array.isArray(res) ? res.length : res.total || 0
+  };
+};
+
+const openAdd = () => proTable.value?.openAdd();
+
+const submitForm = async (formData, done) => {
+  try {
+    if (!formData.code || !formData.name) {
+       ElMessage.warning('请输入权限代码和名称');
+       done();
+       return;
+    }
+    if (formData._id) {
+      await updatePermission(formData._id, formData);
+      ElMessage.success('更新成功');
+    } else {
+      await createPermission(formData);
+      ElMessage.success('创建成功');
+    }
+    done();
+  } catch (e) {
+    console.error(e);
+    done();
+  }
+};
+        `,
+        style: `.page-container { padding: 20px; }`
+      };
+      
+      const permissionSchema = await this.createOrUpdateSchema('sys权限管理', '权限管理', permissionSchemaCode, entitySysPermission._id.toString(), viewSysPermission._id.toString());
+      await this.createOrUpdateMenu('/manage/permission', 'menu.system.permission', 'Key', 4, permissionSchema._id, parentIdManage, ['admin']);
 
 
       // --- 6. 用户管理 (User Management) ---
@@ -1246,13 +1401,13 @@ const submitForm = async (formData, done) => {
       :initParam="initParam"
       :batchDeleteApi="batchDeleteUser"
       :deleteApi="deleteUser"
-      :operation="{ view: true, edit: true, delete: true, mode: 'hover' }"
+      :operation="{ permissions: { view: 'user:view', edit: 'user:edit', delete: 'user:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
       :formConfig="{ label: $t('column.username'), initForm: { username: '', password: '', name: '', role: '', status: 1, avatar: null }, width: '500px' }"
       @submit="submitForm"
       row-key="_id"
     >
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.username') }) }}</el-button>
+        <el-button v-permission="'user:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.username') }) }}</el-button>
       </template>
 
       <template #avatar="{ row }">
@@ -1520,8 +1675,8 @@ const submitForm = async (formData, done) => {
     >
       <!-- Table Header Buttons -->
       <template #tableHeader>
-        <el-button type="primary" :icon="CirclePlus" @click="handleAdd">{{ $t('common.add') }}</el-button>
-        <el-button type="success" :icon="Check" @click="handleSave" :loading="saving">{{ $t('common.submit') }}</el-button>
+        <el-button v-permission="'i18n:edit'" type="primary" :icon="CirclePlus" @click="handleAdd">{{ $t('common.add') }}</el-button>
+        <el-button v-permission="'i18n:edit'" type="success" :icon="Check" @click="handleSave" :loading="saving">{{ $t('common.submit') }}</el-button>
       </template>
 
       <!-- Inline Edit Columns -->
@@ -1537,7 +1692,7 @@ const submitForm = async (formData, done) => {
 
       <!-- Actions -->
       <template #operation="{ row }">
-        <el-button type="danger" :icon="Delete" circle @click="handleDelete(row)" />
+        <el-button v-permission="'i18n:edit'" type="danger" :icon="Delete" circle @click="handleDelete(row)" />
       </template>
     </ProTable>
 </div>
@@ -1876,36 +2031,84 @@ const handleRollback = (row) => {
     }
   }
 
+  static async initDefaultPermissions() {
+    try {
+      console.log('Initializing default permissions...');
+      
+      const defaultPermissions = [
+        { code: 'user:view', name: '查看用户', type: 'menu', description: '查看用户列表和详情' },
+        { code: 'user:edit', name: '编辑用户', type: 'button', description: '创建、编辑、删除用户' },
+        { code: 'role:view', name: '查看角色', type: 'menu', description: '查看角色列表和详情' },
+        { code: 'role:edit', name: '编辑角色', type: 'button', description: '创建、编辑、删除角色' },
+        { code: 'permission:view', name: '查看权限', type: 'menu', description: '查看权限列表' },
+        { code: 'permission:edit', name: '编辑权限', type: 'button', description: '创建、编辑、删除权限' },
+        { code: 'menu:view', name: '查看菜单', type: 'menu', description: '查看菜单列表' },
+        { code: 'menu:edit', name: '编辑菜单', type: 'button', description: '创建、编辑、删除菜单' },
+        { code: 'schema:view', name: '查看架构', type: 'menu', description: '查看架构列表' },
+        { code: 'schema:edit', name: '编辑架构', type: 'button', description: '创建、编辑、删除架构' },
+        { code: 'entity:view', name: '查看实体', type: 'menu', description: '查看实体列表' },
+        { code: 'entity:edit', name: '编辑实体', type: 'button', description: '创建、编辑、删除实体' },
+        { code: 'audit:view', name: '查看审计日志', type: 'menu', description: '查看操作日志' },
+        { code: 'audit:rollback', name: '回滚操作', type: 'button', description: '回滚历史操作' },
+        { code: 'i18n:view', name: '查看国际化', type: 'menu', description: '查看国际化配置' },
+        { code: 'i18n:edit', name: '编辑国际化', type: 'button', description: '编辑国际化配置' }
+      ];
+
+      for (const perm of defaultPermissions) {
+        const existing = await GeneralService.getList('sys权限', { code: perm.code });
+        if (existing.list.length === 0) {
+          await GeneralService.create('sys权限', perm);
+          console.log(`Created permission: ${perm.code}`);
+        }
+      }
+      console.log('Default permissions initialized');
+    } catch (error) {
+      console.error('Failed to init default permissions:', error);
+    }
+  }
+
   static async initDefaultRoles() {
     try {
       console.log('Initializing default roles...');
-      // Check if admin role exists
-    const { list } = await GeneralService.getList('sys角色', { code: 'admin' });
-    if (list.length === 0) {
-      console.log('Creating default admin role...');
-      await GeneralService.create('sys角色', {
-        name: '超级管理员',
-        code: 'admin',
-        description: '系统超级管理员，拥有所有权限',
-        status: 1
-      });
-    } else {
-      console.log('Admin role already exists');
-    }
-    
-    // Check if user role exists
-    const { list: userList } = await GeneralService.getList('sys角色', { code: 'user' });
-    if (userList.length === 0) {
-       console.log('Creating default user role...');
-       await GeneralService.create('sys角色', {
-         name: '普通用户',
-         code: 'user',
-         description: '普通注册用户',
-         status: 1
-       });
-    } else {
-      console.log('User role already exists');
-    }
+      
+      await this.initDefaultPermissions();
+      
+      const allPerms = await GeneralService.getList('sys权限', { pageSize: 100 });
+      const allPermCodes = allPerms.list.map(p => p.code);
+      
+      const adminRole = await GeneralService.getList('sys角色', { code: 'admin' });
+      if (adminRole.list.length === 0) {
+        console.log('Creating default admin role...');
+        await GeneralService.create('sys角色', {
+          name: '超级管理员',
+          code: 'admin',
+          description: '系统超级管理员，拥有所有权限',
+          permissions: ['*'],
+          status: 1
+        });
+      } else {
+        await GeneralService.update('sys角色', adminRole.list[0]._id.toString(), {
+          permissions: ['*']
+        });
+        console.log('Admin role updated with all permissions');
+      }
+      
+      const userRole = await GeneralService.getList('sys角色', { code: 'user' });
+      if (userRole.list.length === 0) {
+        console.log('Creating default user role...');
+        await GeneralService.create('sys角色', {
+          name: '普通用户',
+          code: 'user',
+          description: '普通注册用户',
+          permissions: ['user:view', 'menu:view'],
+          status: 1
+        });
+      } else {
+        await GeneralService.update('sys角色', userRole.list[0]._id.toString(), {
+          permissions: ['user:view', 'menu:view']
+        });
+        console.log('User role updated with basic permissions');
+      }
     } catch (error) {
       console.error('Failed to init default roles:', error);
     }
