@@ -15,7 +15,7 @@ async function start() {
     // 初始化默认用户 admin password123 初始化测试数据 初始化系统管理页面架构 初始化默认角色
     // await AuthService.initSuperAdmin();
     // await DataInitializer.initTestSchemaAndMenu();
-    await DataInitializer.initSysManagementSchemas();
+    // await DataInitializer.initSysManagementSchemas();
     // await DataInitializer.initDefaultRoles();
 
     app.listen(PORT, () => {
