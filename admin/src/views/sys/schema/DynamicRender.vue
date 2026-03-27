@@ -1,7 +1,36 @@
 <template>
   <div v-loading="loading" class="schema-renderer">
-    <component :is="dynamicComponent" v-if="dynamicComponent" />
-    <el-empty v-else-if="!loading" description="暂无内容或加载失败" />
+    <component :is="dynamicComponent" v-if="dynamicComponent && !loadError" />
+    <el-empty v-else-if="!loading && !loadError" description="暂无内容或加载失败" />
+
+    <!-- Error Display -->
+    <div v-if="loadError" class="schema-error">
+      <el-result icon="error" :title="'页面加载失败'" :sub-title="loadError">
+        <template #extra>
+          <el-button type="primary" @click="retryLoad">重试</el-button>
+          <el-button
+            v-if="currentSchemaId && userStore.userInfo?.role === 'admin'"
+            @click="openEditDialog"
+            >编辑代码</el-button
+          >
+        </template>
+      </el-result>
+      <div v-if="errorDetails" class="error-details">
+        <el-card shadow="never">
+          <template #header>
+            <div class="error-details-header">
+              <span>错误详情</span>
+              <el-button size="small" @click="showErrorDetails = !showErrorDetails">
+                {{ showErrorDetails ? '收起' : '展开' }}
+              </el-button>
+            </div>
+          </template>
+          <el-collapse-transition>
+            <pre v-if="showErrorDetails" class="error-pre">{{ errorDetails }}</pre>
+          </el-collapse-transition>
+        </el-card>
+      </div>
+    </div>
 
     <!-- Schema Actions -->
     <div v-if="currentSchemaId && userStore.userInfo?.role === 'admin'" class="schema-actions">
@@ -191,6 +220,9 @@ if (app) {
 
 const loading = ref(false);
 const dynamicComponent = shallowRef<any>(null);
+const loadError = ref('');
+const errorDetails = ref('');
+const showErrorDetails = ref(false);
 
 // Edit Logic
 const editDialogVisible = ref(false);
@@ -518,6 +550,8 @@ const loadSchema = async (id: string) => {
   if (!id) return;
   loading.value = true;
   dynamicComponent.value = null;
+  loadError.value = '';
+  errorDetails.value = '';
 
   try {
     const res = await getSchemaById(id);
@@ -547,17 +581,37 @@ ${style}
     // 使用 vue3-sfc-loader 加载
     // 强制使用新的 URL 以绕过缓存 (添加时间戳)
     const cacheBuster = Date.now();
-    dynamicComponent.value = defineAsyncComponent(() =>
-      loadModule(id + '.vue?t=' + cacheBuster, {
-        ...options,
-        getFile: () => Promise.resolve(sfcContent)
-      })
-    );
+    dynamicComponent.value = defineAsyncComponent({
+      loader: () =>
+        loadModule(id + '.vue?t=' + cacheBuster, {
+          ...options,
+          getFile: () => Promise.resolve(sfcContent)
+        }).catch((err: any) => {
+          const msg = err?.message || err?.toString() || 'Unknown error';
+          loadError.value = msg;
+          errorDetails.value = err?.stack || msg;
+          throw err;
+        }),
+      onError: (err: any, _retry: () => void, _fail: () => void) => {
+        const msg = err?.message || err?.toString() || 'Component loading failed';
+        loadError.value = msg;
+        errorDetails.value = err?.stack || msg;
+        console.error('Async component loading error:', err);
+      }
+    });
   } catch (error: any) {
     console.error('Failed to load schema:', error);
+    loadError.value = error.message || '加载页面失败';
+    errorDetails.value = error.stack || error.message || 'Unknown error';
     ElMessage.error('加载页面失败: ' + error.message);
   } finally {
     loading.value = false;
+  }
+};
+
+const retryLoad = () => {
+  if (currentSchemaId.value) {
+    loadSchema(currentSchemaId.value);
   }
 };
 
@@ -575,6 +629,26 @@ watch(
 .schema-renderer {
   min-height: 100%;
   position: relative; /* For absolute positioning of button */
+}
+.schema-error {
+  padding: 20px;
+}
+.error-details {
+  margin-top: 20px;
+}
+.error-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.error-pre {
+  /* background: #f5f7fa; */
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 12px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 .schema-actions {
   position: fixed;

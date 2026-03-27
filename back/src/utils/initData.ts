@@ -454,10 +454,11 @@ const submitForm = async (formData, done) => {
         </el-form>
       </template>
     </ProTable>
+
 </div>
         `,
         script: `
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { CirclePlus, Delete, EditPen, Warning } from '@element-plus/icons-vue';
@@ -901,6 +902,30 @@ const submitForm = async (formData, done) => {
         </div>
       </template>
     </ProTable>
+
+    <!-- 查看日志弹窗 -->
+    <el-dialog v-model="logsVisible" title="运行日志" width="800px">
+      <el-table :data="logsList" v-loading="logsLoading" stripe>
+        <el-table-column prop="startTime" label="开始时间" width="180">
+          <template #default="{ row }">{{ formatTime(row.startTime) }}</template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'success' ? 'success' : row.status === 'failed' ? 'danger' : 'info'" size="small">
+              {{ row.status === 'success' ? '成功' : row.status === 'failed' ? '失败' : row.status }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="duration" label="耗时(ms)" width="100" />
+        <el-table-column prop="result" label="结果">
+          <template #default="{ row }">
+            <span v-if="row.result" class="log-result">{{ row.result }}</span>
+            <span v-else-if="row.error" class="log-error">{{ row.error }}</span>
+            <span v-else class="text-gray-400">-</span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
 </div>
         `,
         script: `
@@ -1183,7 +1208,7 @@ const submitForm = async (formData, done) => {
 import { ref, reactive, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
-import { CirclePlus } from '@element-plus/icons-vue';
+import { CirclePlus, Tickets } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
@@ -1321,13 +1346,11 @@ const submitForm = async (formData, done) => {
         `,
         script: `
 import { ref, reactive } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
-import { CirclePlus } from '@element-plus/icons-vue';
+import { CirclePlus, Tickets } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
-const { t } = useI18n();
 const getPermissionList = (params) => request.get('/core/sys权限', { params });
 const createPermission = (data) => request.post('/core/sys权限', data);
 const updatePermission = (id, data) => request.put('/core/sys权限/' + id, data);
@@ -1515,7 +1538,7 @@ const uploadHeaders = reactive({
 
 const columns = [
   { type: 'selection', fixed: 'left', width: 55 },
-  { prop: 'avatar', label: 'column.avatar', width: 80 },
+  { prop: 'avatar', label: 'column.avatar', width: 80,isImage: true },
   { prop: 'username', label: 'column.username', search: { el: 'input' } },
   { prop: 'name', label: 'column.name', search: { el: 'input' } },
   { prop: 'role', label: 'column.role' },
@@ -1659,7 +1682,417 @@ const submitForm = async (formData, done) => {
       const userSchema = await this.createOrUpdateSchema('sys用户管理', '用户管理', userSchemaCode, entitySysUser._id.toString(), viewSysUser._id.toString());
       await this.createOrUpdateMenu('/manage/user', 'menu.system.user', 'User', 6, userSchema._id, parentIdManage, ['admin']);
 
-      // --- 7. 国际化管理 (Language Management) ---
+      // --- 7. 定时任务管理 (Scheduler Management) ---
+      const entitySysScheduler = await this.createOrUpdateEntity('sys定时任务');
+      const viewSysScheduler = await this.createOrUpdateView('SysSchedulerList', entitySysScheduler._id.toString());
+
+      const schedulerSchemaCode = {
+        template: `
+<div class="page-container">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :initParam="initParam"
+      :batchDeleteApi="batchDeleteTask"
+      :deleteApi="deleteTask"
+      :operation="{ permissions: { view: 'scheduler:view', edit: 'scheduler:edit', delete: 'scheduler:delete' }, view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: $t('column.taskName'), initForm: { name: '', code: '', interval: '5min', apiPath: '', apiMethod: 'GET', apiParams: '', description: '', status: 1 }, width: '600px' }"
+      @submit="submitForm"
+      row-key="_id"
+    >
+      <template #tableHeader>
+        <el-button v-permission="'scheduler:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.taskName') }) }}</el-button>
+      </template>
+
+      <template #status="{ row }">
+        <el-tag :type="row.status === 1 ? 'success' : 'danger'">{{ row.status === 1 ? $t('status.enabled') : $t('status.disabled') }}</el-tag>
+      </template>
+
+      <template #interval="{ row }">
+        <el-tag type="warning">{{ getIntervalLabel(row.interval || row.cronExpression) }}</el-tag>
+      </template>
+
+      <template #lastRunResult="{ row }">
+        <el-tag v-if="row.lastRunResult === 'success'" type="success" size="small">成功</el-tag>
+        <el-tooltip v-else-if="row.lastRunResult" :content="row.lastRunResult" placement="top">
+          <el-tag type="danger" size="small">失败</el-tag>
+        </el-tooltip>
+        <span v-else class="text-gray-400">-</span>
+      </template>
+
+      <template #nextRunTime="{ row }">
+        <span v-if="row.nextRunTime">{{ formatTime(row.nextRunTime) }}</span>
+        <span v-else class="text-gray-400">-</span>
+      </template>
+
+      <template #operation="{ row }">
+        <el-button link type="primary" :icon="Tickets" @click="viewLogs(row)">日志</el-button>
+      </template>
+
+      <!-- Editor -->
+      <template #edit-form="{ model, isEdit }">
+        <el-form :model="model" label-width="110px">
+          <el-form-item :label="$t('column.taskName')">
+            <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.taskName')" />
+          </el-form-item>
+          <el-form-item :label="$t('column.taskCode')">
+            <el-input v-model="model.code" :placeholder="$t('common.pleaseInput') + $t('column.taskCode')" :disabled="isEdit" />
+          </el-form-item>
+          <el-form-item :label="$t('column.taskInterval')">
+            <el-select v-model="model.interval" style="width: 100%">
+              <el-option label="每 5 分钟" value="5min" />
+              <el-option label="每 10 分钟" value="10min" />
+              <el-option label="每 15 分钟" value="15min" />
+              <el-option label="每 30 分钟" value="30min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每 6 小时" value="6hour" />
+              <el-option label="每 12 小时" value="12hour" />
+              <el-option label="每天凌晨" value="1day" />
+              <el-option label="每周一凌晨" value="1week" />
+              <el-option label="每月 1 号" value="1month" />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('column.apiPath')">
+            <el-input v-model="model.apiPath" placeholder="/api/core/your-entity" />
+          </el-form-item>
+          <el-form-item :label="$t('column.apiMethod')">
+            <el-select v-model="model.apiMethod" style="width: 100%">
+              <el-option label="GET" value="GET" />
+              <el-option label="POST" value="POST" />
+              <el-option label="PUT" value="PUT" />
+              <el-option label="DELETE" value="DELETE" />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('column.apiParams')">
+            <el-input v-model="model.apiParams" type="textarea" :rows="3" placeholder='{"key": "value"} 或 ?key=value' />
+          </el-form-item>
+          <el-form-item :label="$t('column.description')">
+            <el-input v-model="model.description" type="textarea" :placeholder="$t('common.pleaseInput') + $t('column.description')" />
+          </el-form-item>
+          <el-form-item :label="$t('column.status')">
+            <el-switch v-model="model.status" :active-value="1" :inactive-value="0" />
+          </el-form-item>
+        </el-form>
+      </template>
+
+      <!-- Viewer -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="110px" disabled>
+          <el-form-item :label="$t('column.taskName')"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item :label="$t('column.taskCode')"><el-input v-model="model.code" /></el-form-item>
+          <el-form-item :label="$t('column.taskInterval')"><el-input :value="getIntervalLabel(model.interval || model.cronExpression)" /></el-form-item>
+          <el-form-item :label="$t('column.apiPath')"><el-input v-model="model.apiPath" /></el-form-item>
+          <el-form-item :label="$t('column.apiMethod')"><el-input v-model="model.apiMethod" /></el-form-item>
+          <el-form-item :label="$t('column.apiParams')"><el-input v-model="model.apiParams" type="textarea" /></el-form-item>
+          <el-form-item :label="$t('column.description')"><el-input v-model="model.description" type="textarea" /></el-form-item>
+          <el-form-item :label="$t('column.status')">
+            <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? $t('status.enabled') : $t('status.disabled') }}</el-tag>
+          </el-form-item>
+          <el-form-item :label="上次运行"><span>{{ model.lastRunTime ? formatTime(model.lastRunTime) : '-' }}</span></el-form-item>
+          <el-form-item :label="下次运行"><span>{{ model.nextRunTime ? formatTime(model.nextRunTime) : '-' }}</span></el-form-item>
+        </el-form>
+      </template>
+    </ProTable>
+
+    <!-- 查看日志抽屉 -->
+    <el-drawer v-model="logsVisible" title="运行日志" :size="logsDrawerWidth + 'px'" direction="rtl" class="scheduler-logs-drawer">
+      <div class="logs-drawer-content">
+        <!-- 筛选栏 -->
+        <div class="logs-toolbar">
+          <el-select v-model="logsFilterStatus" placeholder="状态筛选" clearable style="width: 120px" @change="handleLogsFilter">
+            <el-option label="全部" value="" />
+            <el-option label="成功" value="success" />
+            <el-option label="失败" value="failed" />
+          </el-select>
+        </div>
+        <!-- 日志表格 -->
+        <el-table :data="logsPagedList" v-loading="logsLoading" stripe style="flex: 1">
+          <el-table-column prop="startTime" label="开始时间" width="170">
+            <template #default="{ row }">{{ formatTime(row.startTime) }}</template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="80">
+            <template #default="{ row }">
+              <el-tag :type="row.status === 'success' ? 'success' : row.status === 'failed' ? 'danger' : 'info'" size="small">
+                {{ row.status === 'success' ? '成功' : row.status === 'failed' ? '失败' : row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="duration" label="耗时" width="80">
+            <template #default="{ row }">{{ row.duration }}ms</template>
+          </el-table-column>
+          <el-table-column prop="result" label="结果">
+            <template #default="{ row }">
+              <pre v-if="row._displayResult" class="log-result">{{ row._displayResult }}</pre>
+              <span v-else-if="row.error" class="log-error">{{ row.error }}</span>
+              <span v-else class="text-gray-400">-</span>
+            </template>
+          </el-table-column>
+        </el-table>
+        <!-- 分页 -->
+        <div class="logs-pagination">
+          <el-pagination
+            v-model:current-page="logsPage"
+            v-model:page-size="logsPageSize"
+            :total="logsFilteredList.length"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next"
+            background
+          />
+        </div>
+      </div>
+    </el-drawer>
+
+    <!-- 日志抽屉拖拽手柄 -->
+    <div v-if="logsVisible" class="logs-resize-handle" :style="{ right: logsDrawerWidth + 'px' }" title="拖动调整宽度" @mousedown.prevent="startLogsResize">
+      <div class="resize-dots"><span></span><span></span><span></span></div>
+    </div>
+    </div>
+        `,
+        script: `
+import { ref, reactive, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { ElMessage } from 'element-plus';
+import { CirclePlus, Tickets } from '@element-plus/icons-vue';
+import request from 'app-request';
+import ProTable from '@/components/ProTable/index.vue';
+
+const { t } = useI18n();
+const getTaskList = (params) => request.get('/core/sys定时任务', { params });
+const createTask = (data) => request.post('/core/sys定时任务', data);
+const updateTask = (id, data) => request.put('/core/sys定时任务/' + id, data);
+const deleteTask = (id) => request.delete('/core/sys定时任务/' + id);
+const batchDeleteTask = (ids) => request.post('/core/sys定时任务/batch-delete', { ids });
+
+const proTable = ref();
+const initParam = reactive({});
+
+const INTERVAL_MAP = {
+   '5min': '*/5 * * * *',
+   '10min': '*/10 * * * *',
+   '15min': '*/15 * * * *',
+   '30min': '*/30 * * * *',
+   '1hour': '0 * * * *',
+   '6hour': '0 */6 * * *',
+   '12hour': '0 */12 * * *',
+   '1day': '0 0 * * *',
+   '1week': '0 0 * * 1',
+   '1month': '0 0 1 * *'
+ };
+
+ const INTERVAL_LABELS = {
+   '5min': '每 5 分钟',
+   '10min': '每 10 分钟',
+   '15min': '每 15 分钟',
+   '30min': '每 30 分钟',
+   '1hour': '每小时',
+   '6hour': '每 6 小时',
+   '12hour': '每 12 小时',
+   '1day': '每天凌晨',
+   '1week': '每周一凌晨',
+   '1month': '每月 1 号'
+ };
+
+const columns = [
+  { type: 'selection', fixed: 'left', width: 55 },
+  { prop: 'name', label: 'column.taskName', search: { el: 'input' } },
+  { prop: 'code', label: 'column.taskCode', search: { el: 'input' } },
+  { prop: 'interval', label: 'column.taskInterval', width: 150 },
+  { prop: 'apiPath', label: 'column.apiPath', search: { el: 'input' } },
+  { prop: 'apiMethod', label: 'column.apiMethod', width: 100 },
+  { prop: 'status', label: 'column.status', width: 100 },
+  { prop: 'lastRunResult', label: 'column.lastRunResult', width: 100 },
+  { prop: 'nextRunTime', label: 'column.nextRunTime', width: 180 },
+  { prop: 'description', label: 'column.description' }
+];
+
+const getTableList = async (params) => {
+  const res = await getTaskList(params);
+  return {
+    data: Array.isArray(res) ? res : res.list || [],
+    total: Array.isArray(res) ? res.length : res.total || 0
+  };
+};
+
+const getIntervalLabel = (val) => {
+  return INTERVAL_LABELS[val] || val || '-';
+};
+
+const formatTime = (time) => {
+  if (!time) return '-';
+  const d = new Date(time);
+  return d.toLocaleString('zh-CN', { hour12: false });
+};
+
+const logsVisible = ref(false);
+const logsList = ref([]);
+const logsLoading = ref(false);
+const currentTaskId = ref('');
+const logsDrawerWidth = ref(600);
+
+let logsResizeStartX = 0;
+let logsResizeStartWidth = 0;
+
+const startLogsResize = (e) => {
+  logsResizeStartX = e.clientX;
+  logsResizeStartWidth = logsDrawerWidth.value;
+  document.addEventListener('mousemove', onLogsResize);
+  document.addEventListener('mouseup', stopLogsResize);
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+};
+
+const onLogsResize = (e) => {
+  const delta = logsResizeStartX - e.clientX;
+  const newWidth = Math.min(Math.max(logsResizeStartWidth + delta, 300), window.innerWidth * 0.8);
+  logsDrawerWidth.value = Math.round(newWidth);
+};
+
+const stopLogsResize = () => {
+  document.removeEventListener('mousemove', onLogsResize);
+  document.removeEventListener('mouseup', stopLogsResize);
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+};
+
+const logsFilterStatus = ref('');
+const logsPage = ref(1);
+const logsPageSize = ref(20);
+
+const logsFilteredList = computed(() => {
+  if (!logsFilterStatus.value) return logsList.value;
+  return logsList.value.filter((item) => item.status === logsFilterStatus.value);
+});
+
+const logsPagedList = computed(() => {
+  const start = (logsPage.value - 1) * logsPageSize.value;
+  return logsFilteredList.value.slice(start, start + logsPageSize.value);
+});
+
+const handleLogsFilter = () => {
+  logsPage.value = 1;
+};
+
+const viewLogs = async (row) => {
+  currentTaskId.value = row._id;
+  logsVisible.value = true;
+  logsPage.value = 1;
+  logsFilterStatus.value = '';
+  logsLoading.value = true;
+  try {
+    const res = await request.get('/scheduler/task/runs/' + row._id);
+    const list = Array.isArray(res) ? res : res?.list || [];
+    logsList.value = list.map((item) => {
+      if (item.result && typeof item.result === 'string') {
+        try {
+          const parsed = JSON.parse(item.result);
+          item._displayResult = typeof parsed === 'object'
+            ? JSON.stringify(parsed.data || parsed, null, 2)
+            : item.result;
+        } catch {
+          item._displayResult = item.result;
+        }
+      }
+      return item;
+    });
+    logsFilteredList.value = logsList.value;
+  } catch (e) {
+    console.error(e);
+    logsList.value = [];
+    logsFilteredList.value = [];
+  } finally {
+    logsLoading.value = false;
+  }
+};
+
+const openAdd = () => proTable.value?.openAdd();
+
+const submitForm = async (formData, done) => {
+  try {
+    if (!formData.name || !formData.code || !formData.apiPath) {
+      ElMessage.warning('请填写名称、标识和API路径');
+      done();
+      return;
+    }
+    const payload = { ...formData, cronExpression: INTERVAL_MAP[formData.interval] || formData.interval };
+    if (payload._id) {
+      await updateTask(payload._id, payload);
+      ElMessage.success('更新成功');
+    } else {
+      await createTask(payload);
+      ElMessage.success('创建成功');
+    }
+    done();
+  } catch (e) {
+    console.error(e);
+    done();
+  }
+};
+        `,
+        style: `
+.page-container { padding: 20px; }
+.text-gray-400 { color: #999; font-size: 13px; }
+.logs-drawer-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.logs-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.logs-pagination {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+.logs-resize-handle {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: col-resize;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: background-color 0.2s;
+}
+.logs-resize-handle:hover { background-color: rgba(64, 158, 255, 0.1); }
+.resize-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+.resize-dots span {
+  display: block;
+  width: 2px;
+  height: 2px;
+  background-color: #909399;
+  border-radius: 50%;
+}
+.log-result {
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+  color: #67c23a;
+}
+.log-error {
+  font-size: 12px;
+  color: #f56c6c;
+}
+        `
+      };
+
+      const schedulerSchema = await this.createOrUpdateSchema('sys定时任务管理', '定时任务管理', schedulerSchemaCode, entitySysScheduler._id.toString(), viewSysScheduler._id.toString());
+      await this.createOrUpdateMenu('/manage/scheduler', 'menu.system.scheduler', 'Timer', 7, schedulerSchema._id, parentIdManage, ['admin']);
+
       // const entitySysI18n = await this.createOrUpdateEntity('sys_i18n');
       // const viewSysI18n = await this.createOrUpdateView('SysI18nList', entitySysI18n._id.toString());
       
@@ -2026,6 +2459,209 @@ const handleRollback = (row) => {
       const auditSchema = await this.createOrUpdateSchema('sys审计日志', '操作日志', auditSchemaCode, entitySysAudit._id.toString(), viewSysAudit._id.toString());
       await this.createOrUpdateMenu('/sys/audit', 'menu.system.audit', 'DocumentCopy', 8, auditSchema._id, parentId, ['admin']);
 
+      // --- 9. 接口日志 (API Log) ---
+      const entitySysApiLog = await this.createOrUpdateEntity('sys接口管理');
+      const viewSysApiLog = await this.createOrUpdateView('sys接口管理', entitySysApiLog._id.toString());
+
+      const apiLogSchemaCode = {
+        template: `
+<div class="page-container">
+    <!-- Statistics Cards -->
+    <el-row :gutter="20" class="mb-4">
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-value">{{ stats.totalRequests || 0 }}</div>
+          <div class="stat-label">总请求数</div>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-value">{{ Math.round(stats.avgDuration || 0) }}ms</div>
+          <div class="stat-label">平均响应时间</div>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-value text-success">{{ successRate }}%</div>
+          <div class="stat-label">成功率</div>
+        </el-card>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-value text-danger">{{ errorRate }}%</div>
+          <div class="stat-label">错误率</div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- ProTable -->
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getApiLogs"
+      :initParam="initParam"
+      :toolButton="true"
+      row-key="_id"
+    >
+      <template #method="{ row }">
+        <el-tag :type="getMethodType(row.method)">{{ row.method }}</el-tag>
+      </template>
+
+      <template #status="{ row }">
+        <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+      </template>
+
+      <template #duration="{ row }">
+        <span :class="getDurationClass(row.duration)">{{ row.duration }}ms</span>
+      </template>
+
+      <template #path="{ row }">
+        <el-tooltip :content="row.path" placement="top" :show-after="300">
+          <span class="path-text">{{ row.path }}</span>
+        </el-tooltip>
+      </template>
+
+      <template #requestBody="{ row }">
+         <el-popover v-if="row.requestBody" placement="left" :title="$t('apiLog.requestBody')" :width="400" trigger="click">
+            <template #reference>
+              <el-button link type="primary">{{ $t('apiLog.view') }}</el-button>
+            </template>
+            <pre style="max-height: 400px; overflow: auto;">{{ formatParams(row.requestBody) }}</pre>
+         </el-popover>
+         <span v-else>-</span>
+      </template>
+
+      <template #responseBody="{ row }">
+         <el-popover v-if="row.responseBody" placement="left" :title="$t('apiLog.responseBody')" :width="400" trigger="click">
+            <template #reference>
+              <el-button link type="primary">{{ $t('apiLog.view') }}</el-button>
+            </template>
+            <pre style="max-height: 400px; overflow: auto;">{{ formatParams(row.responseBody) }}</pre>
+         </el-popover>
+         <span v-else>-</span>
+      </template>
+
+      <template #error="{ row }">
+        <el-tag v-if="row.error" type="danger" size="small">{{ row.error }}</el-tag>
+        <span v-else>-</span>
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive, onMounted, nextTick, computed } from 'vue';
+import ProTable from '@/components/ProTable/index.vue';
+import request from 'app-request';
+
+const getApiLogs = (params) => request.get('/api-log', { params });
+const getApiStatistics = () => request.get('/api-log/statistics');
+
+const proTable = ref();
+const initParam = reactive({});
+const stats = ref({});
+const lineChartRef = ref(null);
+const pieChartRef = ref(null);
+
+const successRate = computed(() => {
+  if (!stats.value.statusStats || stats.value.statusStats.length === 0) return 0;
+  const total = stats.value.statusStats.reduce((sum, s) => sum + s.count, 0);
+  const success = stats.value.statusStats.filter((s) => s.status >= 200 && s.status < 400).reduce((sum, s) => sum + s.count, 0);
+  return total > 0 ? Math.round((success / total) * 100) : 0;
+});
+
+const errorRate = computed(() => {
+  return 100 - successRate.value;
+});
+
+const fetchStatistics = async () => {
+  try {
+    const res = await getApiStatistics();
+    if (res && res.data) {
+      stats.value = res.data;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+onMounted(() => {
+  fetchStatistics();
+});
+
+const columns = [
+  { type: 'index', label: '#', width: 80 },
+  { prop: 'method', label: 'apiLog.method', width: 100, search: { el: 'select', props: { style: { width: '120px' } }, options: [
+      { label: 'GET', value: 'GET' },
+      { label: 'POST', value: 'POST' },
+      { label: 'PUT', value: 'PUT' },
+      { label: 'DELETE', value: 'DELETE' },
+      { label: 'PATCH', value: 'PATCH' }
+    ] }
+  },
+  { prop: 'path', label: 'apiLog.path', minWidth: 200, search: { el: 'input' } },
+  { prop: 'status', label: 'apiLog.status', width: 100, search: { el: 'select', props: { style: { width: '120px' } }, options: [
+      { label: '200', value: '200' },
+      { label: '400', value: '400' },
+      { label: '401', value: '401' },
+      { label: '500', value: '500' }
+    ] } },
+  { prop: 'duration', label: 'apiLog.duration', width: 110, sortable: true },
+  { prop: 'username', label: 'apiLog.user', width: 120, search: { el: 'input' } },
+  { prop: 'ip', label: 'apiLog.ip', width: 140 },
+  { prop: 'createdAt', label: 'column.createTime', width: 180, sortable: true },
+  { prop: 'requestBody', label: 'apiLog.requestBody', width: 100 },
+  { prop: 'responseBody', label: 'apiLog.responseBody', width: 100 },
+  { prop: 'error', label: 'apiLog.error', width: 120 }
+];
+
+const getMethodType = (method) => {
+  const map = {
+    GET: 'info',
+    POST: 'success',
+    PUT: 'warning',
+    DELETE: 'danger',
+    PATCH: 'warning'
+  };
+  return map[method] || 'info';
+};
+
+const getStatusType = (status) => {
+  if (status >= 200 && status < 300) return 'success';
+  if (status >= 300 && status < 400) return 'warning';
+  if (status >= 400 && status < 500) return 'warning';
+  return 'danger';
+};
+
+const getDurationClass = (duration) => {
+  if (duration > 1000) return 'text-danger';
+  if (duration > 500) return 'text-warning';
+  return 'text-success';
+};
+
+const formatParams = (params) => {
+  try {
+    return typeof params === 'string' ? JSON.stringify(JSON.parse(params), null, 2) : JSON.stringify(params, null, 2);
+  } catch (e) {
+    return params;
+  }
+};
+        `,
+        style: `
+.page-container { padding: 20px; height: 100%; }
+.mb-4 { margin-bottom: 20px; }
+.text-danger { color: #f56c6c; }
+.text-warning { color: #e6a23c; }
+.text-success { color: #67c23a; }
+.path-text { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+.stat-card { text-align: center; }
+.stat-value { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
+.stat-label { color: #909399; font-size: 14px; }
+        `
+      };
+
+      const apiLogSchema = await this.createOrUpdateSchema('sys接口管理', '接口日志', apiLogSchemaCode, entitySysApiLog._id.toString(), viewSysApiLog._id.toString());
+      await this.createOrUpdateMenu('/sys/api-log', 'menu.system.apiLog', 'Connection', 9, apiLogSchema._id, parentId, ['admin']);
+
     } catch (error) {
       console.error('Failed to init sys schemas:', error);
     }
@@ -2051,7 +2687,10 @@ const handleRollback = (row) => {
         { code: 'audit:view', name: '查看审计日志', type: 'menu', description: '查看操作日志' },
         { code: 'audit:rollback', name: '回滚操作', type: 'button', description: '回滚历史操作' },
         { code: 'i18n:view', name: '查看国际化', type: 'menu', description: '查看国际化配置' },
-        { code: 'i18n:edit', name: '编辑国际化', type: 'button', description: '编辑国际化配置' }
+        { code: 'i18n:edit', name: '编辑国际化', type: 'button', description: '编辑国际化配置' },
+        { code: 'scheduler:view', name: '查看定时任务', type: 'menu', description: '查看定时任务列表' },
+        { code: 'scheduler:edit', name: '编辑定时任务', type: 'button', description: '创建、编辑、删除定时任务' },
+        { code: 'scheduler:delete', name: '删除定时任务', type: 'button', description: '删除定时任务' }
       ];
 
       for (const perm of defaultPermissions) {

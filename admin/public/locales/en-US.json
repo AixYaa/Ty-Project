@@ -107,6 +107,27 @@
     "viewParams": "View Params",
     "viewSnapshot": "View Snapshot"
   },
+  "apiLog": {
+    "duration": "Duration",
+    "error": "Error",
+    "ip": "IP Address",
+    "method": "Method",
+    "path": "Path",
+    "requestBody": "Request Body",
+    "responseBody": "Response Body",
+    "status": "Status",
+    "user": "User",
+    "view": "View",
+    "totalRequests": "Total Requests",
+    "avgDuration": "Avg Duration",
+    "successRate": "Success Rate",
+    "errorRate": "Error Rate",
+    "topPaths": "Top 20 APIs",
+    "methodDistribution": "Method Distribution",
+    "statusDistribution": "Status Distribution",
+    "responseTime": "Response Time",
+    "recentLogs": "Recent Logs"
+  },
   "column": {
     "avatar": "Avatar",
     "bindSchema": "Bind Schema",
@@ -136,7 +157,16 @@
     "username": "Username",
     "viewName": "View Name",
     "viewType": "View Type",
-    "zhCN": "Chinese"
+    "zhCN": "Chinese",
+    "taskName": "Task Name",
+    "taskCode": "Task Code",
+    "taskInterval": "Interval",
+    "cronExpression": "Cron Expression",
+    "apiPath": "API Path",
+    "apiMethod": "API Method",
+    "apiParams": "API Params",
+    "lastRunResult": "Last Result",
+    "nextRunTime": "Next Run"
   },
   "common": {
     "add": "Add",
@@ -158,6 +188,7 @@
     "pleaseInput": "Please enter",
     "pleaseSelect": "Please select",
     "reset": "Reset",
+    "refresh": "Refresh",
     "search": "Search",
     "statusUpdated": "Status updated successfully",
     "submit": "Submit",
@@ -226,6 +257,7 @@
     "rolePermission": "Role Permission",
     "system": {
       "audit": "Audit Logs",
+      "apiLog": "API Call Logs",
       "center": "Management Center",
       "entity": "Entity Management",
       "i18n": "Language Management",
@@ -233,6 +265,7 @@
       "menu": "Menu Management",
       "permission": "Permission Management",
       "role": "Role Management",
+      "scheduler": "Scheduler Management",
       "schema": "Schema Management",
       "user": "User Management",
       "view": "View Management"

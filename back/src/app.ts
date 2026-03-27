@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import router from './routes';
+import { apiLogMiddleware } from './middleware/apiLog';
 
 import path from 'path';
 
@@ -34,15 +35,18 @@ if (whitelist.length === 0) {
 app.use((req, res, next) => {
   const { method, url } = req;
   const origin = req.headers.origin;
-  
+
   // 简单的日志格式：时间 | 方法 | URL | 来源
   const time = new Date().toISOString();
   console.log(`[API] ${time} | ${method} ${url} | Origin: ${origin || 'Same Origin/No Header'}`);
-  
+
   next();
 });
 
-// 3. CORS 配置
+// 3. API日志记录中间件 - 记录所有接口调用
+app.use(apiLogMiddleware);
+
+  // 4. CORS 配置
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     // 允许没有 origin 的请求 (如 Postman, curl, 同域请求)

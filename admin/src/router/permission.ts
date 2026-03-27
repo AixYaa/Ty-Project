@@ -26,19 +26,33 @@ const generateRoutes = (menus: SysMenu[]): RouteRecordRaw[] => {
     // 如果有 schemaId，说明是动态页面
     if (menu.schemaId && menu.path) {
       console.log('Generating route:', menu.path, menu.schemaId);
-      routes.push({
-        path: menu.path,
-        name: `Dynamic_${menu._id}`, // 确保 name 唯一
-        component: () => import('@/views/sys/schema/DynamicRender.vue'),
-        meta: {
-          title: menu.name,
-          schemaId: menu.schemaId,
-          icon: menu.icon
-        },
-        props: {
-          schemaId: menu.schemaId
-        }
-      });
+
+      // 特殊处理：API日志页面使用独立组件（支持echarts）
+      if (menu.path === '/sys/api-log') {
+        routes.push({
+          path: menu.path,
+          name: `Dynamic_${menu._id}`,
+          component: () => import('@/views/sys/api-log/index.vue'),
+          meta: {
+            title: menu.name,
+            icon: menu.icon
+          }
+        });
+      } else {
+        routes.push({
+          path: menu.path,
+          name: `Dynamic_${menu._id}`, // 确保 name 唯一
+          component: () => import('@/views/sys/schema/DynamicRender.vue'),
+          meta: {
+            title: menu.name,
+            schemaId: menu.schemaId,
+            icon: menu.icon
+          },
+          props: {
+            schemaId: menu.schemaId
+          }
+        });
+      }
     }
   }
 

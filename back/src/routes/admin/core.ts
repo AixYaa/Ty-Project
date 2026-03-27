@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { GeneralService } from '../../services/generalService';
+import { SchedulerService } from '../../services/schedulerService';
 import { ApiResult } from '../../apiResult';
 import { checkPermission } from '../../middleware/requirePermission';
 
@@ -14,7 +15,8 @@ const ENTITY_PERMISSION_MAP: Record<string, { view?: string; edit?: string; dele
   'sys实体': { view: 'entity:view', edit: 'entity:edit', delete: 'entity:edit' },
   'sys视图': { view: 'entity:view', edit: 'entity:edit', delete: 'entity:edit' },
   'sys审计日志': { view: 'audit:view', delete: 'audit:rollback' },
-  'sys国际化': { view: 'i18n:view', edit: 'i18n:edit', delete: 'i18n:edit' }
+  'sys国际化': { view: 'i18n:view', edit: 'i18n:edit', delete: 'i18n:edit' },
+  'sys定时任务': { view: 'scheduler:view', edit: 'scheduler:edit', delete: 'scheduler:delete' }
 };
 
 const getEntityPermission = (entity: string, action: 'view' | 'edit' | 'delete') => {
@@ -58,6 +60,11 @@ router.post('/:entity', async (req: Request, res: Response) => {
       }
     }
     const result = await GeneralService.create(entity, req.body);
+    if (entity === 'sys定时任务') {
+      if (result.status === 1 && result.cronExpression) {
+        await SchedulerService.scheduleTask(result);
+      }
+    }
     res.json(ApiResult.success(result));
   } catch (error: any) {
     res.json(ApiResult.error(error.message));
@@ -75,7 +82,14 @@ router.put('/:entity/:id', async (req: Request, res: Response) => {
         return res.status(403).json(ApiResult.error(`Permission denied. Required: ${requiredPerm}`, 403));
       }
     }
-    const result = await GeneralService.update(entity, id, req.body);
+    const result = await GeneralService.update(entity, id, req.body) as any;
+    if (entity === 'sys定时任务') {
+      if (result && result.status === 1 && result.cronExpression) {
+        await SchedulerService.scheduleTask(result);
+      } else if (result && result.code) {
+        await SchedulerService.stopTask(result.code);
+      }
+    }
     res.json(ApiResult.success(result));
   } catch (error: any) {
     res.json(ApiResult.error(error.message));
@@ -98,6 +112,14 @@ router.post('/:entity/batch-delete', async (req: Request, res: Response) => {
         return res.status(403).json(ApiResult.error(`Permission denied. Required: ${requiredPerm}`, 403));
       }
     }
+    if (entity === 'sys定时任务') {
+      const tasks = await Promise.all(ids.map((taskId: string) => GeneralService.getById(entity, taskId)));
+      for (const task of tasks) {
+        if (task?.code) {
+          await SchedulerService.stopTask(task.code);
+        }
+      }
+    }
     await GeneralService.batchDelete(entity, ids);
     res.json(ApiResult.success(null));
   } catch (error: any) {
@@ -114,6 +136,12 @@ router.delete('/:entity/:id', async (req: Request, res: Response) => {
       const userPermissions = req.user?.permissions || [];
       if (!checkPermission(userPermissions, requiredPerm)) {
         return res.status(403).json(ApiResult.error(`Permission denied. Required: ${requiredPerm}`, 403));
+      }
+    }
+    if (entity === 'sys定时任务') {
+      const task = await GeneralService.getById(entity, id);
+      if (task?.code) {
+        await SchedulerService.stopTask(task.code);
       }
     }
     await GeneralService.delete(entity, id);
