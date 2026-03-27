@@ -4,7 +4,15 @@
     <el-card class="mb-4 welcome-card">
       <div class="welcome-content">
         <div class="greeting-wrapper">
-          <el-avatar :size="64" class="user-avatar" :src="userStore.userInfo?.avatar">
+          <el-avatar
+            :size="64"
+            class="user-avatar"
+            :src="
+              typeof userStore.userInfo?.avatar === 'string'
+                ? userStore.userInfo?.avatar
+                : userStore.userInfo?.avatar?.compressed
+            "
+          >
             {{
               (userStore.userInfo?.name || userStore.userInfo?.username || 'A')
                 .charAt(0)
@@ -74,7 +82,7 @@
             :key="index"
             :timestamp="activity.date"
             placement="top"
-            :type="index === 0 ? 'primary' : ''"
+            :type="index === 0 ? 'primary' : 'info'"
             :hollow="index === 0"
           >
             <el-card shadow="hover" class="commit-card">
@@ -226,13 +234,19 @@ watch(isDark, () => {
 });
 
 // Generate a consistent tag type based on string
-const stringToTagType = (str: string) => {
-  const types = ['', 'success', 'warning', 'danger', 'info'];
+const stringToTagType = (str: string): 'success' | 'warning' | 'danger' | 'info' | 'primary' => {
+  const types: ('success' | 'warning' | 'danger' | 'info' | 'primary')[] = [
+    'success',
+    'warning',
+    'danger',
+    'info',
+    'primary'
+  ];
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return types[Math.abs(hash) % types.length] as any;
+  return types[Math.abs(hash) % types.length] || 'info';
 };
 
 const copyHash = async (hash: string) => {

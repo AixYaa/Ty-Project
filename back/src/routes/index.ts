@@ -11,7 +11,7 @@ export { adminRouter, clientRouter, commonRouter, healthRouter, publicRouter };
 const router = Router();
 router.use('/admin', adminRouter);
 router.use('/client', apiAuthMiddleware, clientRouter);
-router.use('/common', apiAuthMiddleware, commonRouter);
+router.use('/common', commonRouter);
 router.use('/health', healthRouter);
 router.use('/public', publicRouter);
 

@@ -15,6 +15,32 @@ router.get('/time', (req: Request, res: Response) => {
   res.json(ApiResult.success({ time: new Date().toISOString() }));
 });
 
+// 定时任务测试接口
+router.get('/test-echo', (req: Request, res: Response) => {
+  res.json(ApiResult.success({
+    message: '定时任务调用成功',
+    timestamp: new Date().toISOString(),
+    params: req.query,
+    method: 'GET'
+  }));
+});
+
+router.post('/test-echo', (req: Request, res: Response) => {
+  res.json(ApiResult.success({
+    message: '定时任务调用成功',
+    timestamp: new Date().toISOString(),
+    body: req.body,
+    method: 'POST'
+  }));
+});
+
+router.get('/user-count', (req: Request, res: Response) => {
+  res.json(ApiResult.success({
+    count: Math.floor(Math.random() * 100),
+    timestamp: new Date().toISOString()
+  }));
+});
+
 router.get('/git-logs', async (req: Request, res: Response) => {
   try {
     const owner = process.env.GITHUB_OWNER;
