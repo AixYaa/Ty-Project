@@ -4,18 +4,51 @@ import uploadRouter from './upload';
 
 const router = Router();
 
-// 通用接口示例
+/**
+ * @swagger
+ * /common:
+ *   get:
+ *     summary: 公共模块信息
+ *     tags: [Common]
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/', (req: Request, res: Response) => {
   res.json(ApiResult.success({ module: 'common' }));
 });
 
 router.use('/upload', uploadRouter);
 
+/**
+ * @swagger
+ * /common/time:
+ *   get:
+ *     summary: 获取服务器时间
+ *     tags: [Common]
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/time', (req: Request, res: Response) => {
   res.json(ApiResult.success({ time: new Date().toISOString() }));
 });
 
-// 定时任务测试接口
+/**
+ * @swagger
+ * /common/test-echo:
+ *   get:
+ *     summary: GET测试接口（定时任务调用）
+ *     tags: [Common]
+ *     parameters:
+ *       - in: query
+ *         name: param
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/test-echo', (req: Request, res: Response) => {
   res.json(ApiResult.success({
     message: '定时任务调用成功',
@@ -25,6 +58,21 @@ router.get('/test-echo', (req: Request, res: Response) => {
   }));
 });
 
+/**
+ * @swagger
+ * /common/test-echo:
+ *   post:
+ *     summary: POST测试接口（定时任务调用）
+ *     tags: [Common]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.post('/test-echo', (req: Request, res: Response) => {
   res.json(ApiResult.success({
     message: '定时任务调用成功',
@@ -34,6 +82,16 @@ router.post('/test-echo', (req: Request, res: Response) => {
   }));
 });
 
+/**
+ * @swagger
+ * /common/user-count:
+ *   get:
+ *     summary: 获取用户数量（测试用）
+ *     tags: [Common]
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/user-count', (req: Request, res: Response) => {
   res.json(ApiResult.success({
     count: Math.floor(Math.random() * 100),
@@ -41,18 +99,26 @@ router.get('/user-count', (req: Request, res: Response) => {
   }));
 });
 
+/**
+ * @swagger
+ * /common/git-logs:
+ *   get:
+ *     summary: 获取Git提交记录
+ *     tags: [Common]
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/git-logs', async (req: Request, res: Response) => {
   try {
     const owner = process.env.GITHUB_OWNER;
     const repo = process.env.GITHUB_REPO;
-    
+
     if (!owner || !repo) {
       console.warn('GITHUB_OWNER or GITHUB_REPO not set in .env');
       return res.json(ApiResult.success([]));
     }
 
-    // Fetch commits from GitHub
-    // Note: Using native fetch (Node 18+)
     const headers: HeadersInit = {};
     const token = process.env.GITHUB_TOKEN;
     if (token) {
@@ -62,19 +128,17 @@ router.get('/git-logs', async (req: Request, res: Response) => {
     const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=10`, {
       headers
     });
-    
+
     if (!response.ok) {
       throw new Error(`GitHub API returned ${response.status} ${response.statusText}`);
     }
-    
+
     const data: any[] = await response.json();
-    
+
     const logs = data.map((item: any) => {
-      // GitHub date is ISO string (e.g. 2023-10-27T10:00:00Z)
-      // We format it to match local git log format: YYYY-MM-DD HH:mm:ss
       const dateObj = new Date(item.commit.author.date);
       const formattedDate = dateObj.toISOString().replace('T', ' ').substring(0, 19);
-      
+
       return {
         hash: item.sha.substring(0, 7),
         author: item.commit.author.name,
@@ -82,9 +146,9 @@ router.get('/git-logs', async (req: Request, res: Response) => {
         message: item.commit.message
       };
     });
-    
+
     return res.json(ApiResult.success(logs));
-    
+
   } catch (ghError: any) {
     console.error('GitHub fetch failed:', ghError);
     return res.json(ApiResult.success([]));

@@ -170,6 +170,7 @@
   },
   "common": {
     "add": "Add",
+    "apiDoc": "API Docs",
     "back": "Back",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -256,9 +257,10 @@
     "parentMenu": "Parent Menu",
     "rolePermission": "Role Permission",
     "system": {
-      "audit": "Audit Logs",
       "apiLog": "API Call Logs",
+      "audit": "Audit Logs",
       "center": "Management Center",
+      "config": "System Config",
       "entity": "Entity Management",
       "i18n": "Language Management",
       "management": "System Management",

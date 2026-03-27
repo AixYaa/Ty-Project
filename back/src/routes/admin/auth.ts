@@ -1,11 +1,38 @@
 import { Router, Request, Response } from 'express';
 import { AuthService } from '../../services/authService';
 import { ApiResult } from '../../apiResult';
-// import { authMiddleware } from '../../middleware/auth';
 import { adminAuthMiddleware } from '../../middleware/adminAuth';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /admin/auth/login:
+ *   post:
+ *     summary: 用户登录
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: 用户名
+ *               password:
+ *                 type: string
+ *                 description: 密码
+ *     responses:
+ *       200:
+ *         description: 登录成功
+ *       401:
+ *         description: 用户名或密码错误
+ */
 router.post('/login', async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
@@ -20,6 +47,30 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/auth/refresh:
+ *   post:
+ *     summary: 刷新Token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: 刷新令牌
+ *     responses:
+ *       200:
+ *         description: 刷新成功
+ *       401:
+ *         description: 刷新令牌无效或已过期
+ */
 router.post('/refresh', async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
@@ -30,11 +81,22 @@ router.post('/refresh', async (req: Request, res: Response) => {
     const result = await AuthService.refreshToken(refreshToken);
     res.json(ApiResult.success(result));
   } catch (error: any) {
-    // 刷新失败，通常意味着需要重新登录
     res.json(ApiResult.error(error.message, 401));
   }
 });
 
+/**
+ * @swagger
+ * /admin/auth/logout:
+ *   post:
+ *     summary: 用户登出
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 登出成功
+ */
 router.post('/logout', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     if (req.user) {
@@ -46,6 +108,18 @@ router.post('/logout', adminAuthMiddleware, async (req: Request, res: Response) 
   }
 });
 
+/**
+ * @swagger
+ * /admin/auth/permissions:
+ *   get:
+ *     summary: 获取用户权限
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ */
 router.get('/permissions', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const permissions = req.user?.permissions || [];
@@ -55,13 +129,47 @@ router.get('/permissions', adminAuthMiddleware, async (req: Request, res: Respon
   }
 });
 
-// 开发测试用注册接口
+/**
+ * @swagger
+ * /admin/auth/register:
+ *   post:
+ *     summary: 用户注册（开发测试用）
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - name
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: 用户名
+ *               password:
+ *                 type: string
+ *                 description: 密码
+ *               name:
+ *                 type: string
+ *                 description: 姓名
+ *     responses:
+ *       200:
+ *         description: 注册成功
+ */
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const result = await AuthService.register(req.body);
+    const { username, password, name } = req.body;
+    if (!username || !password || !name) {
+      res.json(ApiResult.error('用户名、密码和姓名不能为空', 400));
+      return;
+    }
+    const result = await AuthService.register({ username, password, name } as any);
     res.json(ApiResult.success(result));
   } catch (error: any) {
-    res.json(ApiResult.error(error.message));
+    res.json(ApiResult.error(error.message, 400));
   }
 });
 

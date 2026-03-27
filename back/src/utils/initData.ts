@@ -2,6 +2,7 @@ import { SysService } from '../services/sysService';
 import { GeneralService } from '../services/generalService';
 import { AuditLogService } from '../services/auditService';
 import { SysSchema, SysMenu } from '../types/sys';
+import { getDb } from '../db/mongo';
 
 export class DataInitializer {
   static async initTestSchemaAndMenu() {
@@ -126,6 +127,7 @@ export class DataInitializer {
       const entitySysUser = await this.createOrUpdateEntity('sys用户');
       const entitySysRole = await this.createOrUpdateEntity('sys角色');
       const entitySysI18n = await this.createOrUpdateEntity('sys国际化');
+      const entitySysConfig = await this.createOrUpdateEntity('sys系统配置');
 
       const viewSysMenu = await this.createOrUpdateView('sys菜单列表', entitySysMenu._id.toString());
       const viewSysEntity = await this.createOrUpdateView('sys实体列表', entitySysEntity._id.toString());
@@ -134,6 +136,7 @@ export class DataInitializer {
       const viewSysUser = await this.createOrUpdateView('sys用户列表', entitySysUser._id.toString());
       const viewSysRole = await this.createOrUpdateView('sys角色列表', entitySysRole._id.toString());
       const viewSysI18n = await this.createOrUpdateView('sys国际化列表', entitySysI18n._id.toString());
+      const viewSysConfig = await this.createOrUpdateView('sys系统配置列表', entitySysConfig._id.toString());
 
       // Update Entity Names to Chinese (as requested)
       // Note: We keep collection name (first arg) in English for best practice in DB, 
@@ -2662,6 +2665,77 @@ const formatParams = (params) => {
       const apiLogSchema = await this.createOrUpdateSchema('sys接口管理', '接口日志', apiLogSchemaCode, entitySysApiLog._id.toString(), viewSysApiLog._id.toString());
       await this.createOrUpdateMenu('/sys/api-log', 'menu.system.apiLog', 'Connection', 9, apiLogSchema._id, parentId, ['admin']);
 
+      // --- 10. 系统配置 (System Config) ---
+      const configSchemaCode = {
+        template: `
+<div class="page-container">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :initParam="initParam"
+      :operation="{ view: true, edit: true, delete: false, mode: 'hover' }"
+      :formConfig="{ label: $t('column.configName'), initForm: { name: '', key: '', value: '', type: 'string', description: '' }, width: '600px' }"
+      @submit="submitForm"
+      row-key="_id"
+    >
+      <template #type="{ row }">
+        <el-tag :type="getTypeTag(row.type)">{{ row.type }}</el-tag>
+      </template>
+      <template #value="{ row }">
+        <span v-if="row.type === 'boolean'">{{ row.value === 'true' ? '是' : '否' }}</span>
+        <span v-else>{{ row.value }}</span>
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive } from 'vue';
+import { ElMessage } from 'element-plus';
+import request from 'app-request';
+
+const getTableList = (params) => request.get('/core/sys系统配置', { params });
+const updateConfig = (id, data) => request.put('/core/sys系统配置/' + id, data);
+
+const proTable = ref();
+const initParam = reactive({});
+
+const columns = [
+  { type: 'index', label: '#', width: 80 },
+  { prop: 'name', label: 'column.name', search: true },
+  { prop: 'key', label: 'column.key', search: true },
+  { prop: 'value', label: 'column.value' },
+  { prop: 'type', label: 'column.type', width: 120 },
+  { prop: 'description', label: 'column.description', minWidth: 200 },
+  { prop: 'createdAt', label: 'column.createTime', width: 180 }
+];
+
+const getTypeTag = (type) => {
+  const map = { string: 'info', number: 'success', boolean: 'warning' };
+  return map[type] || 'info';
+};
+
+const submitForm = async (data) => {
+  try {
+    await updateConfig(data._id, data);
+    ElMessage.success('更新成功');
+    proTable.value?.getTableList();
+  } catch (e) {
+    ElMessage.error(e.message || '更新失败');
+  }
+};
+        `,
+        style: `
+.page-container { padding: 20px; }
+        `
+      };
+
+      const configSchema = await this.createOrUpdateSchema('sys系统配置', '系统配置', configSchemaCode, entitySysConfig._id.toString(), viewSysConfig._id.toString());
+      await this.createOrUpdateMenu('/sys/config', 'menu.system.config', 'Setting', 10, configSchema._id, parentId, ['admin']);
+
+      // --- Init Default System Config (Swagger) ---
+      await this.initDefaultSystemConfig();
+
     } catch (error) {
       console.error('Failed to init sys schemas:', error);
     }
@@ -2703,6 +2777,31 @@ const formatParams = (params) => {
       console.log('Default permissions initialized');
     } catch (error) {
       console.error('Failed to init default permissions:', error);
+    }
+  }
+
+  static async initDefaultSystemConfig() {
+    try {
+      console.log('Initializing default system config...');
+      const db = getDb();
+      const configs = [
+        { name: '启用Swagger文档', key: 'enable_swagger', value: 'true', type: 'boolean', description: '控制是否显示API文档页面' },
+        { name: '系统名称', key: 'system_name', value: 'AixProject', type: 'string', description: '系统显示名称' }
+      ];
+
+      for (const config of configs) {
+        const existing = await db.collection('sys系统配置').findOne({ key: config.key });
+        if (!existing) {
+          await db.collection('sys系统配置').insertOne({
+            ...config,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          console.log(`Created config: ${config.key}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to init default system config:', error);
     }
   }
 

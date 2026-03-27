@@ -9,6 +9,29 @@ const router = Router();
 
 router.use(adminAuthMiddleware);
 
+/**
+ * @swagger
+ * /admin/scheduler/task/runs/{taskId}:
+ *   get:
+ *     summary: 获取定时任务执行记录
+ *     tags: [Scheduler]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/task/runs/:taskId', async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
@@ -20,6 +43,24 @@ router.get('/task/runs/:taskId', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/scheduler/task/run/{id}:
+ *   post:
+ *     summary: 手动触发定时任务
+ *     tags: [Scheduler]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 任务已触发
+ */
 router.post('/task/run/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -37,6 +78,24 @@ router.post('/task/run/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/scheduler/task/stop/{code}:
+ *   post:
+ *     summary: 停止定时任务
+ *     tags: [Scheduler]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 任务已停止
+ */
 router.post('/task/stop/:code', async (req: Request, res: Response) => {
   try {
     const { code } = req.params;
@@ -47,6 +106,18 @@ router.post('/task/stop/:code', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/scheduler/task/list:
+ *   get:
+ *     summary: 获取所有定时任务
+ *     tags: [Scheduler]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/task/list', async (req: Request, res: Response) => {
   try {
     const db = getDb();

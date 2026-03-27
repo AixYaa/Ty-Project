@@ -6,6 +6,23 @@ import { checkPermission } from '../../middleware/requirePermission';
 
 const router = Router();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ApiResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: number
+ *         code:
+ *           type: number
+ *         msg:
+ *           type: string
+ *         data:
+ *           type: object
+ */
+
 const ENTITY_PERMISSION_MAP: Record<string, { view?: string; edit?: string; delete?: string }> = {
   'sys用户': { view: 'user:view', edit: 'user:edit', delete: 'user:edit' },
   'sys角色': { view: 'role:view', edit: 'role:edit', delete: 'role:edit' },
@@ -16,7 +33,8 @@ const ENTITY_PERMISSION_MAP: Record<string, { view?: string; edit?: string; dele
   'sys视图': { view: 'entity:view', edit: 'entity:edit', delete: 'entity:edit' },
   'sys审计日志': { view: 'audit:view', delete: 'audit:rollback' },
   'sys国际化': { view: 'i18n:view', edit: 'i18n:edit', delete: 'i18n:edit' },
-  'sys定时任务': { view: 'scheduler:view', edit: 'scheduler:edit', delete: 'scheduler:delete' }
+  'sys定时任务': { view: 'scheduler:view', edit: 'scheduler:edit', delete: 'scheduler:delete' },
+  'sys系统配置': { view: 'system:view', edit: 'system:edit', delete: 'system:edit' }
 };
 
 const getEntityPermission = (entity: string, action: 'view' | 'edit' | 'delete') => {
@@ -24,7 +42,35 @@ const getEntityPermission = (entity: string, action: 'view' | 'edit' | 'delete')
   return perms ? perms[action] : null;
 };
 
-// Get List (Pagination)
+/**
+ * @swagger
+ * /admin/{entity}:
+ *   get:
+ *     summary: 获取实体列表（分页）
+ *     tags: [CRUD]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 实体名称 (sys用户, sys角色, etc.)
+ *       - in: query
+ *         name: pageNum
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/:entity', async (req: Request, res: Response) => {
   try {
     const { entity } = req.params;
@@ -48,7 +94,30 @@ router.get('/:entity', async (req: Request, res: Response) => {
   }
 });
 
-// Create
+/**
+ * @swagger
+ * /admin/{entity}:
+ *   post:
+ *     summary: 创建实体
+ *     tags: [CRUD]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: 创建成功
+ */
 router.post('/:entity', async (req: Request, res: Response) => {
   try {
     const { entity } = req.params;
@@ -71,7 +140,35 @@ router.post('/:entity', async (req: Request, res: Response) => {
   }
 });
 
-// Update
+/**
+ * @swagger
+ * /admin/{entity}/{id}:
+ *   put:
+ *     summary: 更新实体
+ *     tags: [CRUD]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: 更新成功
+ */
 router.put('/:entity/:id', async (req: Request, res: Response) => {
   try {
     const { entity, id } = req.params;
@@ -96,7 +193,35 @@ router.put('/:entity/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Batch Delete
+/**
+ * @swagger
+ * /admin/{entity}/batch-delete:
+ *   post:
+ *     summary: 批量删除实体
+ *     tags: [CRUD]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: 删除成功
+ */
 router.post('/:entity/batch-delete', async (req: Request, res: Response) => {
   try {
     const { entity } = req.params;
@@ -127,7 +252,29 @@ router.post('/:entity/batch-delete', async (req: Request, res: Response) => {
   }
 });
 
-// Delete
+/**
+ * @swagger
+ * /admin/{entity}/{id}:
+ *   delete:
+ *     summary: 删除实体
+ *     tags: [CRUD]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: entity
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 删除成功
+ */
 router.delete('/:entity/:id', async (req: Request, res: Response) => {
   try {
     const { entity, id } = req.params;

@@ -170,6 +170,7 @@
   },
   "common": {
     "add": "新增",
+    "apiDoc": "API文档",
     "back": "返回",
     "cancel": "取消",
     "confirm": "确定",
@@ -256,9 +257,10 @@
     "parentMenu": "父菜单",
     "rolePermission": "角色权限",
     "system": {
-      "audit": "操作日志",
       "apiLog": "API 调用日志",
+      "audit": "操作日志",
       "center": "管理中心",
+      "config": "系统配置",
       "entity": "实体管理",
       "i18n": "国际化管理",
       "management": "系统管理",
