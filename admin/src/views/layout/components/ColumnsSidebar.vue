@@ -21,10 +21,15 @@
           <span class="title">{{ $t(menu.name) }}</span>
         </div>
       </el-scrollbar>
+      <div class="left-column-footer">
+        <el-tooltip :content="$t('common.apiDoc')" placement="right">
+          <el-icon :size="20" @click="openApiDoc"><Document /></el-icon>
+        </el-tooltip>
+      </div>
     </div>
 
     <!-- Right Column: Sub Menus -->
-    <div class="right-column">
+    <div v-if="subMenus.length > 0" class="right-column">
       <div class="sub-menu-title">
         {{ $t(activeParentName) }}
       </div>
@@ -56,7 +61,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getMenuTree, type SysMenu } from '@/api/sys';
-import { Menu as MenuIcon } from '@element-plus/icons-vue';
+import { Menu as MenuIcon, Document } from '@element-plus/icons-vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -145,6 +150,21 @@ watch(
 onMounted(() => {
   loadMenus();
 });
+
+const apiDocUrl = computed(() => {
+  const isProd = import.meta.env.PROD;
+  return isProd ? '/api/api-docs' : 'http://localhost:6631/api/api-docs';
+});
+
+const openApiDoc = () => {
+  window.open(apiDocUrl.value, '_blank');
+};
+
+const showRightColumn = computed(() => subMenus.value.length > 0);
+
+defineExpose({
+  showRightColumn
+});
 </script>
 
 <style scoped>
@@ -171,6 +191,20 @@ onMounted(() => {
   font-weight: bold;
   font-size: 18px;
   background-color: #002140;
+}
+
+.left-column-footer {
+  padding: 12px 0;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+  color: #a6adb4;
+  cursor: pointer;
+}
+
+.left-column-footer:hover {
+  color: #fff;
 }
 
 .column-item {

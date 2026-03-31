@@ -61,7 +61,7 @@
             <span class="selection-text">
               已选择 <span class="selection-count">{{ selectedList.length }}</span> 项:
               <span class="selection-names">
-                {{ selectedList.map((item) => item[labelKey] || item.name).join(', ') }}
+                {{ selectedList.map((item) => $t(item.name)).join(', ') }}
               </span>
             </span>
             <el-button v-if="batchDeleteApi" type="primary" link @click="handleBatchDelete">
@@ -633,6 +633,7 @@ const handleCurrentChange = (val: number) => {
 };
 
 const selectionChange = (val: any[]) => {
+  debugger;
   selectedList.value = val;
 };
 

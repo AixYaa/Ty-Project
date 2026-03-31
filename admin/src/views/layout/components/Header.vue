@@ -19,6 +19,13 @@
       </div>
     </div>
     <div class="header-right">
+      <!-- API Documentation -->
+      <el-tooltip :content="$t('common.apiDoc')" placement="bottom">
+        <el-icon :size="20" class="header-icon-btn" @click="openApiDoc">
+          <Document />
+        </el-icon>
+      </el-tooltip>
+
       <!-- Fullscreen Toggle -->
       <div class="header-icon-btn" @click="toggleFullscreen">
         <el-tooltip
@@ -73,7 +80,8 @@ import {
   UserFilled,
   SwitchButton,
   ArrowDown,
-  FullScreen
+  FullScreen,
+  Document
 } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import Menu from './Menu.vue';
@@ -114,8 +122,7 @@ const userAvatar = computed(() => {
 });
 
 const showCollapse = computed(
-  () =>
-    ['vertical', 'classic', 'columns'].includes(settingStore.layoutMode) || settingStore.isMobile
+  () => ['vertical', 'classic'].includes(settingStore.layoutMode) || settingStore.isMobile
 );
 const showLogo = computed(
   () => ['classic', 'transverse'].includes(settingStore.layoutMode) && !settingStore.isMobile
@@ -144,12 +151,18 @@ const handleLogout = () => {
   })
     .then(async () => {
       await userStore.logout();
-      // Force reload to clear all states (router, store, etc.)
       window.location.href = '/login';
     })
-    .catch(() => {
-      // cancel
-    });
+    .catch(() => {});
+};
+
+const apiDocUrl = computed(() => {
+  const isProd = import.meta.env.PROD;
+  return isProd ? '/api/api-docs' : 'http://localhost:6631/api/api-docs';
+});
+
+const openApiDoc = () => {
+  window.open(apiDocUrl.value, '_blank');
 };
 </script>
 

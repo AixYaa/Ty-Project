@@ -8,7 +8,12 @@
       <Menu mode="vertical" />
     </el-scrollbar>
     <div class="sidebar-footer">
-      <el-popover :width="800" trigger="hover" placement="right" :show-after="200">
+      <el-popover
+        :width="popoverWidth"
+        trigger="hover"
+        :placement="popoverPlacement"
+        :show-after="200"
+      >
         <template #reference>
           <a href="#" class="api-doc-link" @click.prevent="openApiDoc">
             <el-icon :size="18"><Document /></el-icon>
@@ -49,6 +54,48 @@ const apiDocUrl = computed(() => {
     return '/api/api-docs';
   }
   return 'http://localhost:6631/api/api-docs';
+});
+
+const popoverWidth = computed(() => {
+  switch (settingStore.layoutMode) {
+    case 'columns':
+      return 400;
+    case 'transverse':
+      return 600;
+    case 'classic':
+      return 700;
+    case 'vertical':
+    default:
+      return 800;
+  }
+});
+
+const popoverPlacement = computed(() => {
+  switch (settingStore.layoutMode) {
+    case 'columns':
+      return 'right';
+    case 'transverse':
+      return 'bottom';
+    case 'classic':
+      return 'bottom';
+    case 'vertical':
+    default:
+      return 'right';
+  }
+});
+
+const iframeHeight = computed(() => {
+  switch (settingStore.layoutMode) {
+    case 'columns':
+      return '400px';
+    case 'transverse':
+      return '450px';
+    case 'classic':
+      return '500px';
+    case 'vertical':
+    default:
+      return '500px';
+  }
 });
 
 const openApiDoc = () => {
@@ -123,6 +170,6 @@ const openApiDoc = () => {
 
 .api-iframe {
   width: 100%;
-  height: 500px;
+  height: v-bind(iframeHeight);
 }
 </style>

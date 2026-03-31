@@ -49,8 +49,12 @@
         <Sidebar />
       </el-aside>
 
-      <el-aside v-if="isColumns && !settingStore.isMobile" width="260px" class="aside">
-        <ColumnsSidebar />
+      <el-aside
+        v-if="isColumns && !settingStore.isMobile"
+        :width="columnsSidebarWidth"
+        class="aside"
+      >
+        <ColumnsSidebar ref="columnsSidebarRef" />
       </el-aside>
 
       <el-container class="is-vertical">
@@ -91,6 +95,7 @@ import type { RouteLocationNormalizedLoaded } from 'vue-router';
 const settingStore = useSettingStore();
 const tagsViewStore = useTagsViewStore();
 const settingsRef = ref();
+const columnsSidebarRef = ref();
 const { setWatermark, clear } = useWatermark();
 useResponsive();
 
@@ -100,6 +105,18 @@ const isTransverse = computed(() => settingStore.layoutMode === 'transverse');
 const isColumns = computed(() => settingStore.layoutMode === 'columns');
 
 const sidebarWidth = computed(() => (settingStore.isCollapse ? '64px' : '260px'));
+
+const showRightColumn = ref(false);
+
+const columnsSidebarWidth = computed(() => (showRightColumn.value ? '210px' : '70px'));
+
+watch(
+  () => columnsSidebarRef.value?.showRightColumn,
+  (val) => {
+    showRightColumn.value = val ?? false;
+  },
+  { immediate: true }
+);
 
 const layoutClasses = computed(() => ({
   'layout-vertical': isVertical.value,
