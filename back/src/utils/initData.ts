@@ -2741,7 +2741,7 @@ const formatParams = (params) => {
           <el-form-item :label="$t('column.configValue')">
             <el-input v-if="model.type === 'string'" v-model="model.value" :placeholder="$t('common.pleaseInput') + $t('column.configValue')" />
             <el-input-number v-else-if="model.type === 'number'" v-model="model.valueNum" :min="0" style="width: 100%" :placeholder="$t('common.pleaseInput') + $t('column.configValue')" @change="handleNumChange(model)" />
-            <el-switch v-else-if="model.type === 'boolean'" v-model="model.valueBool" @change="handleBoolChange(model)" />
+            <el-switch v-else-if="model.type === 'boolean'" v-model="model.value" active-value="true" inactive-value="false" />
           </el-form-item>
           <el-form-item :label="$t('column.description')">
             <el-input v-model="model.description" type="textarea" :placeholder="$t('common.pleaseInput') + $t('column.description')" />
@@ -2824,10 +2824,6 @@ const handleNumChange = (model) => {
   }
 };
 
-const handleBoolChange = (model) => {
-  model.value = model.valueBool ? 'true' : 'false';
-};
-
 const getTableListAdapted = async (params) => {
   const res = await getTableList(params);
   const list = Array.isArray(res) ? res : res.list || [];
@@ -2852,10 +2848,6 @@ const submitForm = async (formData, done) => {
     if (payload.valueNum !== undefined) {
       payload.value = String(payload.valueNum);
       delete payload.valueNum;
-    }
-    if (payload.valueBool !== undefined) {
-      payload.value = payload.valueBool ? 'true' : 'false';
-      delete payload.valueBool;
     }
     if (payload._id) {
       await updateConfig(payload._id, payload);
