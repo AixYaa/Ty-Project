@@ -5,14 +5,12 @@ import { ErrorCode } from '@/api/errorCode';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const service = axios.create({
-  baseURL: BASE_URL, // 指向后台管理接口 (修正为 /api/admin)
+  baseURL: BASE_URL,
   timeout: 5000
 });
 
-// Request interceptor
 service.interceptors.request.use(
   (config) => {
-    // 如果 URL 以 /mock 开头，则移除 baseURL，使其直接请求根路径以便被 vite-plugin-mock 拦截
     if (config.url?.startsWith('/mock')) {
       config.baseURL = '';
     }
@@ -31,21 +29,15 @@ service.interceptors.request.use(
 let isRefreshing = false;
 let requests: any[] = [];
 
-// Response interceptor
 service.interceptors.response.use(
   (response) => {
     const res = response.data;
-    // 假设后端返回结构 { status: 200, code: 0, msg: 'success', data: ... }
     if (res.status !== 200) {
-      // 优先显示后端返回的 msg，后续可接入 i18n 根据 code 显示多语言错误
       ElMessage.error(res.msg || 'Error');
       return Promise.reject(new Error(res.msg || 'Error'));
     } else {
-      // 检查业务状态码
       if (res.code !== undefined && res.code !== ErrorCode.SUCCESS) {
-        // 特殊处理 token 过期等业务错误
         if (res.code === ErrorCode.TOKEN_EXPIRED || res.code === ErrorCode.INVALID_TOKEN) {
-          // Let 401 handler below handle this or handle it here
         }
         ElMessage.error(res.msg || 'Error');
         return Promise.reject(new Error(res.msg || 'Error'));
@@ -57,6 +49,19 @@ service.interceptors.response.use(
     console.error('err' + error);
     const originalRequest = error.config;
 
+    if (error.response && error.response.status === 503) {
+      const res = error.response.data;
+      const isMaintenancePage = window.location.hash.includes('/maintenance');
+      console.log('[Request] 503 received, msg:', res.msg, 'isMaintenancePage:', isMaintenancePage);
+      if (res.msg && res.msg.includes('维护') && !isMaintenancePage) {
+        sessionStorage.setItem('maintenanceMessage', res.msg || '系统正在维护中，请稍后再试...');
+        ElMessage.warning(res.msg || '系统正在维护中，请稍后再试...');
+        console.log('[Request] Redirecting to maintenance page');
+        window.location.href = window.location.origin + '/#/maintenance';
+      }
+      return Promise.reject(error);
+    }
+
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       const refreshToken = getRefreshToken();
 
@@ -66,7 +71,6 @@ service.interceptors.response.use(
           originalRequest._retry = true;
 
           try {
-            // Call refresh token API
             const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
               refreshToken
             });
@@ -76,7 +80,6 @@ service.interceptors.response.use(
               setToken(accessToken);
               service.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-              // Execute queued requests
               requests.forEach((cb) => cb(accessToken));
               requests = [];
 
@@ -85,15 +88,13 @@ service.interceptors.response.use(
               throw new Error('Refresh failed');
             }
           } catch (refreshError) {
-            // Refresh failed, clear tokens and redirect
             clearTokens();
-            window.location.href = '/login';
+            window.location.href = '/#/login';
             return Promise.reject(refreshError);
           } finally {
             isRefreshing = false;
           }
         } else {
-          // Queue requests while refreshing
           return new Promise((resolve) => {
             requests.push((token: string) => {
               originalRequest.headers['Authorization'] = `Bearer ${token}`;
@@ -102,10 +103,9 @@ service.interceptors.response.use(
           });
         }
       } else {
-        // No refresh token, redirect to login
         ElMessage.error('登录过期，请重新登录');
         clearTokens();
-        window.location.href = '/login';
+        window.location.href = '/#/login';
       }
     } else {
       ElMessage.error(error.message);

@@ -131,6 +131,10 @@
   "column": {
     "avatar": "头像",
     "bindSchema": "绑定架构",
+    "configName": "配置名称",
+    "configKey": "配置键名",
+    "configType": "配置类型",
+    "configValue": "配置值",
     "createTime": "创建时间",
     "description": "描述",
     "entityName": "实体名称",
@@ -154,6 +158,7 @@
     "schemaName": "架构名称",
     "sort": "排序",
     "status": "状态",
+    "updateTime": "更新时间",
     "username": "用户名",
     "viewName": "视图名称",
     "viewType": "视图类型",
@@ -194,7 +199,20 @@
     "statusUpdated": "状态更新成功",
     "submit": "提交",
     "view": "查看",
-    "warning": "警告"
+    "warning": "警告",
+    "yes": "是",
+    "no": "否",
+    "createSuccess": "创建成功",
+    "updateSuccess": "更新成功",
+    "operationFailed": "操作失败",
+    "deleteSuccess": "删除成功"
+  },
+  "config": {
+    "type": {
+      "string": "字符串",
+      "number": "数字",
+      "boolean": "布尔值"
+    }
   },
   "dashboard": {
     "author": "作者",

@@ -30,6 +30,7 @@
           </router-view>
         </el-main>
       </el-container>
+      <Footer />
     </el-container>
 
     <!-- Vertical / Columns / Transverse Layout -->
@@ -72,6 +73,7 @@
             </transition>
           </router-view>
         </el-main>
+        <Footer />
       </el-container>
     </el-container>
 
@@ -86,6 +88,7 @@ import ColumnsSidebar from './components/ColumnsSidebar.vue';
 import Header from './components/Header.vue';
 import TagsView from './components/TagsView/index.vue';
 import Settings from './components/Settings/index.vue';
+import Footer from './components/Footer.vue';
 import { useSettingStore } from '@/store/setting';
 import { useWatermark } from '@/hooks/useWatermark';
 import { useResponsive } from '@/hooks/useResponsive';

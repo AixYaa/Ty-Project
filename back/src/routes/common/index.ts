@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { ApiResult } from '../../apiResult';
+import { ConfigService } from '../../services/configService';
 import uploadRouter from './upload';
 
 const router = Router();
@@ -97,6 +98,66 @@ router.get('/user-count', (req: Request, res: Response) => {
     count: Math.floor(Math.random() * 100),
     timestamp: new Date().toISOString()
   }));
+});
+
+/**
+ * @swagger
+ * /common/system-info:
+ *   get:
+ *     summary: 获取系统信息配置
+ *     tags: [Common]
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
+router.get('/system-info', async (req: Request, res: Response) => {
+  try {
+    const systemInfo = await ConfigService.getSystemInfo();
+    res.json(ApiResult.success(systemInfo));
+  } catch (error) {
+    console.error('Failed to get system info:', error);
+    res.status(500).json(ApiResult.error('Failed to get system info'));
+  }
+});
+
+/**
+ * @swagger
+ * /common/maintenance-status:
+ *   get:
+ *     summary: 获取维护模式状态
+ *     tags: [Common]
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
+router.get('/maintenance-status', async (req: Request, res: Response) => {
+  try {
+    const maintenanceStatus = await ConfigService.isMaintenanceMode();
+    res.json(ApiResult.success(maintenanceStatus));
+  } catch (error) {
+    console.error('Failed to get maintenance status:', error);
+    res.status(500).json(ApiResult.error('Failed to get maintenance status'));
+  }
+});
+
+/**
+ * @swagger
+ * /common/copyright-info:
+ *   get:
+ *     summary: 获取版权信息
+ *     tags: [Common]
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
+router.get('/copyright-info', async (req: Request, res: Response) => {
+  try {
+    const copyrightInfo = await ConfigService.getCopyrightInfo();
+    res.json(ApiResult.success(copyrightInfo));
+  } catch (error) {
+    console.error('Failed to get copyright info:', error);
+    res.status(500).json(ApiResult.error('Failed to get copyright info'));
+  }
 });
 
 /**

@@ -13,6 +13,8 @@ import ProTable from '@/components/ProTable/index.vue';
 import request from '@/utils/request';
 import { useUserStore } from '@/store/user';
 import { permissionDirective } from '@/directives/permission';
+import { useSystemStore } from '@/store/system';
+import i18n, { loadLocaleMessages } from '@/locales';
 
 // Production Mock Server Setup
 if (import.meta.env.PROD) {
@@ -52,9 +54,19 @@ app.config.globalProperties.$api = request;
 import { setupRouterGuard } from './router/permission';
 setupRouterGuard(router);
 
-import i18n, { loadLocaleMessages } from './locales';
+const initApp = async () => {
+  const systemStore = useSystemStore();
+  await systemStore.loadSystemInfo();
 
-const defaultLocale = localStorage.getItem('language') || 'zh-CN';
-loadLocaleMessages(defaultLocale).then(() => {
+  const savedLanguage = localStorage.getItem('language');
+  const defaultLanguage = savedLanguage || systemStore.defaultLanguage || 'zh-CN';
+
+  await loadLocaleMessages(defaultLanguage);
+  if (!savedLanguage && defaultLanguage !== 'zh-CN') {
+    localStorage.setItem('language', defaultLanguage);
+  }
+
   app.mount('#app');
-});
+};
+
+initApp();

@@ -55,15 +55,6 @@ export const deleteMenu = (id: string) => {
   return request.delete<any, any>(`/sys/menu/${id}`);
 };
 
-// --- Entity API ---
-export const getEntities = (params?: any) => {
-  return request.get<any, SysEntity[]>('/sys/entity', { params });
-};
-
-export const createEntity = (data: SysEntity) => {
-  return request.post<any, SysEntity>('/sys/entity', data);
-};
-
 // --- Audit API ---
 export const getAuditLogs = (params?: any) => {
   return request.get<any, { list: AuditLog[]; total: number }>('/admin/audit', { params });

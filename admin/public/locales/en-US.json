@@ -131,6 +131,10 @@
   "column": {
     "avatar": "Avatar",
     "bindSchema": "Bind Schema",
+    "configName": "Config Name",
+    "configKey": "Config Key",
+    "configType": "Config Type",
+    "configValue": "Config Value",
     "createTime": "Created At",
     "description": "Description",
     "entityName": "Entity Name",
@@ -154,6 +158,7 @@
     "schemaName": "Schema Name",
     "sort": "Sort",
     "status": "Status",
+    "updateTime": "Updated At",
     "username": "Username",
     "viewName": "View Name",
     "viewType": "View Type",
@@ -194,7 +199,20 @@
     "statusUpdated": "Status updated successfully",
     "submit": "Submit",
     "view": "View",
-    "warning": "Warning"
+    "warning": "Warning",
+    "yes": "Yes",
+    "no": "No",
+    "createSuccess": "Created successfully",
+    "updateSuccess": "Updated successfully",
+    "operationFailed": "Operation failed",
+    "deleteSuccess": "Deleted successfully"
+  },
+  "config": {
+    "type": {
+      "string": "String",
+      "number": "Number",
+      "boolean": "Boolean"
+    }
   },
   "dashboard": {
     "author": "Author",

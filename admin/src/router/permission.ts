@@ -82,22 +82,18 @@ export const createPermissionGuard = (router: Router) => {
       const token = getToken();
 
       if (token) {
-        if (to.path === '/login') {
-          next({ path: '/' });
+        if (to.path === '/login' || to.path === '/maintenance') {
+          next();
         } else {
           if (!isRoutesLoaded) {
             try {
-              // 获取菜单树
               const menus = await getMenuTree();
               const dynamicRoutes = generateRoutes(menus);
 
-              // 动态添加路由到 Layout 下
-              // 注意：我们需要知道 Layout 的 name，在 router/index.ts 里定义为 'Layout'
               dynamicRoutes.forEach((route) => {
                 router.addRoute('Layout', route);
               });
 
-              // 添加一个 404 捕获路由 (可选)
               router.addRoute({
                 path: '/:pathMatch(.*)*',
                 name: 'NotFound',
@@ -106,17 +102,18 @@ export const createPermissionGuard = (router: Router) => {
 
               isRoutesLoaded = true;
 
-              // 清理无效的 Tags
               const tagsViewStore = useTagsViewStore();
               tagsViewStore.pruneVisitedViews(router);
 
-              // 替换当前跳转，确保新路由生效
               next({ ...to, replace: true });
             } catch (error: any) {
               console.error('Failed to generate dynamic routes', error);
-              // 如果获取菜单失败（如 401），则强制退出
-              clearTokens();
-              next('/login');
+              if (error.response && error.response.status === 503) {
+                next();
+              } else {
+                clearTokens();
+                next('/login');
+              }
             }
           } else {
             next();

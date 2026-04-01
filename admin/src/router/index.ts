@@ -7,6 +7,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/login/index.vue')
   },
   {
+    path: '/maintenance',
+    name: 'Maintenance',
+    component: () => import('../views/maintenance/index.vue')
+  },
+  {
     path: '/',
     name: 'Layout',
     component: () => import('../views/layout/index.vue'),
@@ -47,7 +52,7 @@ const router = createRouter({
 });
 
 export const resetRouter = () => {
-  const whiteList = ['Login', 'Layout', 'Dashboard', '403', '404', '500'];
+  const whiteList = ['Login', 'Layout', 'Dashboard', '403', '404', '500', 'Maintenance'];
   router.getRoutes().forEach((route) => {
     const name = route.name as string;
     if (name && !whiteList.includes(name)) {

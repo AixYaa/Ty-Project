@@ -1,8 +1,8 @@
 <template>
   <div class="sidebar-container" :class="{ 'is-collapse': settingStore.isCollapse }">
     <div v-if="showLogo" class="logo">
-      <span v-if="!settingStore.isCollapse">管理平台</span>
-      <span v-else>Aix</span>
+      <span v-if="!settingStore.isCollapse">{{ systemInfo.systemName || '管理平台' }}</span>
+      <span v-else>{{ systemInfo.systemName ? systemInfo.systemName.slice(0, 3) : 'Aix' }}</span>
     </div>
     <el-scrollbar>
       <Menu mode="vertical" />
@@ -23,7 +23,12 @@
           </a>
         </template>
         <template #default>
-          <iframe :src="apiDocUrl" frameborder="0" class="api-iframe" />
+          <div class="system-info-iframe-wrapper">
+            <iframe :src="apiDocUrl" frameborder="0" class="api-iframe" />
+            <div v-if="systemInfo.systemVersion" class="version-badge">
+              v{{ systemInfo.systemVersion }}
+            </div>
+          </div>
         </template>
       </el-popover>
     </div>
@@ -33,10 +38,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useSettingStore } from '@/store/setting';
+import { useSystemStore } from '@/store/system';
 import Menu from './Menu.vue';
 import { Document } from '@element-plus/icons-vue';
 
 const settingStore = useSettingStore();
+const systemStore = useSystemStore();
+
+const systemInfo = computed(() => systemStore.getSystemInfo());
 
 const showLogo = computed(() => settingStore.layoutMode !== 'classic');
 const menuBgColor = computed(() => {
@@ -168,8 +177,23 @@ const openApiDoc = () => {
   padding: 8px;
 }
 
+.system-info-iframe-wrapper {
+  position: relative;
+}
+
 .api-iframe {
   width: 100%;
   height: v-bind(iframeHeight);
+}
+
+.version-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(64, 158, 255, 0.8);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 </style>

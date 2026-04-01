@@ -4,7 +4,48 @@ import { ApiResult } from '../../apiResult';
 
 const router = Router();
 
-// Get audit logs list
+/**
+ * @swagger
+ * /admin/audit:
+ *   get:
+ *     summary: 获取审计日志列表
+ *     tags: [Audit]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: pageNum
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: username
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: method
+ *         schema:
+ *           type: string
+ *           enum: [GET, POST, PUT, DELETE, PATCH]
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
 router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await AuditLogService.getLogs({
@@ -22,6 +63,27 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Rollback operation
+/**
+ * @swagger
+ * /admin/audit/{id}/rollback:
+ *   post:
+ *     summary: 回滚审计日志操作
+ *     tags: [Audit]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 审计日志ID
+ *     responses:
+ *       200:
+ *         description: 回滚成功
+ *       401:
+ *         description: 未授权
+ */
 router.post('/:id/rollback', async (req: Request, res: Response) => {
   try {
     if (!req.user) {

@@ -1463,7 +1463,7 @@ const submitForm = async (formData, done) => {
               class="avatar-uploader"
               action="/api/common/upload"
               :show-file-list="false"
-              :on-success="(res) => handleAvatarSuccess(res, model)"
+              :http-request="(options) => handleAvatarRequest(options, model)"
               :before-upload="beforeAvatarUpload"
             >
               <img v-if="model.avatar" :src="getAvatarUrl(model.avatar, 'compressed')" class="avatar" />
@@ -1586,6 +1586,36 @@ const handleAvatarSuccess = (response, model) => {
     ElMessage.success('Avatar uploaded!');
   } else {
     ElMessage.error('Upload failed');
+  }
+};
+
+const handleAvatarRequest = async (options, model) => {
+  const { file, onSuccess, onError } = options;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('/api/common/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+      },
+      body: formData
+    });
+
+    const result = await response.json();
+    if (result.status === 200) {
+      model.avatar = result.data;
+      ElMessage.success('Avatar uploaded!');
+      onSuccess(result);
+    } else {
+      ElMessage.error(result.msg || 'Upload failed');
+      onError(new Error(result.msg || 'Upload failed'));
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    ElMessage.error('Upload failed');
+    onError(error);
   }
 };
 
@@ -2679,33 +2709,100 @@ const formatParams = (params) => {
       @submit="submitForm"
       row-key="_id"
     >
+      <template #tableHeader>
+        <el-button v-permission="'config:edit'" type="primary" :icon="CirclePlus" @click="openAdd">{{ $t('table.add', { name: $t('column.configName') }) }}</el-button>
+      </template>
+
       <template #type="{ row }">
-        <el-tag :type="getTypeTag(row.type)">{{ row.type }}</el-tag>
+        <el-tag :type="getTypeTag(row.type)">{{ $t('config.type.' + row.type) }}</el-tag>
       </template>
       <template #value="{ row }">
-        <span v-if="row.type === 'boolean'">{{ row.value === 'true' ? '是' : '否' }}</span>
-        <span v-else>{{ row.value }}</span>
+        <span v-if="row.type === 'boolean'">{{ row.value === 'true' ? $t('common.yes') : $t('common.no') }}</span>
+        <span v-else-if="row.type === 'number'">{{ row.value }}</span>
+        <span v-else class="value-text" :title="row.value">{{ row.value }}</span>
+      </template>
+
+      <!-- Built-in Editor Slot -->
+      <template #edit-form="{ model, isEdit }">
+        <el-form :model="model" label-width="120px">
+          <el-form-item :label="$t('column.configName')">
+            <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.configName')" />
+          </el-form-item>
+          <el-form-item :label="$t('column.configKey')">
+            <el-input v-model="model.key" :placeholder="$t('common.pleaseInput') + $t('column.configKey')" :disabled="isEdit" />
+          </el-form-item>
+          <el-form-item :label="$t('column.configType')">
+            <el-select v-model="model.type" style="width: 100%" :disabled="isEdit">
+              <el-option :label="$t('config.type.string')" value="string" />
+              <el-option :label="$t('config.type.number')" value="number" />
+              <el-option :label="$t('config.type.boolean')" value="boolean" />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('column.configValue')">
+            <el-input v-if="model.type === 'string'" v-model="model.value" :placeholder="$t('common.pleaseInput') + $t('column.configValue')" />
+            <el-input-number v-else-if="model.type === 'number'" v-model="model.valueNum" :min="0" style="width: 100%" :placeholder="$t('common.pleaseInput') + $t('column.configValue')" @change="handleNumChange(model)" />
+            <el-switch v-else-if="model.type === 'boolean'" v-model="model.valueBool" @change="handleBoolChange(model)" />
+          </el-form-item>
+          <el-form-item :label="$t('column.description')">
+            <el-input v-model="model.description" type="textarea" :placeholder="$t('common.pleaseInput') + $t('column.description')" />
+          </el-form-item>
+        </el-form>
+      </template>
+
+      <!-- Built-in Viewer Slot -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="120px" disabled>
+          <el-form-item :label="$t('column.configName')">
+            <el-input v-model="model.name" />
+          </el-form-item>
+          <el-form-item :label="$t('column.configKey')">
+            <el-input v-model="model.key" />
+          </el-form-item>
+          <el-form-item :label="$t('column.configType')">
+            <el-tag :type="getTypeTag(model.type)">{{ $t('config.type.' + model.type) }}</el-tag>
+          </el-form-item>
+          <el-form-item :label="$t('column.configValue')">
+            <span v-if="model.type === 'boolean'">{{ model.value === 'true' ? $t('common.yes') : $t('common.no') }}</span>
+            <span v-else-if="model.type === 'number'">{{ model.value }}</span>
+            <el-input v-else v-model="model.value" />
+          </el-form-item>
+          <el-form-item :label="$t('column.description')">
+            <el-input v-model="model.description" type="textarea" />
+          </el-form-item>
+          <el-form-item :label="$t('column.createTime')">
+            <el-input :value="formatTime(model.createdAt)" />
+          </el-form-item>
+          <el-form-item :label="$t('column.updateTime')">
+            <el-input :value="formatTime(model.updatedAt)" />
+          </el-form-item>
+        </el-form>
       </template>
     </ProTable>
 </div>
         `,
         script: `
 import { ref, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
+import { CirclePlus } from '@element-plus/icons-vue';
 import request from 'app-request';
+import ProTable from '@/components/ProTable/index.vue';
+
+const { t } = useI18n();
 
 const getTableList = (params) => request.get('/core/sys系统配置', { params });
 const updateConfig = (id, data) => request.put('/core/sys系统配置/' + id, data);
+const createConfig = (data) => request.post('/core/sys系统配置', data);
 
 const proTable = ref();
 const initParam = reactive({});
 
 const columns = [
-  { type: 'index', label: '#', width: 80 },
-  { prop: 'name', label: 'column.name', search: true },
-  { prop: 'key', label: 'column.key', search: true },
-  { prop: 'value', label: 'column.value' },
-  { prop: 'type', label: 'column.type', width: 120 },
+  { type: 'selection', fixed: 'left', width: 55 },
+  { prop: 'name', label: 'column.configName', search: { el: 'input' }, minWidth: 150 },
+  { prop: 'key', label: 'column.configKey', search: { el: 'input' }, minWidth: 150 },
+  { prop: 'value', label: 'column.configValue', minWidth: 200 },
+  { prop: 'type', label: 'column.configType', width: 120 },
   { prop: 'description', label: 'column.description', minWidth: 200 },
   { prop: 'createdAt', label: 'column.createTime', width: 180 }
 ];
@@ -2715,18 +2812,75 @@ const getTypeTag = (type) => {
   return map[type] || 'info';
 };
 
-const submitForm = async (data) => {
+const formatTime = (time) => {
+  if (!time) return '-';
+  const d = new Date(time);
+  return d.toLocaleString('zh-CN', { hour12: false });
+};
+
+const handleNumChange = (model) => {
+  if (model.valueNum !== undefined) {
+    model.value = String(model.valueNum);
+  }
+};
+
+const handleBoolChange = (model) => {
+  model.value = model.valueBool ? 'true' : 'false';
+};
+
+const getTableListAdapted = async (params) => {
+  const res = await getTableList(params);
+  const list = Array.isArray(res) ? res : res.list || [];
+  return {
+    data: list,
+    total: Array.isArray(res) ? res.length : res.total || 0
+  };
+};
+
+const openAdd = () => {
+  proTable.value?.openAdd();
+};
+
+const submitForm = async (formData, done) => {
   try {
-    await updateConfig(data._id, data);
-    ElMessage.success('更新成功');
-    proTable.value?.getTableList();
+    if (!formData.name || !formData.key) {
+      ElMessage.warning(t('common.notEmpty', { name: t('column.configName') + '/' + t('column.configKey') }));
+      done();
+      return;
+    }
+    const payload = { ...formData };
+    if (payload.valueNum !== undefined) {
+      payload.value = String(payload.valueNum);
+      delete payload.valueNum;
+    }
+    if (payload.valueBool !== undefined) {
+      payload.value = payload.valueBool ? 'true' : 'false';
+      delete payload.valueBool;
+    }
+    if (payload._id) {
+      await updateConfig(payload._id, payload);
+      ElMessage.success(t('common.updateSuccess'));
+    } else {
+      await createConfig(payload);
+      ElMessage.success(t('common.createSuccess'));
+    }
+    done();
   } catch (e) {
-    ElMessage.error(e.message || '更新失败');
+    console.error(e);
+    ElMessage.error(e.message || t('common.operationFailed'));
+    done();
   }
 };
         `,
         style: `
 .page-container { padding: 20px; }
+.value-text {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
         `
       };
 
@@ -2786,7 +2940,15 @@ const submitForm = async (data) => {
       const db = getDb();
       const configs = [
         { name: '启用Swagger文档', key: 'enable_swagger', value: 'true', type: 'boolean', description: '控制是否显示API文档页面' },
-        { name: '系统名称', key: 'system_name', value: 'AixProject', type: 'string', description: '系统显示名称' }
+        { name: '系统名称', key: 'system_name', value: 'AixProject', type: 'string', description: '系统显示名称' },
+        { name: '系统版本', key: 'system_version', value: '1.0.0', type: 'string', description: '系统版本号' },
+        { name: '系统描述', key: 'system_description', value: '基于 AixFramework 构建的企业级管理系统', type: 'string', description: '系统描述信息' },
+        { name: '默认语言', key: 'default_language', value: 'zh-CN', type: 'string', description: '系统默认语言 (zh-CN / en-US)' },
+        { name: '时区设置', key: 'timezone', value: 'Asia/Shanghai', type: 'string', description: '系统时区设置' },
+        { name: '系统维护模式', key: 'maintenance_mode', value: 'false', type: 'boolean', description: '开启后仅管理员可访问' },
+        { name: '维护提示信息', key: 'maintenance_message', value: '系统正在维护中，请稍后再试...', type: 'string', description: '维护模式时显示给用户的信息' },
+        { name: '版权信息', key: 'copyright', value: '© 2024 AixProject. All rights reserved.', type: 'string', description: '页面底部版权信息' },
+        { name: '备案号', key: 'icp_license', value: '', type: 'string', description: '网站ICP备案号' }
       ];
 
       for (const config of configs) {
