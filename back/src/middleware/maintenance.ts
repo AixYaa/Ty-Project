@@ -19,10 +19,19 @@ const SKIP_PATHS = [
   '/admin/auth/register'
 ];
 
+const SKIP_PREFIXES = [
+  '/public/',
+  '/api/public/'
+];
+
 export const maintenanceMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const path = req.path;
 
   if (SKIP_PATHS.some(skipPath => path.startsWith(skipPath))) {
+    return next();
+  }
+
+  if (SKIP_PREFIXES.some(prefix => path.startsWith(prefix))) {
     return next();
   }
 
