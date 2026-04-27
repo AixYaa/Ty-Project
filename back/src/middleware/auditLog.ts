@@ -141,7 +141,13 @@ export const auditLogMiddleware = async (req: Request, res: Response, next: Next
         documentId: targetId,
         status: res.statusCode,
         duration,
-        ip: req.ip || (req.socket && req.socket.remoteAddress) || 'unknown',
+        ip: (() => {
+          const xForwardedFor = req.headers['x-forwarded-for'] as string;
+          const xRealIp = req.headers['x-real-ip'] as string;
+          return xForwardedFor
+            ? xForwardedFor.split(',')[0].trim()
+            : (xRealIp || req.ip || (req.socket && req.socket.remoteAddress) || 'unknown');
+        })(),
         userAgent: req.get('User-Agent')
       });
     }

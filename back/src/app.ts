@@ -8,6 +8,9 @@ import path from 'path';
 
 const app = express();
 
+// Trust proxy for getting real client IP behind reverse proxy (Nginx, etc.)
+app.set('trust proxy', true);
+
 // Security Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" } // Allow resources to be loaded from different origins (needed for uploads/images)

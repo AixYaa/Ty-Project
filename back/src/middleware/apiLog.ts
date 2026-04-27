@@ -11,7 +11,11 @@ export const apiLogMiddleware = async (req: Request, res: Response, next: NextFu
 
   const contentType = headers['content-type'] || '';
   const userAgent = headers['user-agent'];
-  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const xForwardedFor = headers['x-forwarded-for'] as string;
+  const xRealIp = headers['x-real-ip'] as string;
+  const ip = xForwardedFor
+    ? xForwardedFor.split(',')[0].trim()
+    : (xRealIp || req.ip || req.socket.remoteAddress || 'unknown');
 
   if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
     const originalSend = res.send;
