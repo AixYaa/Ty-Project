@@ -151,7 +151,7 @@ const handleLogout = () => {
   })
     .then(async () => {
       await userStore.logout();
-      window.location.href = '/login';
+      window.location.href = '/#/login';
     })
     .catch(() => {});
 };
