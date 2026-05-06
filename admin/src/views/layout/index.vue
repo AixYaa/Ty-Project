@@ -78,6 +78,7 @@
     </el-container>
 
     <Settings ref="settingsRef" />
+    <DebugDrawer />
   </div>
 </template>
 
@@ -89,6 +90,7 @@ import Header from './components/Header.vue';
 import TagsView from './components/TagsView/index.vue';
 import Settings from './components/Settings/index.vue';
 import Footer from './components/Footer.vue';
+import DebugDrawer from './components/DebugDrawer.vue';
 import { useSettingStore } from '@/store/setting';
 import { useWatermark } from '@/hooks/useWatermark';
 import { useResponsive } from '@/hooks/useResponsive';

@@ -120,7 +120,7 @@ const openApiDoc = () => {
   background-color: v-bind(menuBgColor);
   transition: width 0.3s;
   width: 260px;
-  border-right: 1px solid #dcdfe6;
+  /* border-right: 1px solid #dcdfe6; */
 }
 
 .sidebar-container.is-collapse {

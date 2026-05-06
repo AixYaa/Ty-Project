@@ -19,18 +19,30 @@
       </div>
     </div>
     <div class="header-right">
+      <!-- AI Assistant Toggle -->
+      <div class="header-icon-btn" @click="showAIPanel = true">
+        <el-tooltip content="AI 助手" placement="bottom" popper-class="header-tooltip-popper">
+          <el-icon :size="20" class="header-action-icon"><ChatDotRound /></el-icon>
+        </el-tooltip>
+      </div>
+
       <!-- API Documentation -->
-      <el-tooltip :content="$t('common.apiDoc')" placement="bottom">
-        <el-icon :size="20" class="header-icon-btn" @click="openApiDoc">
-          <Document />
-        </el-icon>
-      </el-tooltip>
+      <div class="header-icon-btn" @click="openApiDoc">
+        <el-tooltip
+          :content="$t('common.apiDoc')"
+          placement="bottom"
+          popper-class="header-tooltip-popper"
+        >
+          <el-icon :size="20" class="header-action-icon"><Document /></el-icon>
+        </el-tooltip>
+      </div>
 
       <!-- Fullscreen Toggle -->
       <div class="header-icon-btn" @click="toggleFullscreen">
         <el-tooltip
           :content="isFullscreen ? $t('header.exitFullscreen') : $t('header.fullscreen')"
           placement="bottom"
+          popper-class="header-tooltip-popper"
         >
           <el-icon :size="20"><FullScreen /></el-icon>
         </el-tooltip>
@@ -38,7 +50,11 @@
 
       <!-- Language Switch -->
       <div class="header-icon-btn" @click="toggleLanguage">
-        <el-tooltip :content="$t('header.switchLanguage')" placement="bottom">
+        <el-tooltip
+          :content="$t('header.switchLanguage')"
+          placement="bottom"
+          popper-class="header-tooltip-popper"
+        >
           <span style="font-size: 16px; font-weight: bold">{{
             locale === 'zh-CN' ? '中' : 'En'
           }}</span>
@@ -67,10 +83,12 @@
       </div>
     </div>
   </div>
+
+  <AIChatDrawer v-model="showAIPanel" />
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useUserStore } from '@/store/user';
 import { useSettingStore } from '@/store/setting';
 import {
@@ -81,11 +99,13 @@ import {
   SwitchButton,
   ArrowDown,
   FullScreen,
-  Document
+  Document,
+  ChatDotRound
 } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import Menu from './Menu.vue';
 import Breadcrumb from './Breadcrumb.vue';
+import AIChatDrawer from '@/components/AIChatDrawer/index.vue';
 import { useFullscreen } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { loadLocaleMessages } from '@/locales';
@@ -96,6 +116,7 @@ const userStore = useUserStore();
 const settingStore = useSettingStore();
 const { t, locale } = useI18n();
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
+const showAIPanel = ref(false);
 
 const toggleLanguage = async () => {
   const newLocale = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN';
@@ -239,6 +260,10 @@ const openApiDoc = () => {
   background-color: rgba(0, 0, 0, 0.025);
 }
 
+.header-action-icon {
+  color: var(--el-text-color-primary);
+}
+
 .user-dropdown {
   display: flex;
   align-items: center;
@@ -249,6 +274,17 @@ const openApiDoc = () => {
 .username {
   font-size: 14px;
   color: #606266;
+}
+
+:global(.header-tooltip-popper.el-popper) {
+  background: var(--el-bg-color-overlay) !important;
+  color: var(--el-text-color-primary) !important;
+  border: 1px solid var(--el-border-color-light) !important;
+}
+
+:global(.header-tooltip-popper.el-popper .el-popper__arrow::before) {
+  background: var(--el-bg-color-overlay) !important;
+  border-color: var(--el-border-color-light) !important;
 }
 
 @media screen and (max-width: 768px) {

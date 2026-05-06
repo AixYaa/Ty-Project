@@ -7,6 +7,7 @@ import i18nRouter from './i18n';
 import auditRouter from './audit';
 import schedulerRouter from './scheduler';
 import apiLogRouter from './apiLog';
+import aiRouter from './ai';
 import { adminAuthMiddleware } from '../../middleware/adminAuth';
 import { auditLogMiddleware } from '../../middleware/auditLog';
 
@@ -38,5 +39,8 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/users', (req: Request, res: Response) => {
   res.json(ApiResult.success({ users: [] }));
 });
+
+// 注册AI路由 (需鉴权)
+router.use('/ai', adminAuthMiddleware, aiRouter);
 
 export default router;

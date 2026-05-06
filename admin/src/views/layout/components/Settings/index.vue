@@ -151,7 +151,11 @@
     <!-- Debug Settings (Only for Admin) -->
     <div v-if="userStore.userInfo?.role === 'admin'" class="setting-item">
       <div class="label">调试配置</div>
-      <el-switch v-model="settingStore.showDebugDrawer" active-text="开启调试抽屉" />
+      <el-switch
+        v-model="settingStore.showDebugDrawer"
+        active-text="开启调试抽屉"
+        @change="handleDebugSwitch"
+      />
     </div>
   </el-drawer>
 </template>
@@ -173,6 +177,13 @@ const handleLanguageChange = (lang: string) => {
   locale.value = lang;
   localStorage.setItem('language', lang);
   ElMessage.success('Switch Language Success');
+};
+
+const handleDebugSwitch = (val: boolean | string | number) => {
+  // 仅控制调试入口按钮显示；关闭时顺带收起抽屉
+  if (!val) {
+    settingStore.debugDrawerVisible = false;
+  }
 };
 
 const themeColors: { value: ThemeColor; hex: string }[] = [
