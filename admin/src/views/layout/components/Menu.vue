@@ -15,21 +15,32 @@
       <el-icon><House /></el-icon>
       <template #title>{{ $t('common.home') }}</template>
     </el-menu-item>
-    
+
     <template v-for="menu in menuTree" :key="menu._id">
       <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu._id || ''">
         <template #title>
           <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
           <span>{{ $t(menu.name) }}</span>
         </template>
-        <el-menu-item 
-          v-for="child in menu.children" 
-          :key="child._id" 
-          :index="child.path"
-        >
-          <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
-          <template #title>{{ $t(child.name) }}</template>
-        </el-menu-item>
+        <template v-for="child in menu.children" :key="child._id">
+          <el-sub-menu
+            v-if="child.children && child.children.length > 0"
+            :index="child._id || child.path"
+          >
+            <template #title>
+              <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
+              <span>{{ $t(child.name) }}</span>
+            </template>
+            <el-menu-item v-for="grand in child.children" :key="grand._id" :index="grand.path">
+              <el-icon v-if="grand.icon"><component :is="grand.icon" /></el-icon>
+              <template #title>{{ $t(grand.name) }}</template>
+            </el-menu-item>
+          </el-sub-menu>
+          <el-menu-item v-else :index="child.path">
+            <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
+            <template #title>{{ $t(child.name) }}</template>
+          </el-menu-item>
+        </template>
       </el-sub-menu>
       <el-menu-item v-else :index="menu.path">
         <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>

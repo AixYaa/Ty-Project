@@ -216,6 +216,13 @@
       :class="formConfig.class"
       direction="rtl"
     >
+      <div
+        class="drawer-inner-resize-handle"
+        title="拖动调整宽度"
+        @mousedown.stop.prevent="startResize"
+      >
+        <div class="resize-dots"><span></span><span></span><span></span></div>
+      </div>
       <div class="drawer-content" :style="formConfig.contentStyle">
         <!-- Debug Info -->
         <div
@@ -264,16 +271,6 @@
         >
       </template>
     </el-drawer>
-
-    <!-- Resize Handle for Editor Drawer -->
-    <div
-      v-if="editor.visible && formConfig"
-      class="drawer-resize-handle"
-      title="拖动调整宽度"
-      @mousedown.prevent="startResize"
-    >
-      <div class="resize-dots"><span></span><span></span><span></span></div>
-    </div>
 
     <!-- Built-in Viewer Dialog -->
     <el-dialog
@@ -925,27 +922,32 @@ defineExpose({
   border: 1px solid #dcdfe6;
 }
 
-.drawer-resize-handle {
-  position: fixed;
-  right: v-bind("editorDrawerWidth + 'px'");
+:deep(.el-drawer__body) {
+  position: relative;
+}
+
+.drawer-inner-resize-handle {
+  position: absolute;
+  left: -7px;
   top: 0;
   bottom: 0;
-  width: 10px;
+  width: 14px;
   cursor: col-resize;
-  z-index: 9999;
+  z-index: 10;
+  pointer-events: auto;
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  background: rgba(64, 158, 255, 0.02);
   transition: background-color 0.2s;
-  transform: translateX(5px); /* 居中于边界 */
 }
 
-.drawer-resize-handle:hover {
+.drawer-inner-resize-handle:hover {
   background-color: rgba(64, 158, 255, 0.1);
 }
 
-.drawer-resize-handle:active {
+.drawer-inner-resize-handle:active {
   background-color: rgba(64, 158, 255, 0.2);
 }
 

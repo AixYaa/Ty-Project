@@ -274,6 +274,13 @@
     "basicInfo": "基本信息",
     "parentMenu": "父菜单",
     "rolePermission": "角色权限",
+    "workflow": {
+      "root": "工作流管理",
+      "templates": "流程模板",
+      "launch": "流程发起",
+      "instances": "流程实例",
+      "tasks": "待办任务"
+    },
     "system": {
       "apiLog": "API 调用日志",
       "audit": "操作日志",

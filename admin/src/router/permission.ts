@@ -38,6 +38,46 @@ const generateRoutes = (menus: SysMenu[]): RouteRecordRaw[] => {
             icon: menu.icon
           }
         });
+      } else if (menu.path === '/workflow/templates') {
+        routes.push({
+          path: menu.path,
+          name: `Dynamic_${menu._id}`,
+          component: () => import('@/views/workflow/templates/index.vue'),
+          meta: {
+            title: menu.name,
+            icon: menu.icon
+          }
+        });
+      } else if (menu.path === '/workflow/launch') {
+        routes.push({
+          path: menu.path,
+          name: `Dynamic_${menu._id}`,
+          component: () => import('@/views/workflow/launch/index.vue'),
+          meta: {
+            title: menu.name,
+            icon: menu.icon
+          }
+        });
+      } else if (menu.path === '/workflow/instances') {
+        routes.push({
+          path: menu.path,
+          name: `Dynamic_${menu._id}`,
+          component: () => import('@/views/workflow/instances/index.vue'),
+          meta: {
+            title: menu.name,
+            icon: menu.icon
+          }
+        });
+      } else if (menu.path === '/workflow/tasks') {
+        routes.push({
+          path: menu.path,
+          name: `Dynamic_${menu._id}`,
+          component: () => import('@/views/workflow/tasks/index.vue'),
+          meta: {
+            title: menu.name,
+            icon: menu.icon
+          }
+        });
       } else {
         routes.push({
           path: menu.path,

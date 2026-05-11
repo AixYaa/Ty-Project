@@ -2879,6 +2879,104 @@ const submitForm = async (formData, done) => {
       const configSchema = await this.createOrUpdateSchema('sys系统配置', '系统配置', configSchemaCode, entitySysConfig._id.toString(), viewSysConfig._id.toString());
       await this.createOrUpdateMenu('/sys/config', 'menu.system.config', 'Setting', 10, configSchema._id, parentId, ['admin']);
 
+      // --- 11. 工作流管理 (Workflow Management) ---
+      const workflowRoot = await this.createOrUpdateMenu('/workflow', 'menu.workflow.root', 'Connection', 20, null, parentIdManage, ['admin', 'user']);
+      const workflowParentId = workflowRoot._id.toString();
+
+      // 11.1 先建实体
+      const entityWfTemplate = await this.createOrUpdateEntity('wf模板');
+      const entityWfInstance = await this.createOrUpdateEntity('wf实例');
+      const entityWfTask = await this.createOrUpdateEntity('wf任务');
+      const entityWfLaunch = await this.createOrUpdateEntity('wf发起');
+
+      // 11.2 实体绑定视图
+      const viewWfTemplate = await this.createOrUpdateView('wf流程模板列表', entityWfTemplate._id.toString());
+      const viewWfInstance = await this.createOrUpdateView('wf流程实例列表', entityWfInstance._id.toString());
+      const viewWfTask = await this.createOrUpdateView('wf流程任务列表', entityWfTask._id.toString());
+      const viewWfLaunch = await this.createOrUpdateView('wf流程发起入口', entityWfLaunch._id.toString());
+
+      // 11.3 视图 + 实体绑定架构
+      const workflowTemplateSchema = await this.createOrUpdateSchema(
+        'wf流程模板管理',
+        '流程模板管理',
+        {
+          template: '<div class="page-container"><el-alert title="工作流模板页面由前端静态模块渲染" type="info" /></div>',
+          script: '',
+          style: '.page-container { padding: 20px; }'
+        },
+        entityWfTemplate._id.toString(),
+        viewWfTemplate._id.toString()
+      );
+      const workflowLaunchSchema = await this.createOrUpdateSchema(
+        'wf流程发起中心',
+        '流程发起中心',
+        {
+          template: '<div class="page-container"><el-alert title="流程发起页面由前端静态模块渲染" type="info" /></div>',
+          script: '',
+          style: '.page-container { padding: 20px; }'
+        },
+        entityWfLaunch._id.toString(),
+        viewWfLaunch._id.toString()
+      );
+      const workflowInstanceSchema = await this.createOrUpdateSchema(
+        'wf流程实例管理',
+        '流程实例管理',
+        {
+          template: '<div class="page-container"><el-alert title="工作流实例页面由前端静态模块渲染" type="info" /></div>',
+          script: '',
+          style: '.page-container { padding: 20px; }'
+        },
+        entityWfInstance._id.toString(),
+        viewWfInstance._id.toString()
+      );
+      const workflowTaskSchema = await this.createOrUpdateSchema(
+        'wf流程任务管理',
+        '流程任务管理',
+        {
+          template: '<div class="page-container"><el-alert title="工作流任务页面由前端静态模块渲染" type="info" /></div>',
+          script: '',
+          style: '.page-container { padding: 20px; }'
+        },
+        entityWfTask._id.toString(),
+        viewWfTask._id.toString()
+      );
+      await this.createOrUpdateMenu(
+        '/workflow/templates',
+        'menu.workflow.templates',
+        'Tickets',
+        1,
+        workflowTemplateSchema._id,
+        workflowParentId,
+        ['admin']
+      );
+      await this.createOrUpdateMenu(
+        '/workflow/launch',
+        'menu.workflow.launch',
+        'Promotion',
+        2,
+        workflowLaunchSchema._id,
+        workflowParentId,
+        ['admin', 'user']
+      );
+      await this.createOrUpdateMenu(
+        '/workflow/instances',
+        'menu.workflow.instances',
+        'List',
+        3,
+        workflowInstanceSchema._id,
+        workflowParentId,
+        ['admin', 'user']
+      );
+      await this.createOrUpdateMenu(
+        '/workflow/tasks',
+        'menu.workflow.tasks',
+        'Checked',
+        4,
+        workflowTaskSchema._id,
+        workflowParentId,
+        ['admin', 'user']
+      );
+
       // --- Init Default System Config (Swagger) ---
       await this.initDefaultSystemConfig();
 
@@ -2910,7 +3008,10 @@ const submitForm = async (formData, done) => {
         { code: 'i18n:edit', name: '编辑国际化', type: 'button', description: '编辑国际化配置' },
         { code: 'scheduler:view', name: '查看定时任务', type: 'menu', description: '查看定时任务列表' },
         { code: 'scheduler:edit', name: '编辑定时任务', type: 'button', description: '创建、编辑、删除定时任务' },
-        { code: 'scheduler:delete', name: '删除定时任务', type: 'button', description: '删除定时任务' }
+        { code: 'scheduler:delete', name: '删除定时任务', type: 'button', description: '删除定时任务' },
+        { code: 'workflow:view', name: '查看工作流', type: 'menu', description: '查看工作流模板、实例和任务' },
+        { code: 'workflow:edit', name: '编辑工作流模板', type: 'button', description: '创建、编辑、删除流程模板' },
+        { code: 'workflow:operate', name: '处理工作流任务', type: 'button', description: '启动实例、处理任务、终止实例' }
       ];
 
       for (const perm of defaultPermissions) {
@@ -2992,14 +3093,33 @@ const submitForm = async (formData, done) => {
           name: '普通用户',
           code: 'user',
           description: '普通注册用户',
-          permissions: ['user:view', 'menu:view'],
+          permissions: ['user:view', 'menu:view', 'workflow:view', 'workflow:operate'],
           status: 1
         });
       } else {
         await GeneralService.update('sys角色', userRole.list[0]._id.toString(), {
-          permissions: ['user:view', 'menu:view']
+          permissions: ['user:view', 'menu:view', 'workflow:view', 'workflow:operate']
         });
         console.log('User role updated with basic permissions');
+      }
+
+      // 管理员（非超级管理员）：拥有系统大部分权限，但不具备超级管理员通配权限
+      const managerPermissions = allPermCodes.filter(code => code !== '*');
+      const managerRole = await GeneralService.getList('sys角色', { code: 'manager' });
+      if (managerRole.list.length === 0) {
+        console.log('Creating default manager role...');
+        await GeneralService.create('sys角色', {
+          name: '管理员',
+          code: 'manager',
+          description: '系统管理员（非超级管理员）',
+          permissions: managerPermissions,
+          status: 1
+        });
+      } else {
+        await GeneralService.update('sys角色', managerRole.list[0]._id.toString(), {
+          permissions: managerPermissions
+        });
+        console.log('Manager role updated with management permissions');
       }
     } catch (error) {
       console.error('Failed to init default roles:', error);
@@ -3060,6 +3180,10 @@ const submitForm = async (formData, done) => {
 
   // Helper: Create or Update Menu
   static async createOrUpdateMenu(path: string, name: string, icon: string, sort: number, schemaId: any, parentId: string | null, roles?: string[]) {
+    // 兼容管理员角色：凡是 admin 可见的菜单，同步开放给 manager
+    const normalizedRoles = roles
+      ? Array.from(new Set([...(roles || []), ...((roles || []).includes('admin') ? ['manager'] : [])]))
+      : roles;
     const menus = await SysService.getMenus({ path });
     let menu;
 
@@ -3094,11 +3218,13 @@ const submitForm = async (formData, done) => {
       }
 
       // Update roles if provided and different
-      if (roles) {
+      if (normalizedRoles) {
         const currentRoles = menu.roles || [];
-        const rolesChanged = roles.length !== currentRoles.length || !roles.every(r => currentRoles.includes(r));
+        const rolesChanged =
+          normalizedRoles.length !== currentRoles.length ||
+          !normalizedRoles.every(r => currentRoles.includes(r));
         if (rolesChanged) {
-          updates.roles = roles;
+          updates.roles = normalizedRoles;
           needsUpdate = true;
         }
       }
@@ -3116,7 +3242,7 @@ const submitForm = async (formData, done) => {
         sort,
         schemaId: schemaId ? schemaId.toString() : undefined,
         parentId: parentId || undefined,
-        roles: roles
+        roles: normalizedRoles
       };
       const result = await SysService.createMenu(menuData);
       menu = { ...menuData, _id: result._id };

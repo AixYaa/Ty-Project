@@ -29,6 +29,7 @@
     "ant-design-vue": "^4.2.6",
     "ant-design-x-vue": "^1.6.0",
     "axios": "^1.13.4",
+    "bpmn-js": "^18.16.1",
     "echarts": "^6.0.0",
     "element-plus": "^2.13.2",
     "nprogress": "^0.2.0",

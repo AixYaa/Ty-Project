@@ -274,6 +274,13 @@
     "basicInfo": "Basic Info",
     "parentMenu": "Parent Menu",
     "rolePermission": "Role Permission",
+    "workflow": {
+      "root": "Workflow",
+      "templates": "Templates",
+      "launch": "Launch",
+      "instances": "Instances",
+      "tasks": "Tasks"
+    },
     "system": {
       "apiLog": "API Call Logs",
       "audit": "Audit Logs",
