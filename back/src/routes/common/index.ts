@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { ApiResult } from '../../apiResult';
 import { ConfigService } from '../../services/configService';
+import { getServerPublicKey } from '../../middleware/encryption';
 import uploadRouter from './upload';
 
 const router = Router();
@@ -213,6 +214,16 @@ router.get('/git-logs', async (req: Request, res: Response) => {
   } catch (ghError: any) {
     console.error('GitHub fetch failed:', ghError);
     return res.json(ApiResult.success([]));
+  }
+});
+
+router.get('/public-key', (req: Request, res: Response) => {
+  try {
+    const publicKey = getServerPublicKey();
+    res.json(ApiResult.success({ publicKey }));
+  } catch (error) {
+    console.error('[Common] Failed to get public key:', error);
+    res.status(500).json(ApiResult.error('获取公钥失败'));
   }
 });
 

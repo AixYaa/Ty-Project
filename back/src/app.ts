@@ -73,6 +73,9 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+import { encryptionMiddleware } from './middleware/encryption';
+app.use(encryptionMiddleware);
+
 // 所有子路由统一挂载到 /api 下：/api/health, /api/admin, /api/client, /api/common
 app.use('/api', router);
 

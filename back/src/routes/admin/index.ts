@@ -11,6 +11,7 @@ import aiRouter from './ai';
 import workflowRouter from './workflow';
 import { adminAuthMiddleware } from '../../middleware/adminAuth';
 import { auditLogMiddleware } from '../../middleware/auditLog';
+import { getServerPublicKey } from '../../middleware/encryption';
 
 const router = Router();
 
@@ -44,5 +45,15 @@ router.get('/users', (req: Request, res: Response) => {
 // 注册AI路由 (需鉴权)
 router.use('/ai', adminAuthMiddleware, aiRouter);
 router.use('/workflow', adminAuthMiddleware, workflowRouter);
+
+router.get('/common/public-key', (req: Request, res: Response) => {
+  try {
+    const publicKey = getServerPublicKey();
+    res.json(ApiResult.success({ publicKey }));
+  } catch (error) {
+    console.error('[Admin] Failed to get public key:', error);
+    res.status(500).json(ApiResult.error('获取公钥失败'));
+  }
+});
 
 export default router;
