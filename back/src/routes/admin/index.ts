@@ -9,6 +9,7 @@ import schedulerRouter from './scheduler';
 import apiLogRouter from './apiLog';
 import aiRouter from './ai';
 import workflowRouter from './workflow';
+import dashboardRouter from './dashboard';
 import { adminAuthMiddleware } from '../../middleware/adminAuth';
 import { auditLogMiddleware } from '../../middleware/auditLog';
 import { getServerPublicKey } from '../../middleware/encryption';
@@ -45,6 +46,7 @@ router.get('/users', (req: Request, res: Response) => {
 // 注册AI路由 (需鉴权)
 router.use('/ai', adminAuthMiddleware, aiRouter);
 router.use('/workflow', adminAuthMiddleware, workflowRouter);
+router.use('/dashboard', adminAuthMiddleware, dashboardRouter);
 
 router.get('/common/public-key', (req: Request, res: Response) => {
   try {
