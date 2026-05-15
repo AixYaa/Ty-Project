@@ -4,8 +4,21 @@ import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 import { ApiResult } from '../../apiResult';
+import { rateLimit } from 'express-rate-limit';
 
 const router = Router();
+
+// Upload specific rate limiter: max 50 requests per 15 minutes per IP
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: {
+    status: 429,
+    code: 429,
+    msg: '上传文件过于频繁，请稍后再试',
+    data: null
+  }
+});
 
 // Ensure directories exist
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -32,7 +45,7 @@ const upload = multer({
   fileFilter
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', uploadLimiter, (req, res, next) => {
   upload.single('file')(req, res, async (err) => {
     if (err instanceof multer.MulterError) {
       return res.json(ApiResult.error(`Upload error: ${err.message}`, 400));

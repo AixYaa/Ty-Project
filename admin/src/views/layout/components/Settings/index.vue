@@ -136,9 +136,24 @@
 
     <div class="setting-item">
       <div class="label">界面配置</div>
-      <el-switch v-model="settingStore.showTagsView" active-text="多页签 (TagsView)" />
 
-      <div v-if="settingStore.showTagsView" class="label-row" style="margin-top: 15px">
+      <!-- Breadcrumb Settings -->
+      <div class="label-row" style="margin-bottom: 15px">
+        <span class="label" style="margin-bottom: 0">面包屑 (Breadcrumb)</span>
+        <el-switch v-model="settingStore.showBreadcrumb" />
+      </div>
+      <div v-if="settingStore.showBreadcrumb" class="label-row" style="margin-bottom: 15px">
+        <span class="label" style="margin-bottom: 0">面包屑图标</span>
+        <el-switch v-model="settingStore.showBreadcrumbIcon" />
+      </div>
+
+      <!-- TagsView Settings -->
+      <div class="label-row" style="margin-bottom: 15px">
+        <span class="label" style="margin-bottom: 0">多页签 (TagsView)</span>
+        <el-switch v-model="settingStore.showTagsView" />
+      </div>
+
+      <div v-if="settingStore.showTagsView" class="label-row" style="margin-bottom: 15px">
         <span class="label" style="margin-bottom: 0">页签风格</span>
         <el-select v-model="settingStore.tagsViewStyle" size="small" style="width: 100px">
           <el-option label="谷歌" value="google" />

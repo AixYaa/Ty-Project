@@ -20,8 +20,17 @@ export const useUserStore = defineStore('user', {
     }
   },
   actions: {
+    async getCaptcha() {
+      const res: any = await request.get('/auth/captcha');
+      return res;
+    },
     async login(loginForm: any) {
       const res: any = await request.post('/auth/login', loginForm);
+      // If we got a 503 error handled by the interceptor, res might be undefined here
+      // But usually interceptor rejects it, so it jumps to catch block in the caller
+      if (!res || !res.accessToken) {
+        return Promise.reject(new Error('Login failed'));
+      }
       this.token = res.accessToken;
       this.userInfo = res.user;
       setToken(res.accessToken);

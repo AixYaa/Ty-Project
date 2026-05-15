@@ -10,6 +10,9 @@
       <div class="login-right">
         <div class="login-card">
           <div class="card-header">
+            <div v-if="systemInfo.systemLogo" class="logo-wrapper">
+              <img :src="systemInfo.systemLogo" alt="logo" class="system-logo" />
+            </div>
             <h1 class="system-name">{{ systemInfo.systemName || '管理平台' }}</h1>
             <p class="system-desc">{{ systemInfo.systemDescription || '企业级管理系统' }}</p>
             <div class="version-badge">v{{ systemInfo.systemVersion || '1.0.0' }}</div>
@@ -33,6 +36,18 @@
                 show-password
                 @keyup.enter="handleLogin"
               />
+            </el-form-item>
+            <el-form-item>
+              <div class="captcha-wrapper">
+                <el-input
+                  v-model="loginForm.captchaCode"
+                  placeholder="请输入验证码"
+                  clearable
+                  style="flex: 1"
+                  @keyup.enter="handleLogin"
+                />
+                <div class="captcha-img" @click="fetchCaptcha" v-html="captchaImage"></div>
+              </div>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" class="login-btn" :loading="loading" @click="handleLogin">
@@ -70,14 +85,34 @@ const copyrightInfo = computed(() => systemStore.getCopyrightInfo());
 
 const loginForm = ref({
   username: '',
-  password: ''
+  password: '',
+  captchaCode: '',
+  captchaId: ''
 });
 
 const loading = ref(false);
+const captchaImage = ref('');
+
+const fetchCaptcha = async () => {
+  try {
+    const res = await userStore.getCaptcha();
+    if (res && res.image) {
+      captchaImage.value = res.image;
+      loginForm.value.captchaId = res.captchaId;
+    }
+  } catch (error) {
+    console.error('获取验证码失败', error);
+  }
+};
 
 const handleLogin = async () => {
   if (!loginForm.value.username || !loginForm.value.password) {
     ElMessage.warning(t('login.tips.inputRequired'));
+    return;
+  }
+
+  if (!loginForm.value.captchaCode) {
+    ElMessage.warning('请输入验证码');
     return;
   }
 
@@ -86,8 +121,13 @@ const handleLogin = async () => {
     await userStore.login(loginForm.value);
     ElMessage.success(t('login.success'));
     router.push('/');
-  } catch {
-    // 错误已在 request 中处理
+  } catch (err: any) {
+    // If it's a 503 from maintenance mode, the interceptor handles the redirect.
+    // We only need to refresh captcha for normal login failures.
+    if (err?.response?.status !== 503) {
+      fetchCaptcha();
+      loginForm.value.captchaCode = '';
+    }
   } finally {
     loading.value = false;
   }
@@ -97,6 +137,7 @@ onMounted(async () => {
   if (!systemStore.isLoaded) {
     await systemStore.loadSystemInfo();
   }
+  fetchCaptcha();
 });
 </script>
 
@@ -148,6 +189,30 @@ onMounted(async () => {
   border-radius: 20px;
 }
 
+.captcha-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.captcha-img {
+  height: 40px;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f4f4f4;
+  border: 1px solid #dcdfe6;
+}
+
+.captcha-img :deep(svg) {
+  height: 100%;
+  width: auto;
+}
+
 .login-right {
   width: 480px;
   display: flex;
@@ -166,6 +231,18 @@ onMounted(async () => {
 .card-header {
   text-align: center;
   margin-bottom: 40px;
+}
+
+.logo-wrapper {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.system-logo {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: contain;
 }
 
 .system-name {

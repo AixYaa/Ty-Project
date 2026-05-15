@@ -46,6 +46,21 @@ export interface SysMenu extends Document {
   updatedAt?: Date;
 }
 
+export interface SysDictionary extends Document {
+  _id?: ObjectId;
+  code: string;
+  name: string;
+  description?: string;
+  items: {
+    label: string;
+    value: string | number;
+    sort?: number;
+    color?: string;
+  }[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface SysUser extends Document {
   _id?: ObjectId;
   username: string;

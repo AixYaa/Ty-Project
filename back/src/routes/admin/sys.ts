@@ -111,4 +111,50 @@ router.delete('/menu/:id', async (req: Request, res: Response) => {
   }
 });
 
+// --- Dictionary Routes ---
+router.post('/dict', async (req: Request, res: Response) => {
+  try {
+    const result = await SysService.createDictionary(req.body);
+    res.json(ApiResult.success(result));
+  } catch (error: any) {
+    res.json(ApiResult.error(error.message));
+  }
+});
+
+router.get('/dict', async (req: Request, res: Response) => {
+  try {
+    const result = await SysService.getDictionaries(req.query);
+    res.json(ApiResult.success(result));
+  } catch (error: any) {
+    res.json(ApiResult.error(error.message));
+  }
+});
+
+router.get('/dict/code/:code', async (req: Request, res: Response) => {
+  try {
+    const result = await SysService.getDictionaryByCode(req.params.code);
+    res.json(ApiResult.success(result));
+  } catch (error: any) {
+    res.json(ApiResult.error(error.message));
+  }
+});
+
+router.put('/dict/:id', async (req: Request, res: Response) => {
+  try {
+    const result = await SysService.updateDictionary(req.params.id, req.body);
+    res.json(ApiResult.success(result));
+  } catch (error: any) {
+    res.json(ApiResult.error(error.message));
+  }
+});
+
+router.delete('/dict/:id', async (req: Request, res: Response) => {
+  try {
+    await SysService.deleteDictionary(req.params.id);
+    res.json(ApiResult.success(null));
+  } catch (error: any) {
+    res.json(ApiResult.error(error.message));
+  }
+});
+
 export default router;

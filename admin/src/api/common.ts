@@ -13,6 +13,7 @@ export interface SystemInfo {
   systemDescription: string;
   defaultLanguage: string;
   timezone: string;
+  systemLogo: string;
 }
 
 export interface MaintenanceStatus {

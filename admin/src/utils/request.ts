@@ -233,12 +233,15 @@ service.interceptors.response.use(
     if (error.response && error.response.status === 503) {
       const res = error.response.data;
       const isMaintenancePage = window.location.hash.includes('/maintenance');
-      console.log('[Request] 503 received, msg:', res.msg, 'isMaintenancePage:', isMaintenancePage);
-      if (res.msg && res.msg.includes('维护') && !isMaintenancePage) {
-        sessionStorage.setItem('maintenanceMessage', res.msg || '系统正在维护中，请稍后再试...');
-        ElMessage.warning(res.msg || '系统正在维护中，请稍后再试...');
+      // Fix: when backend returns 503 using raw res.status(503).json(...), the structure is exactly the JSON we sent.
+      // So res.msg is available. If it's missing, fallback to a default string to trigger the condition.
+      const msg = res?.msg || '系统维护中';
+      console.log('[Request] 503 received, msg:', msg, 'isMaintenancePage:', isMaintenancePage);
+      if (msg.includes('维护') && !isMaintenancePage) {
+        sessionStorage.setItem('maintenanceMessage', msg);
+        ElMessage.warning(msg);
         console.log('[Request] Redirecting to maintenance page');
-        window.location.href = window.location.origin + '/#/maintenance';
+        window.location.href = window.location.origin + window.location.pathname + '#/maintenance';
       }
       return Promise.reject(error);
     }

@@ -151,6 +151,7 @@ import { getGitLogs, type GitCommit } from '@/api/common';
 import { getDashboardStats } from '@/api/dashboard';
 import { ElMessage } from 'element-plus';
 import { User, Menu, DataBoard, Connection, DocumentCopy, Timer } from '@element-plus/icons-vue';
+import { markRaw } from 'vue';
 import * as echarts from 'echarts';
 import { useDark } from '@vueuse/core';
 
@@ -176,10 +177,10 @@ const getGreetingTime = () => {
 
 // Statistics Data (Reactive)
 const statistics = ref([
-  { label: '系统用户数', value: 0, icon: User, color: '#409EFF' },
-  { label: '菜单配置数', value: 0, icon: Menu, color: '#67C23A' },
-  { label: '实体模型数', value: 0, icon: DataBoard, color: '#E6A23C' },
-  { label: 'API 调用量', value: 0, icon: Connection, color: '#F56C6C' }
+  { label: '系统用户数', value: 0, icon: markRaw(User), color: '#409EFF' },
+  { label: '菜单配置数', value: 0, icon: markRaw(Menu), color: '#67C23A' },
+  { label: '实体模型数', value: 0, icon: markRaw(DataBoard), color: '#E6A23C' },
+  { label: 'API 调用量', value: 0, icon: markRaw(Connection), color: '#F56C6C' }
 ]);
 
 const trendData = ref<Array<{ date: string; count: number }>>([]);

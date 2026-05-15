@@ -10,13 +10,17 @@ const SKIP_PATHS = [
   '/common/time',
   '/common/test-echo',
   '/common/user-count',
+  '/common/public-key',
   '/api-docs',
   '/swagger.json',
   '/health',
   '/auth/login',
   '/auth/register',
   '/admin/auth/login',
-  '/admin/auth/register'
+  '/admin/auth/register',
+  '/admin/auth/captcha',
+  '/admin/auth/refresh',
+  '/admin/common/public-key'
 ];
 
 const SKIP_PREFIXES = [

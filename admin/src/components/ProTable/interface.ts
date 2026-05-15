@@ -7,6 +7,7 @@ export interface ProTableColumn {
   sortable?: boolean | 'custom';
   search?: SearchProps; // Search configuration
   isShow?: boolean | ((row: any) => boolean); // Whether to show this column (or specific row cell?) - Usually column level
+  dict?: string; // Dictionary code for displaying label instead of value
   [key: string]: any;
 }
 
@@ -17,6 +18,7 @@ export interface SearchProps {
   label?: string; // Label if different from column label
   defaultValue?: any;
   options?: any[]; // Options for select/radio/checkbox
+  dict?: string; // Dictionary code for options
 }
 
 export interface Pageable {

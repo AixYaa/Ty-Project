@@ -2,8 +2,61 @@ import { Router, Request, Response } from 'express';
 import { AuthService } from '../../services/authService';
 import { ApiResult } from '../../apiResult';
 import { adminAuthMiddleware } from '../../middleware/adminAuth';
+import svgCaptcha from 'svg-captcha';
+import crypto from 'crypto';
+import { getRedis } from '../../db/redis';
+import { rateLimit } from 'express-rate-limit';
+import { body } from 'express-validator';
+import { validateRequest } from '../../middleware/validator';
+import { ConfigService } from '../../services/configService';
 
 const router = Router();
+
+// Login specific rate limiter: max 10 requests per 15 minutes per IP
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    status: 429,
+    code: 429,
+    msg: '密码尝试次数过多，请稍后再试',
+    data: null
+  }
+});
+
+/**
+ * @swagger
+ * /admin/auth/captcha:
+ *   get:
+ *     summary: 获取验证码
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: 成功获取验证码
+ */
+router.get('/captcha', async (req: Request, res: Response) => {
+  try {
+    const captcha = svgCaptcha.create({
+      size: 4,
+      ignoreChars: '0o1i',
+      noise: 2,
+      color: true,
+      background: '#f4f4f4'
+    });
+
+    const captchaId = crypto.randomUUID();
+    const redis = getRedis();
+    // 验证码有效期5分钟
+    await redis.set(`captcha:${captchaId}`, captcha.text.toLowerCase(), 'EX', 300);
+
+    res.json(ApiResult.success({
+      captchaId,
+      image: captcha.data
+    }));
+  } catch (error: any) {
+    res.json(ApiResult.error('Failed to generate captcha', 500));
+  }
+});
 
 /**
  * @swagger
@@ -33,14 +86,43 @@ const router = Router();
  *       401:
  *         description: 用户名或密码错误
  */
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', [
+  body('username').notEmpty().withMessage('用户名不能为空').trim().escape(),
+  body('password').notEmpty().withMessage('密码不能为空').trim(),
+  body('captchaId').notEmpty().withMessage('验证码ID不能为空').trim(),
+  body('captchaCode').notEmpty().withMessage('验证码不能为空').trim(),
+  validateRequest
+], loginLimiter, async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      res.json(ApiResult.error('用户名和密码不能为空', 400));
+    const { username, password, captchaId, captchaCode } = req.body;
+
+    const redis = getRedis();
+    const storedCaptcha = await redis.get(`captcha:${captchaId}`);
+    
+    if (!storedCaptcha) {
+      res.json(ApiResult.error('验证码已过期', 400));
       return;
     }
+    
+    if (storedCaptcha.toLowerCase() !== captchaCode.toLowerCase()) {
+      res.json(ApiResult.error('验证码错误', 400));
+      return;
+    }
+    
+    // 验证成功后删除验证码，防止重复使用
+    await redis.del(`captcha:${captchaId}`);
+
     const result = await AuthService.login(username, password);
+
+    // 检查维护模式，拦截非管理员的登录请求
+    const maintenanceStatus = await ConfigService.isMaintenanceMode();
+    if (maintenanceStatus.enabled) {
+      if (result.user.role !== 'admin' && result.user.role !== 'super_admin') {
+        res.status(503).json(ApiResult.error(maintenanceStatus.message || '系统正在维护中，请稍后再试...', 503));
+        return;
+      }
+    }
+
     res.json(ApiResult.success(result));
   } catch (error: any) {
     res.json(ApiResult.error(error.message, 401));

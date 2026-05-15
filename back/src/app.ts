@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import { rateLimit } from 'express-rate-limit';
 import router from './routes';
 import { apiLogMiddleware } from './middleware/apiLog';
 
@@ -9,7 +10,8 @@ import path from 'path';
 const app = express();
 
 // Trust proxy for getting real client IP behind reverse proxy (Nginx, etc.)
-app.set('trust proxy', true);
+// Using a specific number of hops (e.g. 1) is required for express-rate-limit to prevent IP spoofing
+app.set('trust proxy', 1);
 
 // Security Middleware
 app.use(helmet({
@@ -72,6 +74,21 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// 5. Global Rate Limiter
+const globalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 15 minutes
+  max: 500, // Limit each IP to 1000 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    status: 429,
+    code: 429,
+    msg: '请求过于频繁，请稍后再试',
+    data: null
+  }
+});
+app.use(globalLimiter);
 
 import { encryptionMiddleware } from './middleware/encryption';
 app.use(encryptionMiddleware);

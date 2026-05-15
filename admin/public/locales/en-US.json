@@ -211,7 +211,8 @@
     "type": {
       "string": "String",
       "number": "Number",
-      "boolean": "Boolean"
+      "boolean": "Boolean",
+      "image": "Image"
     }
   },
   "dashboard": {
@@ -286,6 +287,7 @@
       "audit": "Audit Logs",
       "center": "Management Center",
       "config": "System Config",
+      "dictionary": "Dictionary",
       "entity": "Entity Management",
       "i18n": "Language Management",
       "management": "System Management",

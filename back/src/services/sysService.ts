@@ -1,12 +1,13 @@
 import { getDb } from '../db/mongo';
 import { ObjectId, Document } from 'mongodb';
-import { SysEntity, SysView, SysSchema, SysMenu } from '../types/sys';
+import { SysEntity, SysView, SysSchema, SysMenu, SysDictionary } from '../types/sys';
 
 const COLLECTIONS = {
   ENTITY: 'sys实体',
   VIEW: 'sys视图',
   SCHEMA: 'sys架构',
-  MENU: 'sys菜单'
+  MENU: 'sys菜单',
+  DICTIONARY: 'sys字典'
 };
 
 export class SysService {
@@ -210,5 +211,58 @@ export class SysService {
     });
 
     return roots;
+  }
+
+  // --- Dictionary Operations ---
+  static async createDictionary(data: SysDictionary) {
+    const col = await this.getCollection<SysDictionary>(COLLECTIONS.DICTIONARY);
+    const exist = await col.findOne({ code: data.code });
+    if (exist) {
+      throw new Error('字典编码已存在');
+    }
+    const doc = { ...data, createdAt: new Date(), updatedAt: new Date() };
+    const result = await col.insertOne(doc);
+    return { ...doc, _id: result.insertedId };
+  }
+
+  static async getDictionaries(query: any = {}) {
+    const col = await this.getCollection<SysDictionary>(COLLECTIONS.DICTIONARY);
+    const { pageNum = 1, pageSize = 10, ...filter } = query;
+    
+    Object.keys(filter).forEach(key => {
+      if (filter[key] === '' || filter[key] === undefined) {
+        delete filter[key];
+      } else if (typeof filter[key] === 'string') {
+         filter[key] = { $regex: filter[key], $options: 'i' };
+      }
+    });
+
+    const total = await col.countDocuments(filter);
+    const list = await col.find(filter)
+      .skip((Number(pageNum) - 1) * Number(pageSize))
+      .limit(Number(pageSize))
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return { list, total };
+  }
+
+  static async getDictionaryByCode(code: string) {
+    const col = await this.getCollection<SysDictionary>(COLLECTIONS.DICTIONARY);
+    return col.findOne({ code });
+  }
+
+  static async updateDictionary(id: string, data: Partial<SysDictionary>) {
+    const col = await this.getCollection<SysDictionary>(COLLECTIONS.DICTIONARY);
+    const update = { ...data, updatedAt: new Date() };
+    delete (update as any)._id;
+    delete (update as any).code; // Cannot update code
+    await col.updateOne({ _id: this.toObjectId(id) }, { $set: update });
+    return col.findOne({ _id: this.toObjectId(id) });
+  }
+
+  static async deleteDictionary(id: string) {
+    const col = await this.getCollection<SysDictionary>(COLLECTIONS.DICTIONARY);
+    return col.deleteOne({ _id: this.toObjectId(id) });
   }
 }

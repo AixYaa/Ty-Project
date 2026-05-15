@@ -7,6 +7,7 @@ export interface SystemInfo {
   systemDescription: string;
   defaultLanguage: string;
   timezone: string;
+  systemLogo: string;
 }
 
 export interface CopyrightInfo {
@@ -26,6 +27,7 @@ export const useSystemStore = defineStore('system', {
     systemDescription: '',
     defaultLanguage: 'zh-CN',
     timezone: 'Asia/Shanghai',
+    systemLogo: '',
     copyright: '© 2024 AixProject. All rights reserved.',
     icpLicense: '',
     maintenanceEnabled: false,
@@ -48,6 +50,7 @@ export const useSystemStore = defineStore('system', {
           this.systemDescription = sysInfo.systemDescription || '';
           this.defaultLanguage = sysInfo.defaultLanguage || 'zh-CN';
           this.timezone = sysInfo.timezone || 'Asia/Shanghai';
+          this.systemLogo = sysInfo.systemLogo || '';
         }
 
         if (copyright) {
@@ -73,7 +76,8 @@ export const useSystemStore = defineStore('system', {
         systemVersion: this.systemVersion,
         systemDescription: this.systemDescription,
         defaultLanguage: this.defaultLanguage,
-        timezone: this.timezone
+        timezone: this.timezone,
+        systemLogo: this.systemLogo
       };
     },
 

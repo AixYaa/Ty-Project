@@ -211,7 +211,8 @@
     "type": {
       "string": "字符串",
       "number": "数字",
-      "boolean": "布尔值"
+      "boolean": "布尔值",
+      "image": "图片"
     }
   },
   "dashboard": {
@@ -286,6 +287,7 @@
       "audit": "操作日志",
       "center": "管理中心",
       "config": "系统配置",
+      "dictionary": "字典管理",
       "entity": "实体管理",
       "i18n": "国际化管理",
       "management": "系统管理",

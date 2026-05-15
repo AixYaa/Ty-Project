@@ -42,20 +42,23 @@ export class ConfigService {
     systemDescription: string;
     defaultLanguage: string;
     timezone: string;
+    systemLogo: string;
   }> {
     const configs = await this.getByKeys([
       'system_name',
       'system_version',
       'system_description',
       'default_language',
-      'timezone'
+      'timezone',
+      'system_logo'
     ]);
     return {
       systemName: configs['system_name'] || 'AixProject',
       systemVersion: configs['system_version'] || '1.0.0',
       systemDescription: configs['system_description'] || '',
       defaultLanguage: configs['default_language'] || 'zh-CN',
-      timezone: configs['timezone'] || 'Asia/Shanghai'
+      timezone: configs['timezone'] || 'Asia/Shanghai',
+      systemLogo: configs['system_logo'] || ''
     };
   }
 

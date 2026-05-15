@@ -160,7 +160,9 @@ export const createPermissionGuard = (router: Router) => {
           }
         }
       } else {
-        if (to.path !== '/login') {
+        if (to.path === '/maintenance') {
+          next();
+        } else if (to.path !== '/login') {
           next('/login');
         } else {
           isRoutesLoaded = false;

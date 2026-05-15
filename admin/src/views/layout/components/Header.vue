@@ -150,7 +150,10 @@ const showLogo = computed(
 );
 const showMenu = computed(() => settingStore.layoutMode === 'transverse' && !settingStore.isMobile);
 const showBreadcrumb = computed(
-  () => !['transverse'].includes(settingStore.layoutMode) && !settingStore.isMobile
+  () =>
+    settingStore.showBreadcrumb &&
+    !['transverse'].includes(settingStore.layoutMode) &&
+    !settingStore.isMobile
 ); // Hide breadcrumb in transverse mode if space is tight, or keep it? Usually vertical layouts need it more. Let's keep it generally but maybe hide in transverse if it conflicts. actually, let's just show it unless user says otherwise, or maybe stick to common patterns. In transverse, menu is on top. Breadcrumb below? Or in content?
 
 const toggleSidebar = () => {

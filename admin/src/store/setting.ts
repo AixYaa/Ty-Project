@@ -25,6 +25,8 @@ export const useSettingStore = defineStore(
     const watermarkShowTime = ref(false);
     const showTagsView = ref(true);
     const tagsViewStyle = ref<TagsViewStyle>('button');
+    const showBreadcrumb = ref(true);
+    const showBreadcrumbIcon = ref(false);
 
     // Debug Config
     const showDebugDrawer = ref(false);
@@ -91,6 +93,11 @@ export const useSettingStore = defineStore(
       tagsViewStyle.value = style;
     };
 
+    const setBreadcrumb = (show: boolean, icon?: boolean) => {
+      showBreadcrumb.value = show;
+      if (icon !== undefined) showBreadcrumbIcon.value = icon;
+    };
+
     const setDebugDrawer = (show: boolean) => {
       showDebugDrawer.value = show;
     };
@@ -130,6 +137,8 @@ export const useSettingStore = defineStore(
       watermarkShowTime,
       showTagsView,
       tagsViewStyle,
+      showBreadcrumb,
+      showBreadcrumbIcon,
       showDebugDrawer,
       debugDrawerVisible,
       toggleCollapse,
@@ -141,6 +150,7 @@ export const useSettingStore = defineStore(
       setWatermark,
       setTagsView,
       setTagsViewStyle,
+      setBreadcrumb,
       setDebugDrawer,
       toggleDebugDrawer,
       toggleDark
@@ -157,6 +167,8 @@ export const useSettingStore = defineStore(
         'watermarkText',
         'showTagsView',
         'tagsViewStyle',
+        'showBreadcrumb',
+        'showBreadcrumbIcon',
         'showDebugDrawer'
       ]
     }

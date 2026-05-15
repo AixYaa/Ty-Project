@@ -177,7 +177,19 @@
               </div>
 
               <slot v-else :name="col.prop" :row="scope.row">
-                {{ scope.row[col.prop!] }}
+                <template v-if="col.dict">
+                  <el-tag
+                    v-if="getDictColor(col.dict, scope.row[col.prop!])"
+                    :color="getDictColor(col.dict, scope.row[col.prop!])"
+                    style="color: #fff; border: none"
+                  >
+                    {{ dictStore.getDictLabel(col.dict, scope.row[col.prop!]) }}
+                  </el-tag>
+                  <span v-else>{{ dictStore.getDictLabel(col.dict, scope.row[col.prop!]) }}</span>
+                </template>
+                <template v-else>
+                  {{ scope.row[col.prop!] }}
+                </template>
               </slot>
             </template>
           </el-table-column>
@@ -346,8 +358,10 @@ import { useSettingStore } from '@/store/setting';
 import { useUserStore } from '@/store/user';
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
 import { useI18n } from 'vue-i18n';
+import { useDictionaryStore } from '@/store/dictionary';
 
 const { t } = useI18n();
+const dictStore = useDictionaryStore();
 
 // Props
 const props = withDefaults(
@@ -721,8 +735,27 @@ const closeDrawer = () => {
   editor.visible = false;
 };
 
+const getDictColor = (code: string, value: string | number) => {
+  const items = dictStore.dicts[code];
+  if (!items) return '';
+  const item = items.find((i) => i.value === value);
+  return item ? item.color : '';
+};
+
 // Initialize
 onMounted(() => {
+  // Load dictionaries for columns that use them
+  props.columns.forEach((col) => {
+    if (col.dict) {
+      dictStore.fetchDictionary(col.dict);
+    }
+    if (col.search?.dict) {
+      dictStore.fetchDictionary(col.search.dict).then((items) => {
+        col.search!.options = items.map((item) => ({ label: item.label, value: item.value }));
+      });
+    }
+  });
+
   getTableList();
 });
 

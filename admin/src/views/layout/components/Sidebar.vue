@@ -1,8 +1,11 @@
 <template>
   <div class="sidebar-container" :class="{ 'is-collapse': settingStore.isCollapse }">
     <div v-if="showLogo" class="logo">
+      <img v-if="systemInfo.systemLogo" :src="systemInfo.systemLogo" class="sidebar-logo" />
       <span v-if="!settingStore.isCollapse">{{ systemInfo.systemName || '管理平台' }}</span>
-      <span v-else>{{ systemInfo.systemName ? systemInfo.systemName.slice(0, 3) : 'Aix' }}</span>
+      <span v-else-if="!systemInfo.systemLogo">{{
+        systemInfo.systemName ? systemInfo.systemName.slice(0, 3) : 'Aix'
+      }}</span>
     </div>
     <el-scrollbar>
       <Menu mode="vertical" />
@@ -137,6 +140,16 @@ const openApiDoc = () => {
   color: v-bind(menuTextColor);
   white-space: nowrap;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sidebar-logo {
+  height: 32px;
+  max-width: 32px;
+  object-fit: contain;
 }
 
 .sidebar-footer {

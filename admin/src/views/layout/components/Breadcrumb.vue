@@ -12,9 +12,21 @@
               "
               class="no-redirect"
             >
+              <el-icon
+                v-if="settingStore.showBreadcrumbIcon && item.meta.icon"
+                class="breadcrumb-icon"
+              >
+                <component :is="item.meta.icon" />
+              </el-icon>
               {{ $t(item.meta.title) }}
             </span>
             <a v-else @click.prevent="handleLink(item)">
+              <el-icon
+                v-if="settingStore.showBreadcrumbIcon && item.meta.icon"
+                class="breadcrumb-icon"
+              >
+                <component :is="item.meta.icon" />
+              </el-icon>
               {{ $t(item.meta.title) }}
             </a>
           </el-breadcrumb-item>
@@ -75,7 +87,7 @@ const getBreadcrumb = () => {
   // Always add Dashboard/Home first
   matched.push({
     path: '/dashboard',
-    meta: { title: 'common.home' },
+    meta: { title: 'common.home', icon: 'HomeFilled' },
     redirect: '/dashboard'
   });
 
@@ -92,7 +104,7 @@ const getBreadcrumb = () => {
     menuPath.forEach((menu) => {
       matched.push({
         path: menu.path || '',
-        meta: { title: menu.name },
+        meta: { title: menu.name, icon: menu.icon },
         redirect: menu.children && menu.children.length > 0 ? 'noRedirect' : menu.path
       });
     });
@@ -189,6 +201,19 @@ onMounted(() => {
 .no-redirect {
   color: #97a8be;
   cursor: text;
+  display: inline-flex;
+  align-items: center;
+}
+
+.breadcrumb-icon {
+  margin-right: 4px;
+  font-size: 14px;
+  vertical-align: -0.15em;
+}
+
+.el-breadcrumb__inner a {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Breadcrumb transition */

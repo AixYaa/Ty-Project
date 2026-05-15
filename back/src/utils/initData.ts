@@ -119,6 +119,8 @@ export class DataInitializer {
       const parentId = parentMenu._id.toString();
       const parentIdManage = parentMenuManage._id.toString();
 
+      // We will create the Dictionary Menu after the schema is created.
+
       // --- 0.1 Initialize System Entities & Views ---
       const entitySysMenu = await this.createOrUpdateEntity('sys菜单');
       const entitySysEntity = await this.createOrUpdateEntity('sys实体');
@@ -128,6 +130,7 @@ export class DataInitializer {
       const entitySysRole = await this.createOrUpdateEntity('sys角色');
       const entitySysI18n = await this.createOrUpdateEntity('sys国际化');
       const entitySysConfig = await this.createOrUpdateEntity('sys系统配置');
+      const entitySysDictionary = await this.createOrUpdateEntity('sys字典');
 
       const viewSysMenu = await this.createOrUpdateView('sys菜单列表', entitySysMenu._id.toString());
       const viewSysEntity = await this.createOrUpdateView('sys实体列表', entitySysEntity._id.toString());
@@ -137,6 +140,7 @@ export class DataInitializer {
       const viewSysRole = await this.createOrUpdateView('sys角色列表', entitySysRole._id.toString());
       const viewSysI18n = await this.createOrUpdateView('sys国际化列表', entitySysI18n._id.toString());
       const viewSysConfig = await this.createOrUpdateView('sys系统配置列表', entitySysConfig._id.toString());
+      const viewSysDictionary = await this.createOrUpdateView('sys字典列表', entitySysDictionary._id.toString());
 
       // Update Entity Names to Chinese (as requested)
       // Note: We keep collection name (first arg) in English for best practice in DB, 
@@ -698,7 +702,195 @@ const submitForm = async (formData, done) => {
       const viewSchema = await this.createOrUpdateSchema('sys视图管理', '视图管理', viewSchemaCode, entitySysView._id.toString(), viewSysView._id.toString());
       await this.createOrUpdateMenu('/sys/view', 'menu.system.view', 'View', 3, viewSchema._id, parentId, ['admin']);
 
-      // --- 4. 架构管理 (Schema Management) ---
+      // --- 2. 字典管理 (Dictionary Management) ---
+      const dictionarySchemaCode = {
+        template: `
+<div class="page-container">
+    <ProTable
+      ref="proTable"
+      :columns="columns"
+      :requestApi="getTableList"
+      :initParam="initParam"
+      :batchDeleteApi="batchDeleteDict"
+      :deleteApi="deleteDict"
+      :operation="{ permissions: { view: 'dict:view', edit: 'dict:edit', delete: 'dict:edit' }, view: true, edit: true, delete: true, mode: 'hover' }"
+      :formConfig="{ label: '字典', initForm: { name: '', code: '', description: '', items: [] }, width: '800px' }"
+      @submit="submitForm"
+      row-key="_id"
+    >
+      <!-- Table Header Buttons -->
+      <template #tableHeader>
+        <el-button v-permission="'dict:edit'" type="primary" :icon="CirclePlus" @click="openAdd">新增字典</el-button>
+      </template>
+
+      <!-- Built-in Editor Slot -->
+      <template #edit-form="{ model, isEdit }">
+        <el-form :model="model" label-width="80px" style="padding-top: 20px;">
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="名称" prop="name">
+                <el-input v-model="model.name" placeholder="请输入字典名称" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="编码" prop="code">
+                <el-input v-model="model.code" placeholder="请输入字典编码" :disabled="isEdit" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="描述" prop="description">
+            <el-input type="textarea" v-model="model.description" placeholder="请输入字典描述" />
+          </el-form-item>
+          
+          <el-divider content-position="left">字典项配置</el-divider>
+          <div style="margin-bottom: 15px">
+            <el-button type="primary" size="small" @click="handleAddItem(model)">添加字典项</el-button>
+          </div>
+          <el-table :data="model.items" border size="small">
+            <el-table-column label="标签" min-width="120">
+              <template #default="{ row }">
+                <el-input v-model="row.label" size="small" />
+              </template>
+            </el-table-column>
+            <el-table-column label="键值" min-width="120">
+              <template #default="{ row }">
+                <el-input v-model="row.value" size="small" />
+              </template>
+            </el-table-column>
+            <el-table-column label="排序" width="100">
+              <template #default="{ row }">
+                <el-input-number v-model="row.sort" size="small" style="width: 100%" :controls="false" />
+              </template>
+            </el-table-column>
+            <el-table-column label="颜色" width="120">
+              <template #default="{ row }">
+                <el-color-picker v-model="row.color" size="small" />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80" fixed="right" align="center">
+              <template #default="{ $index }">
+                <el-button link type="danger" @click="deleteItem(model, $index)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-form>
+      </template>
+
+      <!-- Viewer -->
+      <template #view-form="{ model }">
+        <el-form :model="model" label-width="80px" disabled>
+          <el-row>
+            <el-col :span="12"><el-form-item label="名称"><el-input v-model="model.name" /></el-form-item></el-col>
+            <el-col :span="12"><el-form-item label="编码"><el-input v-model="model.code" /></el-form-item></el-col>
+          </el-row>
+          <el-form-item label="描述"><el-input type="textarea" v-model="model.description" /></el-form-item>
+          
+          <el-divider content-position="left">字典项</el-divider>
+          <el-table :data="model.items" border size="small">
+            <el-table-column label="标签" prop="label" min-width="120" />
+            <el-table-column label="键值" prop="value" min-width="120" />
+            <el-table-column label="排序" prop="sort" width="100" />
+            <el-table-column label="颜色" width="120">
+              <template #default="{ row }">
+                <div :style="{ width: '20px', height: '20px', backgroundColor: row.color, borderRadius: '4px', margin: '0 auto' }" v-if="row.color"></div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-form>
+      </template>
+    </ProTable>
+</div>
+        `,
+        script: `
+import { ref, reactive } from 'vue';
+import { ElMessage } from 'element-plus';
+import { CirclePlus } from '@element-plus/icons-vue';
+import request from 'app-request';
+import ProTable from '@/components/ProTable/index.vue';
+
+const getDictList = (params) => request.get('/sys/dict', { params });
+const createDict = (data) => request.post('/sys/dict', data);
+const updateDict = (id, data) => request.put('/sys/dict/' + id, data);
+const deleteDict = (id) => request.delete('/sys/dict/' + id);
+// Mock batch delete API (assuming it's added or ignoring for now)
+const batchDeleteDict = (ids) => Promise.resolve(); 
+
+const proTable = ref();
+const initParam = reactive({});
+
+const columns = [
+  { type: 'selection', fixed: 'left', width: 55 },
+  { prop: 'name', label: '字典名称', width: 180, search: { el: 'input' } },
+  { prop: 'code', label: '字典编码', width: 180, search: { el: 'input' } },
+  { prop: 'description', label: '描述' },
+  { prop: 'createdAt', label: '创建时间', width: 180 }
+];
+
+const getTableList = async (params) => {
+  const res = await getDictList(params);
+  return {
+    data: Array.isArray(res) ? res : res.list || [],
+    total: Array.isArray(res) ? res.length : res.total || 0
+  };
+};
+
+const openAdd = () => {
+  proTable.value?.openAdd();
+};
+
+const submitForm = async (formData, done) => {
+  try {
+    if (!formData.name || !formData.code) {
+       ElMessage.warning('名称和编码不能为空');
+       done();
+       return;
+    }
+    
+    // Clean up empty items before saving
+    if (formData.items) {
+      formData.items = formData.items.filter(item => item.label && item.value);
+    }
+
+    if (formData._id) {
+      await updateDict(formData._id, formData);
+      ElMessage.success('更新成功');
+    } else {
+      await createDict(formData);
+      ElMessage.success('创建成功');
+    }
+    done();
+  } catch (e) {
+    ElMessage.error(e.message || '操作失败');
+    done();
+  }
+};
+
+const handleAddItem = (model) => {
+  if (!model.items) model.items = [];
+  model.items.push({
+    label: '',
+    value: '',
+    sort: model.items.length + 1,
+    color: ''
+  });
+};
+
+const deleteItem = (model, index) => {
+  model.items.splice(index, 1);
+};
+        `,
+        style: `
+.page-container {
+  padding: 20px;
+}
+        `
+      };
+      const schemaDict = await this.createOrUpdateSchema('SysDictionary', '字典管理', dictionarySchemaCode, entitySysDictionary._id.toString(), viewSysDictionary._id.toString());
+
+      // --- Dictionary Menu ---
+      await this.createOrUpdateMenu('/sys/dictionary', 'menu.system.dictionary', 'Collection', 95, schemaDict._id.toString(), parentId, ['admin']);
+
+      // --- 3. 架构管理 (Schema Management) ---
       const schemaSchemaCode = {
         template: `
 <div class="page-container">
@@ -1137,7 +1329,7 @@ const submitForm = async (formData, done) => {
       // --- 5. 角色管理 (Role Management) ---
       // const entitySysRole = await this.createOrUpdateEntity('sys_role');
       // const viewSysRole = await this.createOrUpdateView('SysRoleList', entitySysRole._id.toString());
-      
+
       const roleSchemaCode = {
         template: `
 <div class="page-container">
@@ -1280,7 +1472,7 @@ const submitForm = async (formData, done) => {
         `,
         style: `.page-container { padding: 20px; } .mr-2 { margin-right: 8px; }`
       };
-      
+
       const roleSchema = await this.createOrUpdateSchema('sys角色管理', '角色管理', roleSchemaCode, entitySysRole._id.toString(), viewSysRole._id.toString());
       await this.createOrUpdateMenu('/manage/role', 'menu.system.role', 'Avatar', 5, roleSchema._id, parentIdManage, ['admin']);
 
@@ -1406,7 +1598,7 @@ const submitForm = async (formData, done) => {
         `,
         style: `.page-container { padding: 20px; }`
       };
-      
+
       const permissionSchema = await this.createOrUpdateSchema('sys权限管理', '权限管理', permissionSchemaCode, entitySysPermission._id.toString(), viewSysPermission._id.toString());
       await this.createOrUpdateMenu('/manage/permission', 'menu.system.permission', 'Key', 4, permissionSchema._id, parentIdManage, ['admin']);
 
@@ -1482,6 +1674,11 @@ const submitForm = async (formData, done) => {
           <el-form-item :label="$t('column.name')">
             <el-input v-model="model.name" :placeholder="$t('common.pleaseInput') + $t('column.name')" />
           </el-form-item>
+          <el-form-item label="性别" prop="gender">
+             <el-select v-model="model.gender" placeholder="请选择性别" style="width: 100%" clearable>
+                <el-option v-for="item in genderDict" :key="item.value" :label="item.label" :value="item.value" />
+             </el-select>
+          </el-form-item>
           <el-form-item :label="$t('column.role')">
              <el-select v-model="model.role" :placeholder="$t('common.pleaseSelect') + $t('column.role')" style="width: 100%" clearable>
                 <el-option v-for="item in roleList" :key="item.code" :label="item.name" :value="item.code" />
@@ -1506,6 +1703,9 @@ const submitForm = async (formData, done) => {
           </el-form-item>
           <el-form-item :label="$t('column.username')"><el-input v-model="model.username" /></el-form-item>
           <el-form-item :label="$t('column.name')"><el-input v-model="model.name" /></el-form-item>
+          <el-form-item label="性别">
+             <el-tag :type="model.gender === '1' ? '' : model.gender === '2' ? 'danger' : 'info'">{{ model.gender === '1' ? '男' : model.gender === '2' ? '女' : '未知' }}</el-tag>
+          </el-form-item>
           <el-form-item :label="$t('column.role')"><el-tag>{{ getRoleName(model.role) }}</el-tag></el-form-item>
           <el-form-item :label="$t('column.status')">
              <el-tag :type="model.status === 1 ? 'success' : 'danger'">{{ model.status === 1 ? $t('status.enabled') : $t('status.disabled') }}</el-tag>
@@ -1531,10 +1731,12 @@ const updateUser = (id, data) => request.put('/core/sys用户/' + id, data);
 const deleteUser = (id) => request.delete('/core/sys用户/' + id);
 const batchDeleteUser = (ids) => request.post('/core/sys用户/batch-delete', { ids });
 const getRoleListApi = () => request.get('/core/sys角色', { params: { pageSize: 100 } });
+const getDictListApi = (code) => request.get('/sys/dict/code/' + code);
 
 const proTable = ref();
 const initParam = reactive({});
 const roleList = ref([]);
+const genderDict = ref([]);
 const uploadHeaders = reactive({
   Authorization: 'Bearer ' + localStorage.getItem('accessToken')
 });
@@ -1544,8 +1746,9 @@ const columns = [
   { prop: 'avatar', label: 'column.avatar', width: 80,isImage: true },
   { prop: 'username', label: 'column.username', search: { el: 'input' } },
   { prop: 'name', label: 'column.name', search: { el: 'input' } },
+  { prop: 'gender', label: '性别', dict: 'gender', search: { el: 'select', dict: 'gender' } },
   { prop: 'role', label: 'column.role' },
-  { prop: 'status', label: 'column.status' },
+  { prop: 'status', label: 'column.status', search: { el: 'select', dict: 'user_status' } },
   { prop: 'createdAt', label: 'column.createTime', width: 180 }
 ];
 
@@ -1631,8 +1834,12 @@ const beforeAvatarUpload = (rawFile) => {
 };
 
 onMounted(async () => {
-  const res = await getRoleListApi();
+  const [res, dictRes] = await Promise.all([
+    getRoleListApi(),
+    getDictListApi('gender')
+  ]);
   roleList.value = Array.isArray(res) ? res : res.list || [];
+  genderDict.value = dictRes.items || [];
 });
 
 const openAdd = () => {
@@ -1711,7 +1918,7 @@ const submitForm = async (formData, done) => {
 }
         `
       };
-      
+
       const userSchema = await this.createOrUpdateSchema('sys用户管理', '用户管理', userSchemaCode, entitySysUser._id.toString(), viewSysUser._id.toString());
       await this.createOrUpdateMenu('/manage/user', 'menu.system.user', 'User', 6, userSchema._id, parentIdManage, ['admin']);
 
@@ -2128,7 +2335,7 @@ const submitForm = async (formData, done) => {
 
       // const entitySysI18n = await this.createOrUpdateEntity('sys_i18n');
       // const viewSysI18n = await this.createOrUpdateView('SysI18nList', entitySysI18n._id.toString());
-      
+
       const i18nSchemaCode = {
         template: `
 <div class="table-box">
@@ -2334,7 +2541,7 @@ const handleSave = async () => {
       // --- 8. 审计日志 (Audit Log) ---
       // Sync rollback status for existing logs
       await AuditLogService.syncRollbackStatus();
-      
+
       const entitySysAudit = await this.createOrUpdateEntity('sys审计日志');
       const viewSysAudit = await this.createOrUpdateView('sys审计日志列表', entitySysAudit._id.toString());
 
@@ -2719,6 +2926,7 @@ const formatParams = (params) => {
       <template #value="{ row }">
         <span v-if="row.type === 'boolean'">{{ row.value === 'true' ? $t('common.yes') : $t('common.no') }}</span>
         <span v-else-if="row.type === 'number'">{{ row.value }}</span>
+        <img v-else-if="row.type === 'image'" :src="row.value" style="height: 30px; vertical-align: middle; border-radius: 2px;" />
         <span v-else class="value-text" :title="row.value">{{ row.value }}</span>
       </template>
 
@@ -2736,12 +2944,23 @@ const formatParams = (params) => {
               <el-option :label="$t('config.type.string')" value="string" />
               <el-option :label="$t('config.type.number')" value="number" />
               <el-option :label="$t('config.type.boolean')" value="boolean" />
+              <el-option label="图片" value="image" />
             </el-select>
           </el-form-item>
           <el-form-item :label="$t('column.configValue')">
             <el-input v-if="model.type === 'string'" v-model="model.value" :placeholder="$t('common.pleaseInput') + $t('column.configValue')" />
             <el-input-number v-else-if="model.type === 'number'" v-model="model.valueNum" :min="0" style="width: 100%" :placeholder="$t('common.pleaseInput') + $t('column.configValue')" @change="handleNumChange(model)" />
             <el-switch v-else-if="model.type === 'boolean'" v-model="model.value" active-value="true" inactive-value="false" />
+            <el-upload v-else-if="model.type === 'image'"
+              class="avatar-uploader"
+              action="/api/common/upload"
+              :headers="uploadHeaders"
+              :show-file-list="false"
+              :on-success="(res) => handleUploadSuccess(res, model)"
+            >
+              <img v-if="model.value" :src="model.value" class="avatar" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #dcdfe6;" />
+              <el-icon v-else class="avatar-uploader-icon" style="font-size: 28px; color: #8c939d; width: 100px; height: 100px; text-align: center; border: 1px dashed #dcdfe6; border-radius: 4px;"><Plus /></el-icon>
+            </el-upload>
           </el-form-item>
           <el-form-item :label="$t('column.description')">
             <el-input v-model="model.description" type="textarea" :placeholder="$t('common.pleaseInput') + $t('column.description')" />
@@ -2764,6 +2983,7 @@ const formatParams = (params) => {
           <el-form-item :label="$t('column.configValue')">
             <span v-if="model.type === 'boolean'">{{ model.value === 'true' ? $t('common.yes') : $t('common.no') }}</span>
             <span v-else-if="model.type === 'number'">{{ model.value }}</span>
+            <img v-else-if="model.type === 'image'" :src="model.value" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #dcdfe6;" />
             <el-input v-else v-model="model.value" />
           </el-form-item>
           <el-form-item :label="$t('column.description')">
@@ -2784,11 +3004,24 @@ const formatParams = (params) => {
 import { ref, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
-import { CirclePlus } from '@element-plus/icons-vue';
+import { CirclePlus, Plus } from '@element-plus/icons-vue';
 import request from 'app-request';
 import ProTable from '@/components/ProTable/index.vue';
 
 const { t } = useI18n();
+
+const uploadHeaders = reactive({
+  Authorization: 'Bearer ' + localStorage.getItem('accessToken')
+});
+
+const handleUploadSuccess = (res, model) => {
+  if (res.code === 200 || res.status === 200) {
+    model.value = res.data.compressed || res.data.original || res.data;
+    ElMessage.success('上传成功');
+  } else {
+    ElMessage.error(res.msg || '上传失败');
+  }
+};
 
 const getTableList = (params) => request.get('/core/sys系统配置', { params });
 const updateConfig = (id, data) => request.put('/core/sys系统配置/' + id, data);
@@ -2979,6 +3212,9 @@ const submitForm = async (formData, done) => {
 
       // --- Init Default System Config (Swagger) ---
       await this.initDefaultSystemConfig();
+      
+      // --- Init Default Dictionaries ---
+      await this.initDefaultDictionaries();
 
     } catch (error) {
       console.error('Failed to init sys schemas:', error);
@@ -2988,7 +3224,7 @@ const submitForm = async (formData, done) => {
   static async initDefaultPermissions() {
     try {
       console.log('Initializing default permissions...');
-      
+
       const defaultPermissions = [
         { code: 'user:view', name: '查看用户', type: 'menu', description: '查看用户列表和详情' },
         { code: 'user:edit', name: '编辑用户', type: 'button', description: '创建、编辑、删除用户' },
@@ -3034,6 +3270,7 @@ const submitForm = async (formData, done) => {
       const configs = [
         { name: '启用Swagger文档', key: 'enable_swagger', value: 'true', type: 'boolean', description: '控制是否显示API文档页面' },
         { name: '系统名称', key: 'system_name', value: 'AixProject', type: 'string', description: '系统显示名称' },
+        { name: '系统Logo', key: 'system_logo', value: '', type: 'image', description: '系统左上角Logo' },
         { name: '系统版本', key: 'system_version', value: '1.0.0', type: 'string', description: '系统版本号' },
         { name: '系统描述', key: 'system_description', value: '基于 AixFramework 构建的企业级管理系统', type: 'string', description: '系统描述信息' },
         { name: '默认语言', key: 'default_language', value: 'zh-CN', type: 'string', description: '系统默认语言 (zh-CN / en-US)' },
@@ -3060,15 +3297,59 @@ const submitForm = async (formData, done) => {
     }
   }
 
+  static async initDefaultDictionaries() {
+    try {
+      console.log('Initializing default dictionaries...');
+      const db = getDb();
+      
+      // 用户状态字典
+      const userStatusDict = await db.collection('sys字典').findOne({ code: 'user_status' });
+      if (!userStatusDict) {
+        await db.collection('sys字典').insertOne({
+          name: '用户状态',
+          code: 'user_status',
+          description: '系统用户的账号状态',
+          items: [
+            { label: '正常', value: '1', sort: 1, color: '#67C23A' },
+            { label: '禁用', value: '0', sort: 2, color: '#F56C6C' }
+          ],
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        console.log('Created default dictionary: user_status');
+      }
+
+      // 性别字典
+      const genderDict = await db.collection('sys字典').findOne({ code: 'gender' });
+      if (!genderDict) {
+        await db.collection('sys字典').insertOne({
+          name: '性别',
+          code: 'gender',
+          description: '用户的性别信息',
+          items: [
+            { label: '未知', value: '0', sort: 1, color: '#909399' },
+            { label: '男', value: '1', sort: 2, color: '#409EFF' },
+            { label: '女', value: '2', sort: 3, color: '#F56C6C' }
+          ],
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        console.log('Created default dictionary: gender');
+      }
+    } catch (error) {
+      console.error('Failed to init default dictionaries:', error);
+    }
+  }
+
   static async initDefaultRoles() {
     try {
       console.log('Initializing default roles...');
-      
+
       await this.initDefaultPermissions();
-      
+
       const allPerms = await GeneralService.getList('sys权限', { pageSize: 100 });
       const allPermCodes = allPerms.list.map(p => p.code);
-      
+
       const adminRole = await GeneralService.getList('sys角色', { code: 'admin' });
       if (adminRole.list.length === 0) {
         console.log('Creating default admin role...');
@@ -3085,7 +3366,7 @@ const submitForm = async (formData, done) => {
         });
         console.log('Admin role updated with all permissions');
       }
-      
+
       const userRole = await GeneralService.getList('sys角色', { code: 'user' });
       if (userRole.list.length === 0) {
         console.log('Creating default user role...');
@@ -3197,7 +3478,7 @@ const submitForm = async (formData, done) => {
         updates.schemaId = schemaId.toString();
         needsUpdate = true;
       }
-      
+
       if (parentId && (!menu.parentId || menu.parentId !== parentId)) {
         updates.parentId = parentId;
         needsUpdate = true;
