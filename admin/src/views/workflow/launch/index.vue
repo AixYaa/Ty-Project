@@ -25,7 +25,13 @@
         <span class="table-title">我的流程申请</span>
       </template>
       <template #status="{ row }">
-        <el-tag :type="statusTagMap[row.status] || 'info'">{{ row.status }}</el-tag>
+        <el-tag
+          :type="
+            (statusTagMap[row.status] as 'success' | 'warning' | 'info' | 'primary' | 'danger') ||
+            'info'
+          "
+          >{{ row.status }}</el-tag
+        >
       </template>
       <template #operation="{ row }">
         <el-button link type="primary" @click="showDetail(row)">运行日志</el-button>
@@ -147,7 +153,7 @@ const startForm = reactive<any>({
   variables: {}
 });
 
-const statusTagMap: Record<string, string> = {
+const statusTagMap: Record<string, 'success' | 'warning' | 'info' | 'primary' | 'danger'> = {
   running: 'warning',
   completed: 'success',
   rejected: 'danger',

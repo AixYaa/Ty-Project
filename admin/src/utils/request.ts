@@ -9,7 +9,6 @@ const HYBRID_ENABLED = import.meta.env.VITE_ENCRYPTION_HYBRID === 'true';
 const ALGORITHM = 'AES-GCM';
 const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
-const AES_KEY_LENGTH = 256;
 
 interface SessionCrypto {
   aesKey: CryptoKey;
@@ -30,13 +29,13 @@ async function fetchPublicKey(): Promise<JsonWebKey> {
   const pem = res.data?.data?.publicKey || res.data?.publicKey;
   if (!pem) throw new Error('未获取到服务器公钥');
   const der = pemToDer(pem);
-  cachedPublicKey = await crypto.subtle.importKey(
+  cachedPublicKey = (await crypto.subtle.importKey(
     'spki',
     der,
     { name: 'RSA-OAEP', hash: 'SHA-256' },
     false,
     ['encrypt']
-  ) as JsonWebKey;
+  )) as JsonWebKey;
   return cachedPublicKey;
 }
 
@@ -52,41 +51,41 @@ function pemToDer(pem: string): ArrayBuffer {
 }
 
 async function generateAesKey(): Promise<CryptoKey> {
-  return crypto.subtle.generateKey(
-    { name: ALGORITHM, length: 256 },
-    true,
-    ['encrypt', 'decrypt']
-  );
+  return crypto.subtle.generateKey({ name: ALGORITHM, length: 256 }, true, ['encrypt', 'decrypt']);
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
+function arrayBufferToBase64(buffer: ArrayBuffer | ArrayBufferLike): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i] || 0);
+  }
   return btoa(binary);
 }
 
-function base64ToArrayBuffer(base64: string): Uint8Array {
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i) || 0;
+  }
+  return bytes.buffer as ArrayBuffer;
 }
 
 async function rsaEncrypt(plaintext: string, publicKey: JsonWebKey): Promise<string> {
   const encoded = new TextEncoder().encode(plaintext);
-  const encrypted = await crypto.subtle.encrypt(
-    { name: 'RSA-OAEP', hash: 'SHA-256' },
-    publicKey as any,
-    encoded
-  );
+  const encrypted = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, publicKey as any, encoded);
   return arrayBufferToBase64(encrypted);
 }
 
-async function aesEncrypt(plaintext: string, key: CryptoKey, iv: Uint8Array): Promise<{ ciphertext: string; authTag: string }> {
+async function aesEncrypt(
+  plaintext: string,
+  key: CryptoKey,
+  iv: Uint8Array
+): Promise<{ ciphertext: string; authTag: string }> {
   const encoded = new TextEncoder().encode(plaintext);
   const encrypted = await crypto.subtle.encrypt(
-    { name: ALGORITHM, iv },
+    { name: ALGORITHM, iv: iv as BufferSource },
     key,
     encoded
   );
@@ -94,21 +93,26 @@ async function aesEncrypt(plaintext: string, key: CryptoKey, iv: Uint8Array): Pr
   const ciphertext = full.slice(0, -AUTH_TAG_LENGTH);
   const authTag = full.slice(-AUTH_TAG_LENGTH);
   return {
-    ciphertext: btoa(String.fromCharCode(...ciphertext)),
-    authTag: btoa(String.fromCharCode(...authTag))
+    ciphertext: btoa(String.fromCharCode(...Array.from(ciphertext))),
+    authTag: btoa(String.fromCharCode(...Array.from(authTag)))
   };
 }
 
-async function aesDecrypt(ciphertext: string, key: CryptoKey, iv: Uint8Array, authTag: string): Promise<string> {
-  const ctBytes = base64ToArrayBuffer(ciphertext);
-  const tagBytes = base64ToArrayBuffer(authTag);
+async function aesDecrypt(
+  ciphertext: string,
+  key: CryptoKey,
+  iv: Uint8Array,
+  authTag: string
+): Promise<string> {
+  const ctBytes = new Uint8Array(base64ToArrayBuffer(ciphertext));
+  const tagBytes = new Uint8Array(base64ToArrayBuffer(authTag));
   const combined = new Uint8Array(ctBytes.length + tagBytes.length);
   combined.set(ctBytes, 0);
   combined.set(tagBytes, ctBytes.length);
   const decrypted = await crypto.subtle.decrypt(
-    { name: ALGORITHM, iv },
+    { name: ALGORITHM, iv: iv as BufferSource },
     key,
-    combined
+    combined.buffer as ArrayBuffer
   );
   return new TextDecoder().decode(decrypted);
 }
@@ -124,7 +128,10 @@ async function ensureSession(): Promise<void> {
   const aesKeyBase64 = arrayBufferToBase64(exportedAes);
   const ivBase64 = arrayBufferToBase64(iv.buffer);
 
-  const encrypted = await rsaEncrypt(JSON.stringify({ key: aesKeyBase64, iv: ivBase64 }), publicKey);
+  const encrypted = await rsaEncrypt(
+    JSON.stringify({ key: aesKeyBase64, iv: ivBase64 }),
+    publicKey
+  );
 
   sessionStorage.setItem('rsaEncryptedAes', encrypted);
   sessionCrypto = { aesKey, iv };
@@ -157,12 +164,16 @@ service.interceptors.request.use(
           if (!encryptedAes) {
             return config;
           }
-          const { ciphertext, authTag } = await aesEncrypt(JSON.stringify(data), sessionCrypto!.aesKey, sessionCrypto!.iv);
+          const { ciphertext, authTag } = await aesEncrypt(
+            JSON.stringify(data),
+            sessionCrypto!.aesKey,
+            sessionCrypto!.iv
+          );
           config.data = {
             _encrypted: true,
             key: encryptedAes,
             data: ciphertext,
-            iv: arrayBufferToBase64(sessionCrypto!.iv.buffer),
+            iv: arrayBufferToBase64(sessionCrypto!.iv.buffer as ArrayBuffer),
             authTag
           };
           delete config.params;
@@ -188,7 +199,12 @@ service.interceptors.response.use(
         return Promise.reject(new Error('加密会话已失效'));
       }
       try {
-        const decrypted = await aesDecrypt(res.data, sessionCrypto.aesKey, base64ToArrayBuffer(res.iv), res.authTag);
+        const decrypted = await aesDecrypt(
+          res.data,
+          sessionCrypto.aesKey,
+          new Uint8Array(base64ToArrayBuffer(res.iv)),
+          res.authTag
+        );
         res = JSON.parse(decrypted);
       } catch (e) {
         console.error('[Encryption] Decrypt response error:', e);
@@ -202,7 +218,8 @@ service.interceptors.response.use(
       return Promise.reject(new Error(res.msg || 'Error'));
     } else {
       if (res.code !== undefined && res.code !== ErrorCode.SUCCESS) {
-        if (res.code === ErrorCode.TOKEN_EXPIRED || res.code === ErrorCode.INVALID_TOKEN) {}
+        if (res.code === ErrorCode.TOKEN_EXPIRED || res.code === ErrorCode.INVALID_TOKEN) {
+        }
         ElMessage.error(res.msg || 'Error');
         return Promise.reject(new Error(res.msg || 'Error'));
       }

@@ -21,7 +21,9 @@
           </el-avatar>
           <div class="greeting-text">
             <h1>
-              {{ getGreetingTime() }}，{{ userStore.userInfo?.name || userStore.userInfo?.username || 'Admin' }}！
+              {{ getGreetingTime() }}，{{
+                userStore.userInfo?.name || userStore.userInfo?.username || 'Admin'
+              }}！
             </h1>
             <p>{{ $t('dashboard.overview') }} | 又是充满活力的一天，准备好开始工作了吗？</p>
           </div>
@@ -101,10 +103,18 @@
                 <div class="commit-footer">
                   <div class="commit-meta-left">
                     <div class="author-info">
-                      <el-avatar :size="20" class="author-avatar" :style="{ backgroundColor: getAvatarColor(activity.author) }">
+                      <el-avatar
+                        :size="20"
+                        class="author-avatar"
+                        :style="{ backgroundColor: getAvatarColor(activity.author) }"
+                      >
                         {{ activity.author.charAt(0).toUpperCase() }}
                       </el-avatar>
-                      <span class="author-name" :class="{ 'is-me': activity.author.toLowerCase() === 'aix' }">{{ activity.author }}</span>
+                      <span
+                        class="author-name"
+                        :class="{ 'is-me': activity.author.toLowerCase() === 'aix' }"
+                        >{{ activity.author }}</span
+                      >
                     </div>
                     <span class="divider"></span>
                     <span class="commit-time">
@@ -114,7 +124,11 @@
                   </div>
 
                   <div class="commit-meta-right">
-                    <div class="commit-hash-btn" @click="copyHash(activity.hash)" title="复制 Commit Hash">
+                    <div
+                      class="commit-hash-btn"
+                      title="复制 Commit Hash"
+                      @click="copyHash(activity.hash)"
+                    >
                       <el-icon><DocumentCopy /></el-icon>
                       <span>{{ activity.hash }}</span>
                     </div>
@@ -136,7 +150,7 @@ import { useUserStore } from '@/store/user';
 import { getGitLogs, type GitCommit } from '@/api/common';
 import { getDashboardStats } from '@/api/dashboard';
 import { ElMessage } from 'element-plus';
-import { User, View, Goods, Money, Menu, DataBoard, Connection, DataLine, DocumentCopy, Timer } from '@element-plus/icons-vue';
+import { User, Menu, DataBoard, Connection, DocumentCopy, Timer } from '@element-plus/icons-vue';
 import * as echarts from 'echarts';
 import { useDark } from '@vueuse/core';
 
@@ -168,8 +182,8 @@ const statistics = ref([
   { label: 'API 调用量', value: 0, icon: Connection, color: '#F56C6C' }
 ]);
 
-const trendData = ref<Array<{date: string, count: number}>>([]);
-const moduleData = ref<Array<{name: string, value: number}>>([]);
+const trendData = ref<Array<{ date: string; count: number }>>([]);
+const moduleData = ref<Array<{ name: string; value: number }>>([]);
 
 const chartTextColor = computed(() => (isDark.value ? '#E5EAF3' : '#606266'));
 const chartBorderColor = computed(() => (isDark.value ? '#4C4D4F' : '#EBEEF5'));
@@ -193,7 +207,7 @@ const initCharts = () => {
       xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: trendData.value.map(item => item.date),
+        data: trendData.value.map((item) => item.date),
         axisLabel: { color: textColor },
         axisLine: { lineStyle: { color: borderColor } }
       },
@@ -207,7 +221,7 @@ const initCharts = () => {
           name: 'API 调用量',
           type: 'line',
           smooth: true,
-          data: trendData.value.map(item => item.count),
+          data: trendData.value.map((item) => item.count),
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: 'rgba(64,158,255,0.3)' },
@@ -270,22 +284,6 @@ watch(isDark, () => {
   initCharts();
 });
 
-// Generate a consistent tag type based on string
-const stringToTagType = (str: string): 'success' | 'warning' | 'danger' | 'info' | 'primary' => {
-  const types: ('success' | 'warning' | 'danger' | 'info' | 'primary')[] = [
-    'success',
-    'warning',
-    'danger',
-    'info',
-    'primary'
-  ];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return types[Math.abs(hash) % types.length] || 'info';
-};
-
 const getAvatarColor = (str: string) => {
   const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9c27b0'];
   let hash = 0;
@@ -308,10 +306,12 @@ const loadStats = async () => {
   try {
     const data = await getDashboardStats();
     if (data) {
-      statistics.value[0].value = data.statistics.users;
-      statistics.value[1].value = data.statistics.menus;
-      statistics.value[2].value = data.statistics.schemas;
-      statistics.value[3].value = data.statistics.apiLogs;
+      if (statistics.value && statistics.value.length >= 4) {
+        statistics.value[0]!.value = data.statistics.users;
+        statistics.value[1]!.value = data.statistics.menus;
+        statistics.value[2]!.value = data.statistics.schemas;
+        statistics.value[3]!.value = data.statistics.apiLogs;
+      }
 
       trendData.value = data.trends.apiLogs;
 

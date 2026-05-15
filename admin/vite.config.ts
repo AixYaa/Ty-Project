@@ -5,7 +5,7 @@ import { viteMockServe } from 'vite-plugin-mock';
 import path from 'path';
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode }: { mode: string }) => {
   const env = loadEnv(mode, process.cwd());
   return {
     base: './', // Use relative path for assets to support deployment in any subdirectory
@@ -23,20 +23,52 @@ export default defineConfig(({ mode }) => {
         ext: '.gz'
       })
     ],
+    esbuild: {
+      drop: mode === 'production' ? ['console', 'debugger'] : []
+    },
     build: {
+      target: 'es2015',
+      minify: 'esbuild',
+      chunkSizeWarningLimit: 2000, // 提高警告阈值到 2000KB
       rollupOptions: {
+        // 抑制来自特定库（如 mockjs）的 eval 等警告
+        onwarn(warning, warn) {
+          if (warning.code === 'EVAL' && warning.loc?.file?.includes('mockjs')) {
+            return;
+          }
+          warn(warning);
+        },
         output: {
-          manualChunks(id) {
+          manualChunks(id: string) {
             if (id.includes('node_modules')) {
-              if (id.includes('element-plus') || id.includes('@element-plus')) {
+              if (id.includes('element-plus') || id.includes('@element-plus'))
                 return 'element-plus';
-              }
-              if (id.includes('vue') || id.includes('pinia')) {
-                return 'vue-vendor';
-              }
-              if (id.includes('@guolao/vue-monaco-editor')) {
-                return 'editor';
-              }
+              if (id.includes('ant-design')) return 'ant-design';
+              if (
+                id.includes('bpmn-js') ||
+                id.includes('diagram-js') ||
+                id.includes('min-dash') ||
+                id.includes('min-dom') ||
+                id.includes('moddle') ||
+                id.includes('moddle-xml') ||
+                id.includes('camunda-bpmn-moddle')
+              )
+                return 'bpmn';
+              if (id.includes('echarts') || id.includes('zrender')) return 'echarts';
+              if (id.includes('vue3-sfc-loader')) return 'sfc-loader';
+              if (id.includes('xlsx')) return 'xlsx';
+              if (
+                id.includes('vue') ||
+                id.includes('@vue') ||
+                id.includes('pinia') ||
+                id.includes('vue-router') ||
+                id.includes('vue-i18n')
+              )
+                return 'vue-core';
+              if (id.includes('axios') || id.includes('mockjs')) return 'network';
+              if (id.includes('monaco-editor') || id.includes('@guolao')) return 'monaco-editor';
+              if (id.includes('@wangeditor')) return 'wangeditor';
+
               return 'vendor'; // default vendor chunk for other node_modules
             }
           }
@@ -54,7 +86,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_PROXY_TARGET || 'http://localhost:6632',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '/api')
+          rewrite: (path: string) => path.replace(/^\/api/, '/api')
         },
         '/uploads': {
           target: env.VITE_PROXY_TARGET || 'http://localhost:6632',
